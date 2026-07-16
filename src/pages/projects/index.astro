@@ -1,0 +1,56 @@
+---
+import Base from '../../layouts/Base.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { getCollection } from 'astro:content';
+
+const projects = (await getCollection('projects'))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const categories = [...new Set(projects.map(p => p.data.category))];
+const allTags = [...new Set(projects.flatMap(p => p.data.tags))];
+---
+
+<Base title="项目" description="课程项目与个人作品">
+  <div class="page-header">
+    <h1>项目</h1>
+    <p>课程作业、个人项目、工具开发 — 成长的每一步都留下痕迹</p>
+  </div>
+
+  <div class="project-stats">
+    <div class="stat">
+      <span class="stat-num">{projects.length}</span>
+      <span class="stat-label">项目总数</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">{categories.length}</span>
+      <span class="stat-label">类别</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">{allTags.length}</span>
+      <span class="stat-label">技术标签</span>
+    </div>
+  </div>
+
+  <div class="grid projects-grid">
+    {projects.map(p => <ProjectCard project={p} />)}
+  </div>
+</Base>
+
+<style>
+  .project-stats {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+    padding: 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .stat { display: flex; flex-direction: column; align-items: center; }
+  .stat-num { font-size: 1.8rem; font-weight: 700; color: var(--accent); }
+  .stat-label { font-size: 0.8rem; color: var(--text-muted); }
+  .projects-grid { grid-template-columns: 1fr; }
+  @media (min-width: 640px) {
+    .projects-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>

@@ -1,0 +1,168 @@
+---
+import Base from '../layouts/Base.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { getCollection } from 'astro:content';
+
+const projects = (await getCollection('projects'))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 5);
+
+const notes = (await getCollection('notes'))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+
+const hobbies = await getCollection('hobbies');
+---
+
+<Base title="首页" description="童国睿的个人网站 — 记录成长、项目与思考">
+  <section class="hero">
+    <h1 class="hero-name">童国睿</h1>
+    <p class="hero-desc">
+      软件工程 · 大三 · 贵州大学<br />
+      记录课程项目、技术探索与生活爱好
+    </p>
+    <div class="hero-links">
+      <a href="/projects" class="btn">浏览项目</a>
+      <a href="/about" class="btn btn-outline">关于我</a>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-header">
+      <h2>最新项目</h2>
+      <a href="/projects" class="section-more">查看全部 →</a>
+    </div>
+    <div class="grid home-grid">
+      {projects.map(p => <ProjectCard project={p} />)}
+    </div>
+  </section>
+
+  {notes.length > 0 && (
+    <section class="section">
+      <div class="section-header">
+        <h2>最近笔记</h2>
+        <a href="/notes" class="section-more">查看全部 →</a>
+      </div>
+      <div class="note-list">
+        {notes.map(n => (
+          <a href={`/notes/${n.id}`} class="note-item">
+            <span class="note-date">{n.data.date.toLocaleDateString('zh-CN')}</span>
+            <span class="note-title">{n.data.title}</span>
+            <span class="note-desc">{n.data.description}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {hobbies.length > 0 && (
+    <section class="section">
+      <div class="section-header">
+        <h2>爱好</h2>
+        <a href="/hobbies" class="section-more">查看全部 →</a>
+      </div>
+      <div class="grid home-grid">
+        {hobbies.map(h => (
+          <a href={`/hobbies/${h.id}`} class="card hobby-card">
+            <h3>{h.data.title}</h3>
+            <p>{h.data.description}</p>
+            <div class="hobby-tags">
+              {h.data.tags.map(t => <span class="tag">{t}</span>)}
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+</Base>
+
+<style>
+  .hero {
+    padding: 3rem 0 2.5rem;
+    text-align: center;
+  }
+  .hero-name {
+    font-size: 2.8rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 0.8rem;
+  }
+  .hero-desc {
+    color: var(--text-secondary);
+    font-size: 1.05rem;
+    line-height: 1.8;
+    margin-bottom: 1.5rem;
+  }
+  .hero-links { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; }
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+  }
+  .btn-outline:hover { background: var(--accent-light); }
+
+  .section {
+    margin-bottom: 3rem;
+  }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1.2rem;
+  }
+  .section-header h2 { margin: 0; }
+  .section-more {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+  .section-more:hover { color: var(--accent); }
+
+  .home-grid { grid-template-columns: 1fr; }
+  @media (min-width: 640px) {
+    .home-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .note-list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .note-item {
+    display: flex;
+    gap: 1rem;
+    align-items: baseline;
+    padding: 0.8rem 1rem;
+    border-radius: var(--radius);
+    transition: background 0.2s;
+    text-decoration: none;
+    color: var(--text);
+  }
+  .note-item:hover { background: var(--bg-hover); }
+  .note-date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    min-width: 5rem;
+  }
+  .note-title {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .note-desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  @media (max-width: 640px) {
+    .note-desc { display: none; }
+  }
+
+  .hobby-card { text-decoration: none; color: var(--text); }
+  .hobby-card h3 { margin: 0 0 0.5rem; font-size: 1.1rem; }
+  .hobby-card p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0 0 0.8rem;
+  }
+  .hobby-tags { display: flex; flex-wrap: wrap; }
+</style>

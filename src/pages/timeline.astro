@@ -1,0 +1,123 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const projects = await getCollection('projects');
+const notes = await getCollection('notes');
+
+type Event = {
+  date: Date;
+  title: string;
+  description: string;
+  type: 'project' | 'note';
+  url: string;
+};
+
+const events: Event[] = [
+  ...projects.map(p => ({
+    date: p.data.date,
+    title: p.data.title,
+    description: p.data.description,
+    type: 'project' as const,
+    url: `/projects/${p.id}`,
+  })),
+  ...notes.map(n => ({
+    date: n.data.date,
+    title: n.data.title,
+    description: n.data.description,
+    type: 'note' as const,
+    url: `/notes/${n.id}`,
+  })),
+].sort((a, b) => b.date.valueOf() - a.date.valueOf());
+
+const years = [...new Set(events.map(e => e.date.getFullYear()))].sort((a, b) => b - a);
+---
+
+<Base title="时间线" description="成长历程">
+  <div class="page-header">
+    <h1>时间线</h1>
+    <p>走过的每一步</p>
+  </div>
+
+  {events.length === 0 ? (
+    <div class="empty-state">
+      <p>还没有内容，敬请期待</p>
+    </div>
+  ) : (
+    <div class="timeline">
+      {years.map(year => (
+        <div class="year-group">
+          <h2 class="year-heading">{year}</h2>
+          <div class="year-line">
+            {events.filter(e => e.date.getFullYear() === year).map(e => (
+              <a href={e.url} class={`timeline-event type-${e.type}`}>
+                <div class="event-dot"></div>
+                <div class="event-body">
+                  <time class="meta">
+                    {e.date.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' })}
+                  </time>
+                  <h3>{e.title}</h3>
+                  <p>{e.description}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</Base>
+
+<style>
+  .timeline { max-width: 600px; margin: 0 auto; }
+  .year-group { margin-bottom: 2.5rem; }
+  .year-heading {
+    font-size: 1.5rem;
+    color: var(--accent);
+    margin-bottom: 1rem;
+    position: relative;
+  }
+  .year-line {
+    border-left: 2px solid var(--accent-light);
+    padding-left: 1.5rem;
+    margin-left: 0.5rem;
+  }
+  .timeline-event {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    text-decoration: none;
+    color: var(--text);
+    position: relative;
+    padding: 0.8rem 1rem;
+    border-radius: var(--radius);
+    transition: background 0.2s;
+  }
+  .timeline-event:hover { background: var(--bg-hover); }
+  .event-dot {
+    position: absolute;
+    left: -1.6rem;
+    top: 1.1rem;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent-light);
+    border: 2px solid var(--accent);
+  }
+  .type-project .event-dot { background: var(--accent); }
+  .type-note .event-dot { background: var(--bg-card); }
+  .event-body { flex: 1; }
+  .event-body time { display: block; margin-bottom: 0.2rem; font-size: 0.82rem; }
+  .event-body h3 {
+    font-size: 1rem;
+    margin: 0 0 0.3rem;
+    font-weight: 600;
+  }
+  .event-body p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+  }
+  .empty-state { text-align: center; padding: 4rem 0; color: var(--text-muted); }
+</style>

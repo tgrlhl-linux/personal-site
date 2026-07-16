@@ -1,0 +1,60 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const notes = (await getCollection('notes'))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+
+<Base title="笔记" description="技术笔记与学习随笔">
+  <div class="page-header">
+    <h1>笔记</h1>
+    <p>学习中的思考、踩坑记录、知识总结</p>
+  </div>
+
+  {notes.length === 0 ? (
+    <div class="empty-state">
+      <p>还没有笔记，敬请期待</p>
+    </div>
+  ) : (
+    <div class="note-list-full">
+      {notes.map(n => (
+        <a href={`/notes/${n.id}`} class="note-entry card">
+          <time class="meta">{n.data.date.toLocaleDateString('zh-CN')}</time>
+          <h2>{n.data.title}</h2>
+          <p>{n.data.description}</p>
+          <div class="note-tags">
+            {n.data.tags.map(t => <span class="tag">{t}</span>)}
+          </div>
+        </a>
+      ))}
+    </div>
+  )}
+</Base>
+
+<style>
+  .note-list-full { display: flex; flex-direction: column; gap: 0.8rem; }
+  .note-entry {
+    display: block;
+    text-decoration: none;
+    color: var(--text);
+    padding: 1.2rem 1.5rem;
+  }
+  .note-entry:hover { color: var(--text); }
+  .note-entry time { display: block; margin-bottom: 0.3rem; }
+  .note-entry h2 {
+    font-size: 1.15rem;
+    margin: 0 0 0.4rem;
+  }
+  .note-entry p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0 0 0.6rem;
+  }
+  .note-tags { display: flex; flex-wrap: wrap; }
+  .empty-state {
+    text-align: center;
+    padding: 4rem 0;
+    color: var(--text-muted);
+  }
+</style>

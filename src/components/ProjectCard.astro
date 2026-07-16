@@ -1,0 +1,74 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+export interface Props {
+  project: CollectionEntry<'projects'>;
+}
+
+const { project } = Astro.props;
+const { title, description, date, tags, category, status } = project.data;
+
+const categoryLabel: Record<string, string> = {
+  course: '课程',
+  personal: '个人',
+  tool: '工具',
+};
+
+const statusLabel: Record<string, string> = {
+  completed: '已完成',
+  'in-progress': '进行中',
+  archived: '归档',
+};
+---
+
+<article class="card project-card">
+  <a href={`/projects/${project.id}`} class="project-link">
+    <div class="project-meta">
+      <span class="tag cat-{category}">{categoryLabel[category]}</span>
+      {status !== 'completed' && <span class="tag status">{statusLabel[status]}</span>}
+      <span class="meta">{date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long' })}</span>
+    </div>
+    <h2 class="project-title">{title}</h2>
+    <p class="project-desc">{description}</p>
+    <div class="project-tags">
+      {tags.map(tag => <span class="tag">{tag}</span>)}
+    </div>
+  </a>
+</article>
+
+<style>
+  .project-card { padding: 0; }
+  .project-link {
+    display: block;
+    padding: 1.5rem;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .project-link:hover { color: var(--text); }
+  .project-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+    flex-wrap: wrap;
+  }
+  .project-meta .meta { font-size: 0.8rem; margin: 0; }
+  .project-title {
+    font-size: 1.15rem;
+    margin: 0 0 0.4rem;
+  }
+  .project-desc {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0 0 0.8rem;
+    line-height: 1.5;
+  }
+  .project-tags { display: flex; flex-wrap: wrap; }
+  .tag.status {
+    background: #fef3e2;
+    color: #b8860b;
+  }
+  .cat-course { background: #e8f0fe; color: #1a5bb5; }
+  .cat-personal { background: #fce8e6; color: #c53929; }
+  .cat-tool { background: #e6f4ea; color: #1e7e34; }
+</style>

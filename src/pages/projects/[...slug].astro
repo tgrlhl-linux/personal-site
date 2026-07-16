@@ -1,0 +1,90 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map(p => ({
+    params: { slug: p.id },
+    props: { entry: p },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+const { title, description, date, tags, category, status } = entry.data;
+
+const statusLabel: Record<string, string> = {
+  completed: '已完成',
+  'in-progress': '进行中',
+  archived: '归档',
+};
+---
+
+<Base title={title} description={description}>
+  <article class="post">
+    <header class="post-header">
+      <div class="post-meta">
+        <span class="tag">{category === 'course' ? '课程' : category === 'personal' ? '个人' : '工具'}</span>
+        {status !== 'completed' && <span class="tag status-tag">{statusLabel[status]}</span>}
+        <time class="meta">{date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+      </div>
+      <h1>{title}</h1>
+      <p class="post-desc">{description}</p>
+      <div class="post-tags">
+        {tags.map(t => <span class="tag">{t}</span>)}
+      </div>
+    </header>
+
+    <div class="post-content">
+      <Content />
+    </div>
+
+    <nav class="post-nav">
+      <a href="/projects" class="btn">← 返回项目列表</a>
+    </nav>
+  </article>
+</Base>
+
+<style>
+  .post-header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .post-meta { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.8rem; flex-wrap: wrap; }
+  .post-meta .meta { margin: 0; }
+  .post-header h1 { font-size: 1.8rem; margin-bottom: 0.6rem; }
+  .post-desc {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+  .post-tags { display: flex; flex-wrap: wrap; }
+  .status-tag { background: #fef3e2; color: #b8860b; }
+
+  .post-content {
+    font-size: 1rem;
+    line-height: 1.8;
+    max-width: 100%;
+  }
+  .post-content h2 { margin-top: 2rem; }
+  .post-content h3 { margin-top: 1.5rem; }
+  .post-content ul, .post-content ol { margin-left: 1.5rem; }
+  .post-content li { margin-bottom: 0.3rem; }
+  .post-content img { border-radius: var(--radius); margin: 1rem 0; }
+  .post-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+  }
+  .post-content th, .post-content td {
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.8rem;
+    text-align: left;
+  }
+  .post-content th { background: var(--bg-hover); font-weight: 600; }
+
+  .post-nav { margin-top: 3rem; }
+</style>

@@ -1,0 +1,82 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="关于" description="关于童国睿">
+  <div class="page-header">
+    <h1>关于</h1>
+  </div>
+
+  <div class="about-content">
+    <section class="about-section">
+      <h2>👋 自我介绍</h2>
+      <p>
+        贵州大学软件工程专业大三学生。热衷于用代码解决问题，从底层系统到前端界面都乐在其中。
+        相信持续记录和反思是成长最快的方式——这个网站就是这一信念的产物。
+      </p>
+    </section>
+
+    <section class="about-section">
+      <h2>🎯 现在关注</h2>
+      <ul>
+        <li>系统编程（Rust、C、操作系统原理）</li>
+        <li>数据库设计与实现</li>
+        <li>Web 全栈开发</li>
+        <li>数据可视化与 3D 图形</li>
+      </ul>
+    </section>
+
+    <section class="about-section">
+      <h2>🛠️ 技术栈</h2>
+      <div class="skills">
+        {[
+          { cat: '语言', items: ['Java', 'Rust', 'Python', 'JavaScript', 'Shell', 'SQL'] },
+          { cat: '后端', items: ['Flask', 'Node.js', 'Spring Boot'] },
+          { cat: '前端', items: ['Astro', 'HTML/CSS', 'Three.js'] },
+          { cat: '工具', items: ['Git', 'Linux', 'Docker', 'Hadoop'] },
+        ].map(g => (
+          <div class="skill-group">
+            <h3>{g.cat}</h3>
+            <div class="skill-items">
+              {g.items.map(s => <span class="skill-tag">{s}</span>)}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="about-section">
+      <h2>📬 联系</h2>
+      <p>
+        GitHub：<a href="https://github.com/your-github" target="_blank">github.com/your-github</a><br />
+        Email：<a href="mailto:your@email.com">your@email.com</a>
+      </p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .about-content { max-width: 640px; }
+  .about-section { margin-bottom: 2.5rem; }
+  .about-section h2 { font-size: 1.3rem; margin-bottom: 0.8rem; }
+  .about-section p, .about-section li {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.8;
+  }
+  .about-section li { margin-bottom: 0.3rem; }
+
+  .skills { display: flex; flex-direction: column; gap: 1.2rem; }
+  .skill-group { }
+  .skill-group h3 { font-size: 0.9rem; color: var(--text-muted); margin: 0 0 0.4rem; text-transform: uppercase; letter-spacing: 1px; }
+  .skill-items { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .skill-tag {
+    display: inline-block;
+    font-size: 0.85rem;
+    padding: 0.3em 0.8em;
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-secondary);
+  }
+</style>
