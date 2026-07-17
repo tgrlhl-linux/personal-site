@@ -1,6 +1,6 @@
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
-  site: 'https://yourdomain.dev',
+  site: 'https://shengxia.dev',
   server: { host: true }
 });

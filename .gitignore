@@ -1,5 +1,11 @@
 node_modules/
 dist/
 .astro/
+.env
+.env.local
 .DS_Store
+Thumbs.db
 *.local
+*.log
+.idea/
+.vscode/
