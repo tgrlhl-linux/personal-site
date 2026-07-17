@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>设计提案 03 — 编辑式极简</title>
+<style>
+  :root {
+    --bg: #faf8f3;
+    --text: #2d2a28;
+    --text-secondary: #7a6f66;
+    --text-muted: #b8aea4;
+    --accent: #c17f59;
+    --accent-dim: #e8ddd0;
+    --hairline: rgba(0,0,0,0.05);
+    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif;
+    --font-serif: "Newsreader", Georgia, "Noto Serif SC", serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--font-serif);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    font-weight: 400;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+
+  /* Header */
+  .header {
+    padding: 2rem 0;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .logo {
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--text);
+  }
+  .nav { display: flex; gap: 2rem; }
+  .nav a {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    transition: color 0.2s;
+  }
+  .nav a:hover { color: var(--accent); }
+
+  /* ===== Hero ===== */
+  .hero {
+    padding: 6rem 0 4rem;
+    text-align: center;
+    max-width: 720px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .hero::after {
+    content: '';
+    display: block;
+    width: 2rem;
+    height: 2px;
+    background: var(--accent);
+    margin: 2.5rem auto 0;
+  }
+  .hero h1 {
+    font-family: var(--font-serif);
+    font-size: 4rem;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    margin-bottom: 1.2rem;
+  }
+  .hero h1 .ampersand {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .hero p {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    line-height: 1.8;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  /* ===== Content divider ===== */
+  .section-label {
+    font-family: var(--font-sans);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid var(--hairline);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .section-label a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.6rem;
+    letter-spacing: 1px;
+  }
+  .section-label a:hover { color: var(--accent); }
+
+  /* ===== Feature grid ===== */
+  .features {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    background: var(--hairline);
+    border: 1px solid var(--hairline);
+    margin-bottom: 3rem;
+  }
+  .feature-item {
+    background: var(--bg);
+    padding: 2.5rem;
+    text-decoration: none;
+    color: var(--text);
+    transition: background 0.3s;
+  }
+  .feature-item:hover { background: #f5f2ea; }
+  .feature-item .num {
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-bottom: 0.8rem;
+  }
+  .feature-item h3 {
+    font-size: 1.3rem;
+    font-weight: 500;
+    margin-bottom: 0.4rem;
+    line-height: 1.3;
+  }
+  .feature-item p {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  .feature-item .meta {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 1rem;
+  }
+
+  /* ===== Project editorial list ===== */
+  .project-rows { margin-bottom: 3rem; }
+  .project-row {
+    display: grid;
+    grid-template-columns: 4rem 1fr 10rem;
+    gap: 1.5rem;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid var(--hairline);
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.2s;
+  }
+  .project-row:first-child { border-top: 1px solid var(--hairline); }
+  .project-row:hover {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    margin: 0 -0.5rem;
+    background: rgba(0,0,0,0.015);
+    border-radius: 2px;
+  }
+  .project-row .index {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    padding-top: 0.2rem;
+  }
+  .project-row .info { }
+  .project-row .info h3 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 0.15rem;
+  }
+  .project-row .info p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .project-row .tags {
+    display: flex; gap: 0.3rem; flex-wrap: wrap;
+    margin-top: 0.4rem;
+  }
+  .project-row .tags .tag {
+    font-family: var(--font-sans);
+    font-size: 0.65rem;
+    padding: 0.15em 0.5em;
+    background: var(--bg);
+    border: 1px solid var(--hairline);
+    border-radius: 3px;
+    color: var(--text-muted);
+  }
+  .project-row .date {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: right;
+    padding-top: 0.2rem;
+  }
+
+  /* ===== Side notes ===== */
+  .aside-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 3rem;
+  }
+  .aside-block { }
+  .aside-block h4 {
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .aside-item {
+    display: block;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid var(--hairline);
+    text-decoration: none;
+    color: var(--text);
+  }
+  .aside-item:last-child { border-bottom: none; }
+  .aside-item .title {
+    font-size: 0.95rem;
+    margin-bottom: 0.15rem;
+  }
+  .aside-item .desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+  .aside-item .date {
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-bottom: 0.2rem;
+  }
+  .aside-item:hover .title { color: var(--accent); }
+
+  /* ===== Footer ===== */
+  .footer {
+    padding: 2.5rem 0;
+    border-top: 1px solid var(--hairline);
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 1rem;
+  }
+  .footer p { font-size: 0.8rem; color: var(--text-muted); }
+  .footer-links { display: flex; gap: 1.5rem; }
+  .footer-links a {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-family: var(--font-sans);
+  }
+  .footer-links a:hover { color: var(--accent); }
+
+  @media (max-width: 768px) {
+    .hero h1 { font-size: 2.5rem; }
+    .features { grid-template-columns: 1fr; }
+    .project-row { grid-template-columns: 2rem 1fr; }
+    .project-row .date { display: none; }
+    .aside-grid { grid-template-columns: 1fr; }
+    .container { padding: 0 1.2rem; }
+    .nav { gap: 1rem; }
+  }
+
+  .demo-badge {
+    position: fixed; bottom: 1rem; right: 1rem;
+    background: var(--text); color: var(--bg);
+    font-family: var(--font-sans);
+    font-size: 0.65rem; padding: 0.3rem 0.8rem;
+    border-radius: 3px; letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header class="header">
+    <a href="#" class="logo">Guorui Tong</a>
+    <nav class="nav">
+      <a href="#">项目</a>
+      <a href="#">笔记</a>
+      <a href="#">爱好</a>
+      <a href="#">关于</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>记录 <span class="ampersand">&</span> 构建</h1>
+    <p>软件工程大三学生。从底层系统到前端界面，用代码解决问题的过程都记录在这里。</p>
+  </section>
+
+  <!-- Feature grid: 2x2 editorial -->
+  <div class="features">
+    <a href="#" class="feature-item">
+      <div class="num">001</div>
+      <h3>MiniSQL — 纯 Java SQL 引擎</h3>
+      <p>从零实现的轻量级关系型数据库，完整覆盖 SQL 解析、查询执行、B+ 树索引与事务管理。</p>
+      <div class="meta">课程项目 · 2026.06</div>
+    </a>
+    <a href="#" class="feature-item">
+      <div class="num">002</div>
+      <h3>Cosmic 3D — 宇宙可视化</h3>
+      <p>基于 Three.js 的 3D 星空场景，粒子系统与动态星轨，交互式视角控制。</p>
+      <div class="meta">个人项目 · 2026.06</div>
+    </a>
+    <a href="#" class="feature-item">
+      <div class="num">003</div>
+      <h3>文件系统仿真 — Rust + egui</h3>
+      <p>操作系统实验，Rust 实现 FAT 文件系统，位图分配、多级目录、GUI 实时状态展示。</p>
+      <div class="meta">课程项目 · 2026.06</div>
+    </a>
+    <a href="#" class="feature-item">
+      <div class="num">004</div>
+      <h3>Flask 成绩管理系统</h3>
+      <p>Shell 脚本迁移到 Flask Web 框架，双角色登录、SQLite 持久化、统计看板。</p>
+      <div class="meta">课程项目 · 2026.06</div>
+    </a>
+  </div>
+
+  <!-- Full project list -->
+  <div class="section-label">
+    <span>所有项目</span>
+    <a href="#">查看全部 →</a>
+  </div>
+  <div class="project-rows">
+    <a href="#" class="project-row">
+      <span class="index">05</span>
+      <div class="info">
+        <h3>数据库大作业 — 设计与实施</h3>
+        <p>需求分析 → E-R 图 → 3NF 规范化 → SQL 实现 → 存储过程与触发器</p>
+        <div class="tags"><span class="tag">数据库</span><span class="tag">SQL</span><span class="tag">E-R 图</span></div>
+      </div>
+      <span class="date">2026.06</span>
+    </a>
+    <a href="#" class="project-row">
+      <span class="index">06</span>
+      <div class="info">
+        <h3>HDFS 客户端操作</h3>
+        <p>Hadoop 3.3.4 分布式集群，Java API 实现 11 个 HDFS 操作，完整 CRUD</p>
+        <div class="tags"><span class="tag">Java</span><span class="tag">Hadoop</span><span class="tag">HDFS</span></div>
+      </div>
+      <span class="date">2026.04</span>
+    </a>
+    <a href="#" class="project-row">
+      <span class="index">07</span>
+      <div class="info">
+        <h3>Linux 成绩管理系统（Shell）</h3>
+        <p>多用户 Shell 脚本系统，增删改查、权限控制、CSV 批量导入导出</p>
+        <div class="tags"><span class="tag">Shell</span><span class="tag">Linux</span></div>
+      </div>
+      <span class="date">2026.06</span>
+    </a>
+    <a href="#" class="project-row">
+      <span class="index">08</span>
+      <div class="info">
+        <h3>PPT 设计作品集</h3>
+        <p>HTML/CSS/JavaScript 和 Python 程序化生成演示文稿，多种风格</p>
+        <div class="tags"><span class="tag">设计</span><span class="tag">HTML</span><span class="tag">Python</span></div>
+      </div>
+      <span class="date">2026.06</span>
+    </a>
+  </div>
+
+  <!-- Notes & Hobbies -->
+  <div class="aside-grid">
+    <div class="aside-block">
+      <h4>笔记</h4>
+      <a href="#" class="aside-item">
+        <div class="date">2026.07.16</div>
+        <div class="title">期末复习资料清理记录</div>
+        <div class="desc">大二下结束后的资料整理，区分原生资料与 AI 生成产物</div>
+      </a>
+      <a href="#" class="aside-item" style="opacity:0.4;">
+        <div class="date">—</div>
+        <div class="title">更多笔记即将到来</div>
+        <div class="desc">正在整理 MiniSQL、文件系统仿真等项目的技术笔记</div>
+      </a>
+    </div>
+    <div class="aside-block">
+      <h4>爱好</h4>
+      <a href="#" class="aside-item">
+        <div class="title">3D 图形与可视化</div>
+        <div class="desc">Three.js 场景、粒子系统、交互式可视化</div>
+      </a>
+      <a href="#" class="aside-item">
+        <div class="title">PPT / 演示设计</div>
+        <div class="desc">代码生成演示文稿，暖色克制、纯版式、高密度</div>
+      </a>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 Guorui Tong</p>
+    <div class="footer-links">
+      <a href="https://github.com/tgrlhl-linux">GitHub</a>
+      <a href="mailto:1767242545@qq.com">Email</a>
+    </div>
+  </footer>
+</div>
+
+<div class="demo-badge">提案 03 · 编辑式极简</div>
+</body>
+</html>

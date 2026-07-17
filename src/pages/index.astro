@@ -2,14 +2,15 @@
 import Base from '../layouts/Base.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import { getCollection } from 'astro:content';
+import { query } from '../db/mysql';
 
 const projects = (await getCollection('projects'))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
   .slice(0, 5);
 
-const notes = (await getCollection('notes'))
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
-  .slice(0, 3);
+const dbNotes = await query(
+  'SELECT id, title, LEFT(content, 150) AS excerpt, description, course, tags, created_at FROM notes ORDER BY created_at DESC LIMIT 3'
+);
 
 const hobbies = await getCollection('hobbies');
 ---
@@ -37,18 +38,18 @@ const hobbies = await getCollection('hobbies');
     </div>
   </section>
 
-  {notes.length > 0 && (
+  {dbNotes.length > 0 && (
     <section class="section">
       <div class="section-header">
         <h2>最近笔记</h2>
         <a href="/notes" class="section-more">查看全部 →</a>
       </div>
       <div class="note-list">
-        {notes.map(n => (
+        {dbNotes.map(n => (
           <a href={`/notes/${n.id}`} class="note-item">
-            <span class="note-date">{n.data.date.toLocaleDateString('zh-CN')}</span>
-            <span class="note-title">{n.data.title}</span>
-            <span class="note-desc">{n.data.description}</span>
+            <span class="note-date">{new Date(n.created_at).toLocaleDateString('zh-CN')}</span>
+            <span class="note-title">{n.title}</span>
+            <span class="note-desc">{n.excerpt || n.description || ''}</span>
           </a>
         ))}
       </div>

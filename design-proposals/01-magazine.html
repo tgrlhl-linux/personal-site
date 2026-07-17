@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>设计提案 01 — 杂志风</title>
+<style>
+  :root {
+    --bg: #f8f6f2;
+    --text: #1c1a18;
+    --text-secondary: #6b625b;
+    --text-muted: #a09890;
+    --accent: #c17f59;
+    --accent-light: #e8ddd0;
+    --hairline: rgba(0,0,0,0.07);
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    --font-serif: Georgia, "Noto Serif SC", serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== Layout ===== */
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+
+  /* ===== Header ===== */
+  .header {
+    padding: 1.5rem 0;
+    border-bottom: 1px solid var(--hairline);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .logo {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--text);
+  }
+  .nav { display: flex; gap: 2rem; }
+  .nav a {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .nav a:hover { color: var(--accent); }
+
+  /* ===== Hero ===== */
+  .hero {
+    padding: 5rem 0 4rem;
+    max-width: 800px;
+  }
+  .hero-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+  }
+  .hero h1 {
+    font-size: 3.5rem;
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    margin-bottom: 1.5rem;
+    color: var(--text);
+  }
+  .hero h1 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+  .hero p {
+    font-size: 1.15rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    max-width: 560px;
+  }
+
+  /* ===== Section ===== */
+  .section { padding: 3rem 0; }
+  .section-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .section-header h2 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .section-more {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+  }
+  .section-more:hover { color: var(--accent); }
+
+  /* ===== Magazine Project List ===== */
+  .project-list { }
+  .project-row {
+    display: grid;
+    grid-template-columns: 3rem 1fr 8rem;
+    gap: 1.5rem;
+    align-items: baseline;
+    padding: 1.2rem 0;
+    border-bottom: 1px solid var(--hairline);
+    text-decoration: none;
+    color: var(--text);
+    transition: background 0.2s;
+    cursor: pointer;
+  }
+  .project-row:hover { background: rgba(0,0,0,0.02); margin: 0 -1rem; padding: 1.2rem 1rem; border-radius: 4px; }
+  .project-row:first-child { border-top: 1px solid var(--hairline); }
+  .project-num {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .project-info { }
+  .project-info h3 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 0.2rem;
+  }
+  .project-info p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+  }
+  .project-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-align: right;
+  }
+
+  /* ===== Featured Split ===== */
+  .featured-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin: 1rem 0;
+  }
+  .featured-card {
+    padding: 2rem;
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.3s;
+  }
+  .featured-card:hover {
+    border-color: var(--accent-light);
+    background: rgba(193, 127, 89, 0.03);
+  }
+  .featured-card .tag {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 0.8rem;
+    display: block;
+  }
+  .featured-card h3 {
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+  .featured-card p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  /* ===== Tags ===== */
+  .tags { display: flex; gap: 0.4rem; margin-top: 0.8rem; flex-wrap: wrap; }
+  .tag {
+    font-size: 0.75rem;
+    padding: 0.2em 0.6em;
+    border: 1px solid var(--hairline);
+    border-radius: 3px;
+    color: var(--text-muted);
+  }
+
+  /* ===== Footer ===== */
+  .footer {
+    border-top: 1px solid var(--hairline);
+    padding: 2.5rem 0;
+    margin-top: 3rem;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 1rem;
+  }
+  .footer p { font-size: 0.8rem; color: var(--text-muted); }
+  .footer-links { display: flex; gap: 1.5rem; }
+  .footer-links a { font-size: 0.8rem; color: var(--text-muted); text-decoration: none; }
+  .footer-links a:hover { color: var(--accent); }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 768px) {
+    .hero h1 { font-size: 2.2rem; }
+    .project-row { grid-template-columns: 2rem 1fr; }
+    .project-meta { display: none; }
+    .featured-split { grid-template-columns: 1fr; }
+    .nav { gap: 1rem; }
+    .container { padding: 0 1.2rem; }
+  }
+
+  /* ===== Demo notice ===== */
+  .demo-badge {
+    position: fixed; bottom: 1rem; right: 1rem;
+    background: var(--accent); color: #fff;
+    font-size: 0.7rem; padding: 0.3rem 0.8rem;
+    border-radius: 4px; letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <header class="header">
+    <a href="#" class="logo">Guorui</a>
+    <nav class="nav">
+      <a href="#">项目</a>
+      <a href="#">笔记</a>
+      <a href="#">爱好</a>
+      <a href="#">关于</a>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <p class="hero-label">Software Engineer · Guizhou University</p>
+    <h1>记录·构建<br/><em>保持好奇</em></h1>
+    <p>从底层系统到前端界面，用代码解决问题的过程都记录在这里。软件工程大三，目前关注数据库、系统编程与Web全栈。</p>
+  </section>
+
+  <!-- Featured split -->
+  <section class="section">
+    <div class="section-header">
+      <h2>精选</h2>
+    </div>
+    <div class="featured-split">
+      <a href="#" class="featured-card">
+        <span class="tag">项目</span>
+        <h3>MiniSQL — 纯 Java SQL 引擎</h3>
+        <p>从零实现的轻量级关系型数据库，完整覆盖 SQL 解析→执行→存储全链路，零外部依赖。</p>
+        <div class="tags"><span class="tag">Java</span><span class="tag">SQL</span><span class="tag">数据库</span></div>
+      </a>
+      <a href="#" class="featured-card">
+        <span class="tag">笔记</span>
+        <h3>期末复习资料清理记录</h3>
+        <p>大二下结束后整理资料，区分原生资料与 AI 生成产物，保留学校原始文件，清理临时中间件。</p>
+        <div class="tags"><span class="tag">效率</span><span class="tag">文件管理</span></div>
+      </a>
+    </div>
+  </section>
+
+  <!-- Projects -->
+  <section class="section">
+    <div class="section-header">
+      <h2>项目</h2>
+      <a href="#" class="section-more">查看全部 →</a>
+    </div>
+    <div class="project-list">
+      <a href="#" class="project-row">
+        <span class="project-num">01</span>
+        <div class="project-info">
+          <h3>MiniSQL — 纯 Java SQL 引擎</h3>
+          <p>从零实现的轻量级关系型数据库，词法分析→语法分析→查询执行→B+树索引→事务管理</p>
+        </div>
+        <span class="project-meta">2026.06</span>
+      </a>
+      <a href="#" class="project-row">
+        <span class="project-num">02</span>
+        <div class="project-info">
+          <h3>Flask 成绩管理系统（Web）</h3>
+          <p>Shell 版本迁移到 Flask Web 框架，双角色登录、数据库持久化、统计看板</p>
+        </div>
+        <span class="project-meta">2026.06</span>
+      </a>
+      <a href="#" class="project-row">
+        <span class="project-num">03</span>
+        <div class="project-info">
+          <h3>文件系统仿真 — Rust + egui</h3>
+          <p>操作系统实验，Rust 模拟 FAT 文件系统，位图管理、多级目录、GUI 可视化</p>
+        </div>
+        <span class="project-meta">2026.06</span>
+      </a>
+      <a href="#" class="project-row">
+        <span class="project-num">04</span>
+        <div class="project-info">
+          <h3>Cosmic 3D — 三维宇宙可视化</h3>
+          <p>Three.js 3D 星空动画，粒子系统、动态星轨、交互控制</p>
+        </div>
+        <span class="project-meta">2026.06</span>
+      </a>
+      <a href="#" class="project-row">
+        <span class="project-num">05</span>
+        <div class="project-info">
+          <h3>数据库大作业 — 设计与实施</h3>
+          <p>需求分析→E-R图→3NF规范化→SQL实现→存储过程与触发器</p>
+        </div>
+        <span class="project-meta">2026.06</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>© 2026 Guorui Tong · 记录成长 保持好奇</p>
+    <div class="footer-links">
+      <a href="https://github.com/tgrlhl-linux">GitHub</a>
+      <a href="mailto:1767242545@qq.com">Email</a>
+    </div>
+  </footer>
+</div>
+
+<div class="demo-badge">提案 01 · 杂志风</div>
+</body>
+</html>

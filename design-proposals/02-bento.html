@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>设计提案 02 — Bento Grid</title>
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --bg-card: #ffffff;
+    --text: #1c1a18;
+    --text-secondary: #6b625b;
+    --text-muted: #9c8c80;
+    --accent: #c17f59;
+    --accent-light: #ede3d8;
+    --hairline: rgba(0,0,0,0.06);
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    --font-mono: "Consolas", "JetBrains Mono", monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+
+  /* Header */
+  .header {
+    padding: 1.5rem 0;
+    border-bottom: 1px solid var(--hairline);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .logo {
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    text-decoration: none;
+    color: var(--text);
+  }
+  .logo span { color: var(--accent); }
+  .nav { display: flex; gap: 1.5rem; }
+  .nav a {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 0.3rem 0;
+    position: relative;
+  }
+  .nav a:hover { color: var(--accent); }
+  .nav a.active { color: var(--text); }
+
+  /* Hero - Compact */
+  .hero {
+    padding: 3rem 0 2.5rem;
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .hero h1 {
+    font-size: 2.8rem;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.8rem;
+  }
+  .hero .dot { color: var(--accent); }
+  .hero p {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  /* ===== Bento Grid ===== */
+  .bento {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    padding: 1rem 0 3rem;
+  }
+
+  .bento-card {
+    background: var(--bg-card);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+  }
+  .bento-card:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    transform: translateY(-2px);
+    border-color: var(--accent-light);
+  }
+
+  /* Sizes */
+  .card-hero { grid-column: span 2; grid-row: span 2; padding: 2rem; justify-content: center; }
+  .card-wide { grid-column: span 2; }
+  .card-tall { grid-row: span 2; }
+  .card-square { }
+
+  .bento-card .label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    margin-bottom: 0.8rem;
+  }
+  .bento-card h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    line-height: 1.3;
+  }
+  .bento-card p {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    flex: 1;
+  }
+  .bento-card .count {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+  .bento-card .tags {
+    display: flex; flex-wrap: wrap; gap: 0.3rem;
+    margin-top: 0.8rem;
+  }
+  .bento-card .tag {
+    font-size: 0.72rem;
+    padding: 0.2em 0.6em;
+    background: var(--accent-light);
+    border-radius: 4px;
+    color: var(--accent);
+  }
+
+  /* Specific card overrides */
+  .card-hero h3 { font-size: 1.8rem; margin-bottom: 0.1rem; }
+  .card-hero h3 .highlight { color: var(--accent); }
+  .card-hero p { font-size: 0.95rem; margin-bottom: 1.2rem; }
+  .card-hero .cta {
+    display: inline-block;
+    padding: 0.5rem 1.2rem;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    text-decoration: none;
+    align-self: flex-start;
+  }
+  .card-hero .cta:hover { background: #a06848; }
+
+  .note-row {
+    display: flex; flex-direction: column; gap: 0.6rem;
+    margin-top: 0.5rem;
+  }
+  .note-row-item {
+    display: flex; gap: 0.8rem; align-items: baseline;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--hairline);
+    text-decoration: none; color: var(--text);
+    font-size: 0.85rem;
+  }
+  .note-row-item:last-child { border-bottom: none; }
+  .note-row-item .date { font-size: 0.75rem; color: var(--text-muted); min-width: 4rem; }
+  .note-row-item:hover .title { color: var(--accent); }
+
+  .hobby-items {
+    display: flex; flex-direction: column; gap: 0.6rem;
+    margin-top: 0.5rem;
+  }
+  .hobby-item {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.5rem 0.8rem;
+    border-radius: 6px;
+    text-decoration: none; color: var(--text);
+    font-size: 0.88rem;
+  }
+  .hobby-item:hover { background: var(--bg); }
+  .hobby-item .icon { font-size: 1.2rem; }
+
+  /* Footer */
+  .footer {
+    border-top: 1px solid var(--hairline);
+    padding: 2rem 0;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 1rem;
+  }
+  .footer p { font-size: 0.8rem; color: var(--text-muted); }
+  .footer-links { display: flex; gap: 1.5rem; }
+  .footer-links a { font-size: 0.8rem; color: var(--text-muted); text-decoration: none; }
+  .footer-links a:hover { color: var(--accent); }
+
+  @media (max-width: 768px) {
+    .bento { grid-template-columns: 1fr 1fr; }
+    .card-hero { grid-column: span 2; grid-row: span 1; }
+    .container { padding: 0 1.2rem; }
+  }
+  @media (max-width: 480px) {
+    .bento { grid-template-columns: 1fr; }
+    .card-wide, .card-hero { grid-column: span 1; }
+    .hero h1 { font-size: 2rem; }
+  }
+
+  .demo-badge {
+    position: fixed; bottom: 1rem; right: 1rem;
+    background: var(--accent); color: #fff;
+    font-size: 0.7rem; padding: 0.3rem 0.8rem;
+    border-radius: 4px; letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header class="header">
+    <a href="#" class="logo">G<span>R</span></a>
+    <nav class="nav">
+      <a href="#" class="active">首页</a>
+      <a href="#">项目</a>
+      <a href="#">笔记</a>
+      <a href="#">关于</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>童国睿<span class="dot">.</span></h1>
+    <p>软件工程大三 · 贵州大学 — 从底层系统到前端界面，记录用代码解决问题的过程</p>
+  </section>
+
+  <!-- Bento Grid -->
+  <div class="bento">
+    <!-- Hero card (featured project) -->
+    <a href="#" class="bento-card card-hero">
+      <span class="label">精选项目</span>
+      <h3><span class="highlight">MiniSQL</span> — 纯 Java<br/>SQL 引擎</h3>
+      <p>从零实现的轻量级关系型数据库，词法分析→语法分析→查询执行→B+树索引→事务管理，零外部依赖。</p>
+      <div class="tags">
+        <span class="tag">Java</span>
+        <span class="tag">SQL</span>
+        <span class="tag">数据库</span>
+        <span class="tag">编译器</span>
+      </div>
+    </a>
+
+    <!-- Stats -->
+    <div class="bento-card card-square">
+      <span class="label">项目</span>
+      <div class="count">8</div>
+      <p style="font-size:0.8rem; color:var(--text-muted);">已完成</p>
+    </div>
+
+    <!-- Latest note -->
+    <div class="bento-card card-square">
+      <span class="label">最新笔记</span>
+      <div class="note-row">
+        <a href="#" class="note-row-item">
+          <span class="date">2026.07</span>
+          <span class="title">期末复习资料清理记录</span>
+        </a>
+        <a href="#" class="note-row-item" style="opacity:0.5; pointer-events:none;">
+          <span class="date">—</span>
+          <span class="title">更多笔记即将到来</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Hobbies -->
+    <div class="bento-card card-square">
+      <span class="label">爱好</span>
+      <div class="hobby-items">
+        <a href="#" class="hobby-item">
+          <span class="icon">✦</span> 3D 图形与可视化
+        </a>
+        <a href="#" class="hobby-item">
+          <span class="icon">▤</span> PPT / 演示设计
+        </a>
+      </div>
+    </div>
+
+    <!-- Projects row -->
+    <a href="#" class="bento-card card-wide">
+      <span class="label">近期项目</span>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
+        <div>
+          <h3 style="font-size:1rem;">Cosmic 3D</h3>
+          <p style="font-size:0.8rem;">Three.js 宇宙星空可视化</p>
+        </div>
+        <div>
+          <h3 style="font-size:1rem;">文件系统仿真</h3>
+          <p style="font-size:0.8rem;">Rust + egui FAT 模拟</p>
+        </div>
+        <div>
+          <h3 style="font-size:1rem;">Flask 成绩管理</h3>
+          <p style="font-size:0.8rem;">Shell→Flask Web 迁移</p>
+        </div>
+        <div>
+          <h3 style="font-size:1rem;">HDFS 客户端</h3>
+          <p style="font-size:0.8rem;">Hadoop 3.3.4 全操作</p>
+        </div>
+      </div>
+    </a>
+
+    <!-- Skill tags -->
+    <div class="bento-card card-square">
+      <span class="label">技能</span>
+      <div class="tags" style="margin-top:0.6rem;">
+        <span class="tag">Java</span>
+        <span class="tag">Rust</span>
+        <span class="tag">Python</span>
+        <span class="tag">JavaScript</span>
+        <span class="tag">Astro</span>
+        <span class="tag">Flask</span>
+        <span class="tag">SQL</span>
+        <span class="tag">Git</span>
+        <span class="tag">Linux</span>
+        <span class="tag">Three.js</span>
+        <span class="tag" style="opacity:0.4;">+</span>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="bento-card card-square" style="align-items:center; justify-content:center; text-align:center; background: var(--accent); color: #fff; border-color: var(--accent);">
+      <p style="font-size:0.85rem; color:rgba(255,255,255,0.8); margin-bottom:0.3rem;">了解更多</p>
+      <p style="font-size:0.75rem; color:rgba(255,255,255,0.6);">关于我 →</p>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 Guorui Tong</p>
+    <div class="footer-links">
+      <a href="https://github.com/tgrlhl-linux">GitHub</a>
+      <a href="mailto:1767242545@qq.com">Email</a>
+    </div>
+  </footer>
+</div>
+
+<div class="demo-badge">提案 02 · Bento Grid</div>
+</body>
+</html>

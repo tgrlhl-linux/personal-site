@@ -8,6 +8,8 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "astro": "^5.0.0"
+    "@astrojs/vercel": "^8.2.11",
+    "astro": "^5.0.0",
+    "mysql2": "^3.23.0"
   }
 }

@@ -1,9 +1,10 @@
 ---
 import Base from '../layouts/Base.astro';
 import { getCollection } from 'astro:content';
+import { query } from '../db/mysql';
 
+const dbNotes = await query('SELECT id, title, LEFT(content, 100) AS excerpt, created_at FROM notes ORDER BY created_at DESC');
 const projects = await getCollection('projects');
-const notes = await getCollection('notes');
 
 type Event = {
   date: Date;
@@ -21,10 +22,10 @@ const events: Event[] = [
     type: 'project' as const,
     url: `/projects/${p.id}`,
   })),
-  ...notes.map(n => ({
-    date: n.data.date,
-    title: n.data.title,
-    description: n.data.description,
+  ...dbNotes.map(n => ({
+    date: new Date(n.created_at),
+    title: n.title,
+    description: (n.excerpt || n.title),
     type: 'note' as const,
     url: `/notes/${n.id}`,
   })),

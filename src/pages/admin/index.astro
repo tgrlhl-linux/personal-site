@@ -1,0 +1,109 @@
+---
+const token = Astro.cookies.get('admin_token')?.value;
+let authenticated = false;
+if (token) {
+  try {
+    const decoded = Buffer.from(token, 'base64').toString();
+    const [username] = decoded.split(':');
+    authenticated = username === (import.meta.env.ADMIN_USERNAME || 'admin');
+  } catch {}
+}
+if (!authenticated) return Astro.redirect('/admin/login');
+---
+
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理概览</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif; background:#f5f4f0; color:#1c1a18; }
+    .layout { display:flex; min-height:100vh; }
+    .side { width:200px; background:#1a1a24; color:#c8c8d0; display:flex; flex-direction:column; flex-shrink:0; position:sticky; top:0; height:100vh; }
+    .side-logo { padding:1.2rem; font-size:0.85rem; font-weight:600; border-bottom:1px solid rgba(255,255,255,0.08); }
+    .side-nav { flex:1; padding:0.5rem 0; }
+    .side-nav a { display:block; padding:0.6rem 1.2rem; font-size:0.85rem; color:#9a9aa8; text-decoration:none; border-left:2px solid transparent; }
+    .side-nav a:hover { background:rgba(255,255,255,0.04); color:#e8e8f0; }
+    .side-nav a.active { background:rgba(255,255,255,0.06); color:#fff; border-left-color:#c17f59; }
+    .side-foot { padding:1rem 1.2rem; border-top:1px solid rgba(255,255,255,0.08); font-size:0.78rem; }
+    .side-foot a { color:#7a7a8a; text-decoration:none; }
+    .side-foot a:hover { color:#c17f59; }
+    .main { flex:1; padding:2rem; max-width:900px; }
+    .hd { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; }
+    .hd h1 { font-size:1.4rem; font-weight:600; margin:0; }
+    .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-bottom:2rem; }
+    .stat { background:#fff; border:1px solid rgba(0,0,0,0.06); border-radius:8px; padding:1.5rem; text-align:center; }
+    .stat-num { font-size:2rem; font-weight:700; color:#c17f59; }
+    .stat-label { font-size:0.8rem; color:#8a8a9a; margin-top:0.2rem; }
+    .card { background:#fff; border:1px solid rgba(0,0,0,0.06); border-radius:8px; padding:1.5rem; }
+    .card h2 { font-size:1rem; font-weight:600; margin-bottom:0.8rem; }
+    .item { display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid rgba(0,0,0,0.04); }
+    .item:last-child { border:none; }
+    .item a { color:#1c1a18; text-decoration:none; font-size:0.9rem; }
+    .item a:hover { color:#c17f59; }
+    .item .date { font-size:0.78rem; color:#8a8a9a; }
+    .btn { padding:0.5rem 1.2rem; border-radius:4px; font-size:0.85rem; cursor:pointer; border:none; text-decoration:none; display:inline-block; }
+    .btn-pri { background:#c17f59; color:#fff; }
+    .btn-pri:hover { opacity:0.9; }
+    .loading { color:#8a8a9a; font-size:0.85rem; padding:1rem 0; }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="side">
+    <div class="side-logo">管理后台</div>
+    <nav class="side-nav">
+      <a href="/admin" class="active">概览</a>
+      <a href="/admin/notes">笔记</a>
+    </nav>
+    <div class="side-foot">
+      <a href="/">查看网站</a>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="hd">
+      <h1>概览</h1>
+      <a href="/admin/notes/new" class="btn btn-pri">写笔记</a>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-num" id="noteCount">-</div><div class="stat-label">笔记</div></div>
+      <div class="stat"><div class="stat-num" id="courseCount">-</div><div class="stat-label">课程分类</div></div>
+      <div class="stat"><div class="stat-num" id="hobbyCount">-</div><div class="stat-label">爱好</div></div>
+    </div>
+
+    <div class="card">
+      <h2>最近笔记</h2>
+      <div id="recentNotes"><div class="loading">加载中...</div></div>
+    </div>
+  </main>
+</div>
+
+<script>
+async function loadDashboard() {
+  var res = await fetch('/api/notes?limit=5');
+  var data = await res.json();
+  var notes = data.notes || [];
+
+  document.getElementById('noteCount').textContent = data.total || notes.length;
+  document.getElementById('courseCount').textContent = (data.courses || []).length;
+  document.getElementById('hobbyCount').textContent = '0';
+
+  var container = document.getElementById('recentNotes');
+  if (notes.length === 0) {
+    container.innerHTML = '<div style="color:#8a8a9a;font-size:0.85rem;">还没有笔记</div>';
+    return;
+  }
+  var html = '';
+  notes.forEach(function(n) {
+    var dateStr = n.created_at ? new Date(n.created_at).toLocaleDateString() : '';
+    html += '<div class="item"><a href="/admin/notes/edit/' + n.id + '">' + n.title + '</a><span class="date">' + dateStr + '</span></div>';
+  });
+  container.innerHTML = html;
+}
+loadDashboard();
+</script>
+</body>
+</html>

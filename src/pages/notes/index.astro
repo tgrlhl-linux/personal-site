@@ -1,30 +1,70 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { getCollection } from 'astro:content';
+import { query } from '../../db/mysql';
 
-const notes = (await getCollection('notes'))
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const search = Astro.url.searchParams.get('q') || '';
+const courseFilter = Astro.url.searchParams.get('course') || '';
+
+let where = '1=1';
+const params = [];
+if (search) {
+  where += ' AND (title LIKE ? OR content LIKE ?)';
+  params.push(`%${search}%`, `%${search}%`);
+}
+if (courseFilter) {
+  where += ' AND course = ?';
+  params.push(courseFilter);
+}
+
+const notes = await query(
+  `SELECT id, title, LEFT(content, 200) AS excerpt, course, tags, created_at
+   FROM notes WHERE ${where} ORDER BY created_at DESC`,
+  params
+);
+
+const courses = await query(
+  'SELECT DISTINCT course FROM notes WHERE course IS NOT NULL AND course != "" ORDER BY course'
+);
 ---
 
-<Base title="笔记" description="技术笔记与学习随笔">
+<Base title="笔记" description="课程笔记与技术思考">
   <div class="page-header">
     <h1>笔记</h1>
-    <p>学习中的思考、踩坑记录、知识总结</p>
+    <p>重点课程的知识整理与技术思考</p>
+  </div>
+
+  <div class="note-toolbar">
+    <form class="search-form" method="GET" action="/notes">
+      <input type="text" name="q" placeholder="搜索笔记..." value={search} class="search-input">
+      {courseFilter && <input type="hidden" name="course" value={courseFilter}>}
+      <button type="submit" class="search-btn">搜索</button>
+    </form>
+
+    <div class="course-filters">
+      <a href="/notes" class="course-tag {!courseFilter ? 'active' : ''}">全部</a>
+      {courses.map(c => (
+        <a href={`/notes?course=${encodeURIComponent(c.course)}`} class="course-tag {courseFilter === c.course ? 'active' : ''}">{c.course}</a>
+      ))}
+    </div>
   </div>
 
   {notes.length === 0 ? (
     <div class="empty-state">
-      <p>还没有笔记，敬请期待</p>
+      <p>还没有笔记</p>
+      {search && <p class="hint">没有找到匹配「{search}」的笔记</p>}
     </div>
   ) : (
     <div class="note-list-full">
       {notes.map(n => (
         <a href={`/notes/${n.id}`} class="note-entry card">
-          <time class="meta">{n.data.date.toLocaleDateString('zh-CN')}</time>
-          <h2>{n.data.title}</h2>
-          <p>{n.data.description}</p>
+          <div class="note-entry-top">
+            <time class="meta">{new Date(n.created_at).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+            {n.course && <span class="tag">{n.course}</span>}
+          </div>
+          <h2>{n.title}</h2>
+          <p>{n.excerpt}</p>
           <div class="note-tags">
-            {n.data.tags.map(t => <span class="tag">{t}</span>)}
+            {JSON.parse(n.tags || '[]').map(t => <span class="tag">{t}</span>)}
           </div>
         </a>
       ))}
@@ -33,28 +73,48 @@ const notes = (await getCollection('notes'))
 </Base>
 
 <style>
+  .note-toolbar { margin-bottom: 2rem; }
+  .search-form { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+  .search-input {
+    flex: 1; padding: 0.5rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius); font-size: 0.9rem;
+    background: var(--bg-card);
+  }
+  .search-input:focus { outline: none; border-color: var(--accent); }
+  .search-btn {
+    padding: 0.5rem 1rem; background: var(--accent);
+    color: #fff; border: none; border-radius: var(--radius);
+    font-size: 0.85rem; cursor: pointer;
+  }
+  .search-btn:hover { background: var(--accent-dark); }
+  .course-filters {
+    display: flex; gap: 0.4rem; flex-wrap: wrap;
+  }
+  .course-tag {
+    font-size: 0.8rem; padding: 0.25em 0.7em;
+    border: 1px solid var(--border); border-radius: 20px;
+    color: var(--text-secondary); text-decoration: none;
+    transition: all 0.15s;
+  }
+  .course-tag:hover { border-color: var(--accent); color: var(--accent); }
+  .course-tag.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
   .note-list-full { display: flex; flex-direction: column; gap: 0.8rem; }
   .note-entry {
-    display: block;
-    text-decoration: none;
-    color: var(--text);
+    display: block; text-decoration: none; color: var(--text);
     padding: 1.2rem 1.5rem;
   }
   .note-entry:hover { color: var(--text); }
-  .note-entry time { display: block; margin-bottom: 0.3rem; }
+  .note-entry-top { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; }
   .note-entry h2 {
-    font-size: 1.15rem;
-    margin: 0 0 0.4rem;
+    font-size: 1.15rem; margin: 0 0 0.4rem;
   }
   .note-entry p {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin: 0 0 0.6rem;
+    font-size: 0.88rem; color: var(--text-secondary);
+    margin: 0 0 0.6rem; line-height: 1.5;
   }
   .note-tags { display: flex; flex-wrap: wrap; }
-  .empty-state {
-    text-align: center;
-    padding: 4rem 0;
-    color: var(--text-muted);
-  }
+  .empty-state { text-align: center; padding: 4rem 0; color: var(--text-muted); }
+  .empty-state .hint { font-size: 0.85rem; margin-top: 0.5rem; }
 </style>

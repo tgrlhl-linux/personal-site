@@ -1,0 +1,174 @@
+---
+const token = Astro.cookies.get('admin_token')?.value;
+let authenticated = false;
+if (token) {
+  try {
+    const decoded = Buffer.from(token, 'base64').toString();
+    const [username] = decoded.split(':');
+    authenticated = username === (import.meta.env.ADMIN_USERNAME || 'admin');
+  } catch {}
+}
+if (!authenticated) return Astro.redirect('/admin/login');
+---
+
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>笔记管理</title>
+  <link rel="stylesheet" href="/admin/admin.css">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif; background:#f5f4f0; color:#1c1a18; }
+    .layout { display:flex; min-height:100vh; }
+    .side { width:200px; background:#1a1a24; color:#c8c8d0; display:flex; flex-direction:column; flex-shrink:0; position:sticky; top:0; height:100vh; }
+    .side-logo { padding:1.2rem; font-size:0.85rem; font-weight:600; border-bottom:1px solid rgba(255,255,255,0.08); }
+    .side-nav { flex:1; padding:0.5rem 0; }
+    .side-nav a { display:block; padding:0.6rem 1.2rem; font-size:0.85rem; color:#9a9aa8; text-decoration:none; border-left:2px solid transparent; }
+    .side-nav a:hover { background:rgba(255,255,255,0.04); color:#e8e8f0; }
+    .side-nav a.active { background:rgba(255,255,255,0.06); color:#fff; border-left-color:#c17f59; }
+    .side-foot { padding:1rem 1.2rem; border-top:1px solid rgba(255,255,255,0.08); font-size:0.78rem; }
+    .side-foot a { color:#7a7a8a; text-decoration:none; }
+    .side-foot a:hover { color:#c17f59; }
+    .main { flex:1; padding:2rem; max-width:960px; }
+    .hd { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; }
+    .hd h1 { font-size:1.4rem; font-weight:600; margin:0; }
+    .hd p { font-size:0.82rem; color:#8a8a9a; margin:0; }
+    .filters { display:flex; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap; }
+    .filters input, .filters select { padding:0.4rem 0.7rem; border:1px solid rgba(0,0,0,0.08); border-radius:4px; font-size:0.82rem; }
+    .filters input { flex:1; min-width:200px; }
+    .btn { padding:0.5rem 1.2rem; border-radius:4px; font-size:0.85rem; cursor:pointer; border:none; text-decoration:none; display:inline-block; }
+    .btn-pri { background:#c17f59; color:#fff; }
+    .btn-pri:hover { opacity:0.9; }
+    .btn-sec { background:#f5f4f0; color:#1c1a18; border:1px solid rgba(0,0,0,0.1); }
+    .btn-sec:hover { background:#e8e4dd; }
+    .btn-del { background:#ff6b6b; color:#fff; }
+    .btn-sm { padding:0.3rem 0.8rem; font-size:0.78rem; }
+    .card { background:#fff; border:1px solid rgba(0,0,0,0.06); border-radius:8px; padding:0; overflow:hidden; }
+    table { width:100%; border-collapse:collapse; }
+    th { text-align:left; padding:0.6rem 0.8rem; font-weight:500; color:#8a8a9a; border-bottom:1px solid rgba(0,0,0,0.06); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.5px; }
+    td { padding:0.5rem 0.8rem; border-bottom:1px solid rgba(0,0,0,0.04); font-size:0.85rem; }
+    tr:hover td { background:rgba(0,0,0,0.01); }
+    .td-title a { color:#1c1a18; text-decoration:none; font-weight:500; }
+    .td-title a:hover { color:#c17f59; }
+    .td-meta { color:#8a8a9a; font-size:0.8rem; }
+    .td-actions { text-align:right; }
+    .tag { display:inline-block; font-size:0.7rem; padding:0.15em 0.5em; background:#ede3d8; color:#c17f59; border-radius:3px; }
+    .empty { text-align:center; padding:3rem; color:#8a8a9a; }
+    .loading { text-align:center; padding:2rem; color:#8a8a9a; }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="side">
+    <div class="side-logo">管理后台</div>
+    <nav class="side-nav">
+      <a href="/admin">概览</a>
+      <a href="/admin/notes" class="active">笔记</a>
+    </nav>
+    <div class="side-foot">
+      <a href="/">查看网站</a>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="hd">
+      <div><h1>笔记管理</h1><p id="countInfo">加载中...</p></div>
+      <a href="/admin/notes/new" class="btn btn-pri">写新笔记</a>
+    </div>
+
+    <div class="filters">
+      <input type="text" id="searchInput" placeholder="搜索笔记...">
+      <select id="courseSelect">
+        <option value="">全部课程</option>
+      </select>
+      <button class="btn btn-pri btn-sm" id="filterBtn">筛选</button>
+    </div>
+
+    <div id="noteList"><div class="loading">加载中...</div></div>
+  </main>
+</div>
+
+<script>
+let allNotes = [];
+
+async function loadNotes() {
+  const q = document.getElementById('searchInput').value;
+  const course = document.getElementById('courseSelect').value;
+  let url = '/api/notes';
+  const params = [];
+  if (q) params.push('q=' + encodeURIComponent(q));
+  if (course) params.push('course=' + encodeURIComponent(course));
+  if (params.length) url += '?' + params.join('&');
+
+  const res = await fetch(url);
+  const data = await res.json();
+  allNotes = data.notes || [];
+
+  document.getElementById('countInfo').textContent = '共 ' + allNotes.length + ' 篇笔记';
+
+  const sel = document.getElementById('courseSelect');
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="">全部课程</option>';
+  (data.courses || []).forEach(function(c) {
+    sel.innerHTML += '<option value="' + c + '">' + c + '</option>';
+  });
+  sel.value = currentVal;
+
+  renderNotes();
+}
+
+function renderNotes() {
+  const container = document.getElementById('noteList');
+  if (allNotes.length === 0) {
+    container.innerHTML = '<div class="empty">还没有笔记</div>';
+    return;
+  }
+  var html = '<div class="card"><table><thead><tr><th>标题</th><th>课程</th><th>日期</th><th></th></tr></thead><tbody>';
+  allNotes.forEach(function(n) {
+    var tags = '';
+    try {
+      var parsed = JSON.parse(n.tags || '[]');
+      tags = parsed.map(function(t) { return '<span class="tag">' + t + '</span>'; }).join('');
+    } catch(e) {}
+    var courseBadge = n.course ? '<span class="tag">' + n.course + '</span>' : '';
+    var dateStr = n.created_at ? new Date(n.created_at).toLocaleDateString() : '';
+    html += '<tr>';
+    html += '<td class="td-title"><a href="/admin/notes/edit/' + n.id + '">' + escapeHtml(n.title) + '</a></td>';
+    html += '<td class="td-meta">' + courseBadge + '</td>';
+    html += '<td class="td-meta">' + dateStr + '</td>';
+    html += '<td class="td-actions">';
+    html += '<a href="/admin/notes/edit/' + n.id + '" class="btn btn-sec btn-sm">编辑</a> ';
+    html += '<button class="btn btn-del btn-sm" data-id="' + n.id + '" data-title="' + escapeHtml(n.title) + '">删除</button>';
+    html += '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+
+function escapeHtml(str) {
+  var div = document.createElement('div');
+  div.appendChild(document.createTextNode(str || ''));
+  return div.innerHTML;
+}
+
+document.getElementById('noteList').addEventListener('click', async function(e) {
+  if (e.target.tagName === 'BUTTON' && e.target.textContent === '删除') {
+    var id = e.target.dataset.id;
+    var title = e.target.dataset.title;
+    if (!confirm('确定删除 ' + title + ' ？')) return;
+    var res = await fetch('/api/notes/' + id, { method: 'DELETE' });
+    if (res.ok) { loadNotes(); }
+    else { alert('删除失败'); }
+  }
+});
+
+document.getElementById('filterBtn').addEventListener('click', loadNotes);
+document.getElementById('searchInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') loadNotes();
+});
+
+loadNotes();
+</script>
+</body>
+</html>
