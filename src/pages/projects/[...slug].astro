@@ -21,8 +21,13 @@ if (!slug) {
   else project = rows[0];
 }
 
-const meta = project ? JSON.parse(project.metadata || '{}') : {};
-const tagList = project ? (() => { try { return JSON.parse(project.tags || '[]'); } catch { return []; } })() : [];
+function safeParse(val, fallback) {
+  if (val == null) return fallback;
+  if (typeof val === 'object') return val;
+  try { return JSON.parse(val); } catch { return fallback; }
+}
+const meta = project ? safeParse(project.metadata, {}) : {};
+const tagList = project ? safeParse(project.tags, []) : [];
 const statusLabel = { completed: '已完成', 'in-progress': '进行中', archived: '归档' };
 const catLabel = { course: '课程', personal: '个人', tool: '工具' };
 
