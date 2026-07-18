@@ -50,81 +50,74 @@ projects.forEach(p => {
   {projects.length === 0 ? (
     <div class="pp-empty">还没有项目</div>
   ) : (
-    <div class="pp-bento">
+    <div class="pp-layout">
 
-      <!-- Stats -->
-      <div class="pp-stat" style="--sc:#f0883e;--sb:rgba(240,136,62,0.2)">
-        <div class="stat-icon">🛠️</div>
-        <div class="stat-num">{projects.length}</div>
-        <div class="stat-label">项目总数</div>
-      </div>
-      <div class="pp-stat" style="--sc:#79c0ff;--sb:rgba(121,192,255,0.2)">
-        <div class="stat-icon">📂</div>
-        <div class="stat-num">{sortedGroups.length}</div>
-        <div class="stat-label">分类</div>
-      </div>
-      <div class="pp-stat" style="--sc:#3fb950;--sb:rgba(63,185,80,0.2)">
-        <div class="stat-icon">✅</div>
-        <div class="stat-num">{totalStatus.completed || 0}</div>
-        <div class="stat-label">已完成</div>
-      </div>
-      <div class="pp-stat" style="--sc:#d29922;--sb:rgba(210,153,34,0.2)">
-        <div class="stat-icon">🔄</div>
-        <div class="stat-num">{totalStatus['in-progress'] || 0}</div>
-        <div class="stat-label">进行中</div>
-      </div>
-
-      <!-- Featured: 最新项目作为主卡 -->
-      {(() => {
-        const featured = projects[0];
-        if (!featured) return '';
-        const meta = (() => { try { return JSON.parse(featured.metadata || '{}'); } catch { return {}; } })();
-        const tagList = (() => { try { return JSON.parse(featured.tags || '[]'); } catch { return []; } })();
-        return (
-          <a href={`/projects/${featured.slug}`} class="pp-featured" style={`--cc:${catColor(featured.category)}`}>
-            <div class="pf-label">
-              <span class="pf-cat" style={`background:${catColor(featured.category)}`}>{catLabel(featured.category)}</span>
-              <span class="pf-status">{meta.projectStatus === 'completed' ? '已完成' : meta.projectStatus === 'in-progress' ? '进行中' : ''}</span>
-            </div>
-            <div class="pf-title">{featured.title}</div>
-            <div class="pf-desc">{featured.excerpt}</div>
-            <div class="pf-tags">
-              {tagList.slice(0, 4).map(t => <span class="pf-tag">{t}</span>)}
-            </div>
-          </a>
-        );
-      })()}
-
-      <!-- 分类分组 -->
-      {sortedGroups.map(([cat, items]) => (
-        <div class="pp-group" style={`--cc:${catColor(cat)}`}>
-          <div class="pg-hd">
-            <span class="pg-dot" style={`background:${catColor(cat)};box-shadow:0 0 6px ${catColor(cat)}`}></span>
-            <span class="pg-name">{catLabel(cat)}</span>
-            <span class="pg-count">{items.length}</span>
-          </div>
-          <div class="pg-body">
-            {items.map((p, i) => {
-              const meta = (() => { try { return JSON.parse(p.metadata || '{}'); } catch { return {}; } })();
-              const dateStr = meta.date ? new Date(meta.date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'short' }) : '';
-              const tagList = (() => { try { return JSON.parse(p.tags || '[]'); } catch { return []; } })();
-              return (
-                <a href={`/projects/${p.slug}`} class="pg-item">
-                  <div class="pgi-num">{String(i + 1).padStart(2, '0')}</div>
-                  <div class="pgi-info">
-                    <div class="pgi-title">{p.title}</div>
-                    <div class="pgi-desc">{p.excerpt}</div>
-                    <div class="pgi-tags">
-                      {tagList.slice(0, 3).map(t => <span class="pgi-tag">{t}</span>)}
-                    </div>
-                  </div>
-                  <div class="pgi-date">{dateStr}</div>
-                </a>
-              );
-            })}
-          </div>
+      <!-- Stats row -->
+      <div class="pp-stats">
+        <div class="pp-stat" style="--sc:#f0883e;--sb:rgba(240,136,62,0.2)">
+          <div class="stat-icon">🛠️</div>
+          <div class="stat-num">{projects.length}</div>
+          <div class="stat-label">项目总数</div>
         </div>
-      ))}
+        <div class="pp-stat" style="--sc:#79c0ff;--sb:rgba(121,192,255,0.2)">
+          <div class="stat-icon">📂</div>
+          <div class="stat-num">{sortedGroups.length}</div>
+          <div class="stat-label">分类</div>
+        </div>
+        <div class="pp-stat" style="--sc:#3fb950;--sb:rgba(63,185,80,0.2)">
+          <div class="stat-icon">✅</div>
+          <div class="stat-num">{totalStatus.completed || 0}</div>
+          <div class="stat-label">已完成</div>
+        </div>
+        <div class="pp-stat" style="--sc:#d29922;--sb:rgba(210,153,34,0.2)">
+          <div class="stat-icon">🔄</div>
+          <div class="stat-num">{totalStatus['in-progress'] || 0}</div>
+          <div class="stat-label">进行中</div>
+        </div>
+      </div>
+
+      <!-- Category groups with two-column cards -->
+      <div class="pp-cards">
+        {sortedGroups.map(([cat, items]) => (
+          <div class="pp-group" style={`--cc:${catColor(cat)}`}>
+            <div class="pg-hd">
+              <span class="pg-dot" style={`background:${catColor(cat)}`}></span>
+              <span class="pg-name">{catLabel(cat)}</span>
+              <span class="pg-count">{items.length}</span>
+            </div>
+            <div class="pg-body">
+              {items.map((p, i) => {
+                const meta = (() => { try { return JSON.parse(p.metadata || '{}'); } catch { return {}; } })();
+                const dateStr = meta.date ? new Date(meta.date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'short' }) : '';
+                const tagList = (() => { try { return JSON.parse(p.tags || '[]'); } catch { return []; } })();
+                const statusLabel = meta.projectStatus === 'completed' ? '已完成' : meta.projectStatus === 'in-progress' ? '进行中' : '';
+                return (
+                  <a href={`/projects/${p.slug}`} class="pg-card" style={`--cc:${catColor(cat)}`}>
+                    <!-- Left: compact -->
+                    <div class="pgc-left">
+                      <div class="pgc-num">{String(i + 1).padStart(2, '0')}</div>
+                      <div class="pgc-badge" style={`background:${catColor(cat)}`}>{catLabel(cat)}</div>
+                      <div class="pgc-title">{p.title}</div>
+                      <div class="pgc-tags">
+                        {tagList.slice(0, 3).map(t => <span class="pgc-tag">{t}</span>)}
+                      </div>
+                    </div>
+                    <!-- Right: detailed -->
+                    <div class="pgc-right">
+                      <div class="pgc-desc">{p.excerpt}</div>
+                      <div class="pgc-meta">
+                        {statusLabel ? <span class={`pgc-status status-${meta.projectStatus}`}>{statusLabel}</span> : ''}
+                        {dateStr ? <span class="pgc-date">{dateStr}</span> : ''}
+                      </div>
+                    </div>
+                    <div class="pgc-arrow">→</div>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
 
     </div>
   )}
@@ -136,12 +129,15 @@ projects.forEach(p => {
   .pp-sub { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.1rem; }
   .pp-empty { text-align: center; padding: 4rem; color: var(--text-muted); }
 
-  .pp-bento {
+  .pp-layout { max-width: var(--max-width-wide); margin: 0 auto; }
+
+  /* ── Stats row ── */
+  .pp-stats {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 0.75rem;
+    margin-bottom: 1.5rem;
   }
-
   .pp-stat {
     background: var(--bg-card);
     border: 1px solid var(--sb);
@@ -153,79 +149,153 @@ projects.forEach(p => {
   .pp-stat .stat-num { font-size: 1.5rem; font-weight: 700; color: var(--sc); line-height: 1.1; }
   .pp-stat .stat-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.05rem; }
 
-  .pp-featured {
-    grid-column: span 2;
-    grid-row: span 2;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--cc);
-    border-radius: var(--radius);
-    padding: 1.2rem;
-    text-decoration: none;
-    color: var(--text);
-    display: flex;
-    flex-direction: column;
-    transition: box-shadow 0.2s, transform 0.2s;
-  }
-  .pp-featured:hover {
-    box-shadow: var(--shadow-hover);
-    transform: translateY(-2px);
-  }
-  .pf-label { display: flex; gap: 0.5rem; margin-bottom: 0.4rem; }
-  .pf-cat { font-size: 0.65rem; padding: 0.1em 0.5em; border-radius: 4px; color: #fff; }
-  .pf-status { font-size: 0.65rem; color: var(--text-muted); }
-  .pf-title { font-size: 1.15rem; font-weight: 600; margin-bottom: 0.4rem; }
-  .pf-desc { font-size: 0.82rem; color: var(--text-secondary); flex: 1; line-height: 1.6; }
-  .pf-tags { display: flex; gap: 0.25rem; margin-top: 0.6rem; flex-wrap: wrap; }
-  .pf-tag { font-size: 0.68rem; padding: 0.12em 0.45em; background: var(--bg-hover); border-radius: 4px; color: var(--text-secondary); }
-
+  /* ── Category groups ── */
+  .pp-cards { display: flex; flex-direction: column; gap: 1.5rem; }
   .pp-group {
-    grid-column: span 2;
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-left: 3px solid var(--cc);
     border-radius: var(--radius);
     overflow: hidden;
   }
   .pg-hd {
-    padding: 0.6rem 1rem 0.2rem;
+    padding: 0.7rem 1.2rem 0.3rem;
     display: flex; align-items: center; gap: 0.4rem;
   }
-  .pg-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .pg-dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 6px var(--cc); }
   .pg-name { font-weight: 600; font-size: 0.9rem; }
   .pg-count { font-size: 0.65rem; color: var(--text-muted); background: var(--bg-hover); padding: 0.05em 0.45em; border-radius: 6px; }
 
-  .pg-body { padding: 0.1rem 0.6rem 0.6rem; }
-  .pg-item {
+  /* ── Two-column cards ── */
+  .pg-body { padding: 0.3rem 0.8rem 0.8rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  .pg-card {
     display: grid;
-    grid-template-columns: 1.5rem 1fr 5rem;
-    gap: 0.6rem;
-    align-items: start;
-    padding: 0.45rem 0.4rem;
-    margin: 0 -0.2rem;
-    border-radius: 5px;
+    grid-template-columns: 200px 1fr 2rem;
+    gap: 0;
+    align-items: center;
+    padding: 0;
+    border-radius: var(--radius-sm);
     text-decoration: none;
     color: var(--text);
-    border-bottom: 1px solid var(--border);
-    transition: background 0.1s;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.15s, border-color 0.2s;
+    position: relative;
   }
-  .pg-item:last-child { border-bottom: none; }
-  .pg-item:hover { background: var(--bg-hover); }
-  .pgi-num { font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); padding-top: 0.15rem; }
-  .pgi-title { font-size: 0.85rem; font-weight: 500; }
-  .pgi-desc { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.05rem; line-height: 1.4; }
-  .pgi-tags { display: flex; gap: 0.2rem; margin-top: 0.2rem; }
-  .pgi-tag { font-size: 0.62rem; padding: 0.08em 0.35em; background: var(--bg-hover); border-radius: 3px; color: var(--text-secondary); }
-  .pgi-date { font-size: 0.68rem; color: var(--text-muted); text-align: right; padding-top: 0.1rem; }
+  .pg-card:hover {
+    box-shadow: 0 0 0 1px var(--cc), var(--shadow-hover);
+    transform: translateY(-2px);
+    border-color: var(--cc);
+  }
 
+  /* Left panel — compact */
+  .pgc-left {
+    background: linear-gradient(135deg, rgba(from var(--cc) r g b / 0.06), transparent);
+    padding: 0.9rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-height: 100px;
+    border-right: 1px solid var(--border);
+  }
+  .pgc-num {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    letter-spacing: 0.03em;
+  }
+  .pgc-badge {
+    display: inline-block;
+    font-size: 0.6rem;
+    padding: 0.15em 0.6em;
+    border-radius: 4px;
+    color: #fff;
+    width: fit-content;
+    font-weight: 500;
+  }
+  .pgc-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-top: 0.15rem;
+  }
+  .pgc-tags {
+    display: flex;
+    gap: 0.2rem;
+    flex-wrap: wrap;
+    margin-top: 0.1rem;
+  }
+  .pgc-tag {
+    font-size: 0.6rem;
+    padding: 0.1em 0.4em;
+    background: var(--bg-hover);
+    border-radius: 3px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  /* Right panel — detailed */
+  .pgc-right {
+    padding: 0.9rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-height: 100px;
+    justify-content: center;
+  }
+  .pgc-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .pgc-meta {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    margin-top: 0.15rem;
+  }
+  .pgc-status {
+    font-size: 0.65rem;
+    padding: 0.1em 0.5em;
+    border-radius: 4px;
+  }
+  .status-completed { background: rgba(63,185,80,0.15); color: #3fb950; }
+  .status-in-progress { background: rgba(210,153,34,0.15); color: #d29922; }
+  .pgc-date { font-size: 0.65rem; color: var(--text-muted); }
+
+  /* Arrow indicator */
+  .pgc-arrow {
+    font-size: 1rem;
+    color: var(--text-muted);
+    padding-right: 0.6rem;
+    opacity: 0.3;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .pg-card:hover .pgc-arrow {
+    opacity: 1;
+    transform: translateX(3px);
+    color: var(--cc);
+  }
+
+  /* ── Responsive ── */
   @media (max-width: 900px) {
-    .pp-bento { grid-template-columns: repeat(2, 1fr); }
-    .pp-featured { grid-column: span 2; grid-row: span 1; }
+    .pp-stats { grid-template-columns: repeat(2, 1fr); }
+    .pg-card { grid-template-columns: 160px 1fr 1.5rem; }
   }
   @media (max-width: 600px) {
-    .pp-bento { grid-template-columns: 1fr; }
-    .pp-featured, .pp-group { grid-column: span 1; }
-    .pg-item { grid-template-columns: 1.5rem 1fr; }
-    .pgi-date { display: none; }
+    .pp-stats { grid-template-columns: repeat(2, 1fr); }
+    .pg-card { grid-template-columns: 1fr; }
+    .pgc-left {
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      min-height: auto;
+      padding: 0.6rem 0.7rem;
+    }
+    .pgc-right { padding: 0.5rem 0.7rem; min-height: auto; }
+    .pgc-arrow { display: none; }
   }
 </style>
