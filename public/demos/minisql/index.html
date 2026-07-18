@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>MiniSQL — Unity 风格 Web UI</title>
+<style>
+:root {
+  --bg-primary: #0d0d12;
+  --bg-secondary: #13131a;
+  --bg-tertiary: #1a1a24;
+  --bg-elevated: #1e1e2a;
+  --border: rgba(255,255,255,0.06);
+  --text-primary: #e8e8ef;
+  --text-secondary: #8a8a9a;
+  --text-muted: #5a5a6a;
+  --accent: #6ec8ff;
+  --accent-dim: rgba(110,200,255,0.12);
+  --success: #50e3c2;
+  --error: #ff6b6b;
+  --warm: #ffb86c;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Noto Sans SC", sans-serif;
+  --font-mono: "Consolas", "JetBrains Mono", "Fira Code", monospace;
+  --radius: 8px;
+  --radius-sm: 4px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: var(--font-sans); background: var(--bg-primary);
+  color: var(--text-primary); line-height:1.5;
+  height:100vh; display:flex; flex-direction:column; overflow:hidden;
+}
+
+/* Title Bar */
+.titlebar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0.5rem 1rem; background:var(--bg-secondary);
+  border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.titlebar-left { display:flex; align-items:center; gap:0.8rem; }
+.titlebar-dots { display:flex; gap:6px; }
+.titlebar-dots span { width:11px; height:11px; border-radius:50%; }
+.titlebar-dots .red { background:#ff5f57; }
+.titlebar-dots .yellow { background:#ffbd2e; }
+.titlebar-dots .green { background:#28c840; }
+.titlebar-brand { font-size:0.82rem; font-weight:600; color:var(--text-secondary); }
+.titlebar-brand span { color:var(--accent); }
+
+/* Main Layout */
+.main { display:flex; flex:1; overflow:hidden; }
+
+/* Sidebar */
+.sidebar {
+  width:220px; background:var(--bg-secondary);
+  border-right:1px solid var(--border);
+  display:flex; flex-direction:column; flex-shrink:0;
+}
+.sidebar-header {
+  padding:0.8rem 1rem 0.4rem;
+  font-size:0.65rem; text-transform:uppercase; letter-spacing:1px;
+  color:var(--text-muted); font-weight:600;
+}
+.sidebar-tree { flex:1; overflow-y:auto; padding:0.2rem 0.5rem; }
+.tree-item {
+  display:flex; align-items:center; gap:0.4rem;
+  padding:0.3rem 0.6rem; border-radius:var(--radius-sm);
+  font-size:0.78rem; color:var(--text-secondary);
+  cursor:pointer; transition:all 0.15s;
+}
+.tree-item:hover { background:var(--bg-tertiary); color:var(--text-primary); }
+.tree-item .icon { font-size:0.7rem; opacity:0.6; width:16px; text-align:center; }
+.tree-children { padding-left:1.2rem; }
+.sidebar-footer {
+  padding:0.6rem 1rem; border-top:1px solid var(--border);
+  font-size:0.7rem; color:var(--text-muted);
+}
+.status-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--success); margin-right:0.4rem; }
+
+/* Content */
+.content { flex:1; display:flex; flex-direction:column; min-width:0; }
+
+/* Tab bar */
+.tabbar {
+  display:flex; align-items:center; background:var(--bg-secondary);
+  border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.tab {
+  display:flex; align-items:center; gap:0.3rem;
+  padding:0.4rem 0.8rem; font-size:0.75rem; color:var(--text-muted);
+  border-right:1px solid var(--border); cursor:pointer; user-select:none;
+  transition:color 0.15s;
+}
+.tab:hover { color:var(--text-primary); }
+.tab.active { color:var(--text-primary); background:var(--bg-primary); position:relative; }
+.tab.active::after { content:''; position:absolute; bottom:-1px; left:0; right:0; height:1px; background:var(--accent); }
+
+/* Editor */
+.editor-panel { flex:1; display:flex; flex-direction:column; min-height:0; }
+.editor-header {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:0.4rem 1rem; font-size:0.7rem; color:var(--text-muted);
+  border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.editor-actions { display:flex; gap:0.4rem; }
+.btn-execute {
+  display:flex; align-items:center; gap:0.4rem;
+  padding:0.35rem 0.9rem; background:var(--accent); color:var(--bg-primary);
+  border:none; border-radius:var(--radius-sm); font-size:0.75rem; font-weight:600;
+  cursor:pointer; font-family:var(--font-sans); transition:all 0.2s;
+}
+.btn-execute:hover { background:#8ad4ff; transform:translateY(-1px); box-shadow:0 2px 8px rgba(110,200,255,0.3); }
+.btn-reset {
+  padding:0.35rem 0.7rem; background:var(--bg-tertiary); color:var(--text-muted);
+  border:1px solid var(--border); border-radius:var(--radius-sm);
+  font-size:0.7rem; cursor:pointer; font-family:var(--font-sans); transition:all 0.15s;
+}
+.btn-reset:hover { border-color:var(--text-muted); color:var(--text-primary); }
+
+.editor-body {
+  flex:1; padding:0.8rem; position:relative;
+}
+.editor-textarea {
+  width:100%; height:100%;
+  background:transparent; border:none; outline:none;
+  resize:none; font-family:var(--font-mono); font-size:0.85rem;
+  line-height:1.6; color:var(--text-primary); tab-size:2;
+}
+.editor-textarea::placeholder { color:var(--text-muted); }
+
+/* Results */
+.results-panel {
+  border-top:1px solid var(--border); background:var(--bg-secondary);
+  flex:0 0 auto; max-height:45%; min-height:80px;
+  display:flex; flex-direction:column;
+}
+.results-header {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:0.3rem 1rem; border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.results-info { font-size:0.7rem; color:var(--text-muted); }
+.results-body { flex:1; overflow:auto; }
+
+.result-table { width:100%; border-collapse:collapse; font-size:0.8rem; }
+.result-table th {
+  text-align:left; padding:0.4rem 0.8rem; font-weight:600;
+  color:var(--text-secondary); border-bottom:1px solid var(--border);
+  background:var(--bg-tertiary); font-size:0.68rem; text-transform:uppercase;
+  letter-spacing:0.5px; position:sticky; top:0;
+}
+.result-table td {
+  padding:0.35rem 0.8rem; border-bottom:1px solid var(--border);
+  color:var(--text-primary); font-family:var(--font-mono); font-size:0.76rem;
+}
+.result-table tr:hover td { background:rgba(255,255,255,0.015); }
+
+.results-empty {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:1.5rem; color:var(--text-muted); text-align:center;
+}
+.results-empty .icon { font-size:1.2rem; opacity:0.3; }
+.results-empty p { font-size:0.85rem; margin-top:0.3rem; }
+
+.results-msg {
+  padding:0.6rem 1rem; display:flex; align-items:center; gap:0.5rem;
+  font-family:var(--font-mono); font-size:0.8rem;
+}
+.results-msg.success { color:var(--success); background:rgba(80,227,194,0.06); }
+.results-msg.error { color:var(--error); background:rgba(255,107,107,0.06); }
+.results-msg.warm { color:var(--warm); background:rgba(255,184,108,0.06); }
+
+/* Status bar */
+.statusbar {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:0.3rem 1rem; background:var(--bg-secondary);
+  border-top:1px solid var(--border);
+  font-size:0.7rem; color:var(--text-muted); flex-shrink:0;
+}
+.statusbar-left, .statusbar-right { display:flex; align-items:center; gap:1rem; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:var(--text-muted); }
+
+@media (max-width:640px) {
+  .sidebar { width:160px; }
+  .editor-textarea { font-size:0.78rem; }
+  .result-table td, .result-table th { padding:0.3rem 0.5rem; font-size:0.7rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="titlebar">
+  <div class="titlebar-left">
+    <div class="titlebar-dots"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
+    <span class="titlebar-brand">MiniSQL <span>Console</span></span>
+  </div>
+  <div class="titlebar-right">
+    <span style="font-size:0.7rem;color:var(--text-muted)">浏览器内执行 · 数据保存在内存</span>
+  </div>
+</div>
+
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-header">🗄️ 数据库</div>
+    <div class="sidebar-tree" id="sidebarTree">
+      <div class="tree-item"><span class="icon">🗄️</span> MiniSQL (内存)</div>
+      <div class="tree-children" id="tableList"></div>
+    </div>
+    <div class="sidebar-footer">
+      <span class="status-dot"></span> 运行中 · 纯前端引擎
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="tabbar">
+      <div class="tab active"><span>📄</span> SQL 编辑器</div>
+    </div>
+
+    <div class="editor-panel">
+      <div class="editor-header">
+        <span>键入 SQL 语句后点击执行 ▶</span>
+        <div class="editor-actions">
+          <button class="btn-reset" onclick="resetAll()">↺ 重置</button>
+          <button class="btn-execute" onclick="executeSQL()">▶ 执行</button>
+        </div>
+      </div>
+      <div class="editor-body">
+        <textarea class="editor-textarea" id="sqlInput" placeholder="-- 试试输入:&#10;CREATE TABLE students (id INT, name STRING, score INT);&#10;INSERT INTO students VALUES (1, '张三', 85);&#10;SELECT * FROM students;" spellcheck="false">-- 欢迎使用 MiniSQL Web UI！
+-- 试试执行下面这条 SQL：
+
+CREATE TABLE students (id INT, name STRING, score INT);
+INSERT INTO students VALUES (1, '张三', 85);
+INSERT INTO students VALUES (2, '李四', 92);
+INSERT INTO students VALUES (3, '王五', 78);
+SELECT * FROM students;</textarea>
+      </div>
+
+      <div class="results-panel">
+        <div class="results-header">
+          <span class="results-tabs">
+            <span style="font-size:0.75rem;color:var(--text-secondary)">📊 结果</span>
+          </span>
+          <span class="results-info" id="resultsInfo">就绪</span>
+        </div>
+        <div class="results-body" id="resultsBody">
+          <div class="results-empty">
+            <div class="icon">▶</div>
+            <p>点击「执行」运行 SQL</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="statusbar">
+  <div class="statusbar-left">
+    <span id="tableCount">就绪</span>
+    <span class="divider">|</span>
+    <span id="dbStatus">内存模式 · 纯 JS 引擎</span>
+  </div>
+  <div class="statusbar-right">
+    <span id="rowCount">0 行</span>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// MiniSQL 浏览器内 SQL 引擎
+// ═══════════════════════════════════════════════════════════════
+
+const DB = {
+  tables: {},  // { name: { columns: [...], rows: [[...]] } }
+};
+
+// ── SQL 解析器 ──
+function parseSQL(sql) {
+  sql = sql.trim();
+  if (!sql) return null;
+
+  // Handle multi-statement: split by semicolons
+  const stmts = [];
+  let current = '';
+  let inString = false;
+  let inLineComment = false;
+  for (let i = 0; i < sql.length; i++) {
+    const c = sql[i];
+    const next = sql[i + 1];
+
+    if (inLineComment) {
+      if (c === '\n') inLineComment = false;
+      continue;
+    }
+    if (c === '-' && next === '-') { inLineComment = true; continue; }
+
+    if (c === "'") { inString = !inString; current += c; continue; }
+    if (c === ';' && !inString) {
+      const trimmed = current.trim();
+      if (trimmed) stmts.push(trimmed);
+      current = '';
+      continue;
+    }
+    current += c;
+  }
+  const trimmed = current.trim();
+  if (trimmed && !trimmed.endsWith(';')) stmts.push(trimmed);
+
+  return stmts.map(s => parseOne(s)).filter(Boolean);
+}
+
+function parseOne(sql) {
+  const upper = sql.toUpperCase().trim();
+
+  // CREATE TABLE
+  let m = upper.match(/^CREATE\s+TABLE\s+(\w+)\s*\((.+)\)$/);
+  if (m) {
+    const name = sql.match(/CREATE\s+TABLE\s+(\w+)/i)[1];
+    const cols = m[2].split(',').map(s => {
+      const parts = s.trim().split(/\s+/);
+      return { name: parts[0], type: parts[1].toUpperCase() === 'INT' ? 'INT' : 'STRING' };
+    });
+    return { type: 'CREATE', table: name, columns: cols };
+  }
+
+  // DROP TABLE
+  m = upper.match(/^DROP\s+TABLE\s+(\w+)$/);
+  if (m) return { type: 'DROP', table: m[1] };
+
+  // INSERT INTO name VALUES (...), (...)
+  m = sql.match(/^INSERT\s+INTO\s+(\w+)\s+VALUES\s+(.+)$/i);
+  if (m) {
+    const name = m[1];
+    const valuesStr = m[2];
+    const rows = [];
+    // Parse value groups: (v1, v2), (v3, v4)
+    let depth = 0, start = -1;
+    for (let i = 0; i < valuesStr.length; i++) {
+      if (valuesStr[i] === '(') { if (depth === 0) start = i + 1; depth++; }
+      else if (valuesStr[i] === ')') { depth--; if (depth === 0 && start >= 0) {
+        const row = parseValues(valuesStr.substring(start, i));
+        rows.push(row);
+        start = -1;
+      }}
+    }
+    return { type: 'INSERT', table: name, rows };
+  }
+
+  // SELECT ... FROM ... WHERE ...
+  m = sql.match(/^SELECT\s+(.+?)\s+FROM\s+(\w+)(?:\s+WHERE\s+(.+))?$/i);
+  if (m) {
+    const cols = m[1].trim() === '*' ? '*' : m[1].split(',').map(s => s.trim());
+    const name = m[2];
+    const where = m[3] ? parseWhere(m[3]) : null;
+    return { type: 'SELECT', table: name, columns: cols, where };
+  }
+
+  // DELETE FROM name WHERE ...
+  m = sql.match(/^DELETE\s+FROM\s+(\w+)(?:\s+WHERE\s+(.+))?$/i);
+  if (m) {
+    const name = m[1];
+    const where = m[2] ? parseWhere(m[2]) : null;
+    return { type: 'DELETE', table: name, where };
+  }
+
+  // UPDATE name SET col=val WHERE ...
+  m = sql.match(/^UPDATE\s+(\w+)\s+SET\s+(.+?)(?:\s+WHERE\s+(.+))?$/i);
+  if (m) {
+    const name = m[1];
+    const sets = m[2].split(',').map(s => {
+      const parts = s.trim().split(/\s*=\s*/);
+      return { column: parts[0].trim(), value: parseLiteral(parts[1]?.trim()) };
+    });
+    const where = m[3] ? parseWhere(m[3]) : null;
+    return { type: 'UPDATE', table: name, sets, where };
+  }
+
+  return { type: 'UNKNOWN', sql };
+}
+
+function parseValues(str) {
+  const vals = [];
+  let current = '', inStr = false;
+  for (let i = 0; i < str.length; i++) {
+    if (str[i] === "'" && (i === 0 || str[i-1] !== '\\')) { inStr = !inStr; current += str[i]; continue; }
+    if (str[i] === ',' && !inStr) { vals.push(parseLiteral(current.trim())); current = ''; continue; }
+    current += str[i];
+  }
+  if (current.trim()) vals.push(parseLiteral(current.trim()));
+  return vals;
+}
+
+function parseLiteral(s) {
+  if (!s) return null;
+  if (s.startsWith("'") && s.endsWith("'")) return s.slice(1, -1);
+  if (/^\d+$/.test(s)) return parseInt(s, 10);
+  if (/^\d+\.\d+$/.test(s)) return parseFloat(s);
+  return s;
+}
+
+function parseWhere(str) {
+  // Simple: column op value [AND column op value]
+  const parts = str.split(/\s+AND\s+/i);
+  return parts.map(p => {
+    const m = p.match(/^(\w+)\s*(=|!=|>|>=|<|<=)\s*(.+)$/);
+    if (!m) return null;
+    return { column: m[1], op: m[2], value: parseLiteral(m[3].trim()) };
+  }).filter(Boolean);
+}
+
+function evaluateWhere(row, colIndex, schema, conditions) {
+  if (!conditions || conditions.length === 0) return true;
+  return conditions.every(c => {
+    const idx = colIndex[c.column];
+    if (idx === undefined) return false;
+    const val = row[idx];
+    switch (c.op) {
+      case '=': return val == c.value;
+      case '!=': return val != c.value;
+      case '>': return val > c.value;
+      case '>=': return val >= c.value;
+      case '<': return val < c.value;
+      case '<=': return val <= c.value;
+      default: return true;
+    }
+  });
+}
+
+// ── 执行器 ──
+function execute(stmt) {
+  switch (stmt.type) {
+    case 'CREATE': return execCreate(stmt);
+    case 'DROP': return execDrop(stmt);
+    case 'INSERT': return execInsert(stmt);
+    case 'SELECT': return execSelect(stmt);
+    case 'DELETE': return execDelete(stmt);
+    case 'UPDATE': return execUpdate(stmt);
+    default: return { success: false, error: '不支持的语句类型' };
+  }
+}
+
+function execCreate(stmt) {
+  if (DB.tables[stmt.table]) return { success: false, error: `表 '${stmt.table}' 已存在` };
+  DB.tables[stmt.table] = { columns: stmt.columns, rows: [] };
+  return { success: true, message: `✓ 表 '${stmt.table}' 已创建 (${stmt.columns.length} 列)` };
+}
+
+function execDrop(stmt) {
+  if (!DB.tables[stmt.table]) return { success: false, error: `表 '${stmt.table}' 不存在` };
+  delete DB.tables[stmt.table];
+  return { success: true, message: `✓ 表 '${stmt.table}' 已删除` };
+}
+
+function execInsert(stmt) {
+  if (!DB.tables[stmt.table]) return { success: false, error: `表 '${stmt.table}' 不存在` };
+  const schema = DB.tables[stmt.table].columns;
+  for (const row of stmt.rows) {
+    if (row.length !== schema.length) return { success: false, error: `列数不匹配：需要 ${schema.length} 列，实际 ${row.length} 列` };
+    // Type coercion
+    const coerced = row.map((v, i) => {
+      if (schema[i].type === 'INT' && typeof v === 'string') {
+        const n = parseInt(v, 10);
+        return isNaN(n) ? v : n;
+      }
+      return v;
+    });
+    DB.tables[stmt.table].rows.push(coerced);
+  }
+  return { success: true, message: `✓ ${stmt.rows.length} 行已插入`, rows: stmt.rows };
+}
+
+function execSelect(stmt) {
+  if (!DB.tables[stmt.table]) return { success: false, error: `表 '${stmt.table}' 不存在` };
+  const table = DB.tables[stmt.table];
+  const colIndex = {};
+  table.columns.forEach((c, i) => colIndex[c.name] = i);
+
+  const columns = stmt.columns === '*'
+    ? table.columns.map(c => c.name)
+    : stmt.columns;
+
+  const filtered = table.rows.filter(r => evaluateWhere(r, colIndex, table.columns, stmt.where));
+  const projected = filtered.map(r => columns.map(c => r[colIndex[c]] !== undefined ? r[colIndex[c]] : null));
+  return { success: true, columns, rows: projected, total: filtered.length };
+}
+
+function execDelete(stmt) {
+  if (!DB.tables[stmt.table]) return { success: false, error: `表 '${stmt.table}' 不存在` };
+  const table = DB.tables[stmt.table];
+  const colIndex = {};
+  table.columns.forEach((c, i) => colIndex[c.name] = i);
+
+  const before = table.rows.length;
+  if (!stmt.where || stmt.where.length === 0) {
+    // DELETE without WHERE = delete all
+    table.rows = [];
+    return { success: true, message: `✓ ${before} 行已删除` };
+  }
+  table.rows = table.rows.filter(r => !evaluateWhere(r, colIndex, table.columns, stmt.where));
+  return { success: true, message: `✓ ${before - table.rows.length} 行已删除` };
+}
+
+function execUpdate(stmt) {
+  if (!DB.tables[stmt.table]) return { success: false, error: `表 '${stmt.table}' 不存在` };
+  const table = DB.tables[stmt.table];
+  const colIndex = {};
+  table.columns.forEach((c, i) => colIndex[c.name] = i);
+
+  let updated = 0;
+  for (let i = 0; i < table.rows.length; i++) {
+    if (evaluateWhere(table.rows[i], colIndex, table.columns, stmt.where)) {
+      for (const set of stmt.sets) {
+        const idx = colIndex[set.column];
+        if (idx !== undefined) table.rows[i][idx] = set.value;
+      }
+      updated++;
+    }
+  }
+  return { success: true, message: `✓ ${updated} 行已更新` };
+}
+
+// ── UI ──
+function executeSQL() {
+  const input = document.getElementById('sqlInput');
+  const sql = input.value.trim();
+  if (!sql) return;
+
+  const stmts = parseSQL(sql);
+  if (!stmts || stmts.length === 0) {
+    showResult({ success: false, error: '无法解析 SQL 语句' });
+    return;
+  }
+
+  let lastResult = null;
+  for (const stmt of stmts) {
+    lastResult = execute(stmt);
+    if (!lastResult.success) break;
+  }
+
+  if (lastResult) showResult(lastResult);
+  updateSidebar();
+}
+
+function showResult(result) {
+  const body = document.getElementById('resultsBody');
+  const info = document.getElementById('resultsInfo');
+
+  if (!result.success) {
+    body.innerHTML = `<div class="results-msg error">✗ ${result.error || '执行失败'}</div>`;
+    info.textContent = '错误';
+    return;
+  }
+
+  if (result.message) {
+    body.innerHTML = `<div class="results-msg success">${result.message}</div>`;
+    info.textContent = '完成';
+    return;
+  }
+
+  if (result.columns && result.rows !== undefined) {
+    if (result.rows.length === 0) {
+      body.innerHTML = `<div class="results-msg warm">(空) 0 行</div>`;
+      info.textContent = '0 行';
+      return;
+    }
+    let html = '<table class="result-table"><thead><tr>';
+    result.columns.forEach(c => { html += `<th>${c}</th>`; });
+    html += '</tr></thead><tbody>';
+    result.rows.forEach(r => {
+      html += '<tr>';
+      result.columns.forEach((c, i) => {
+        html += `<td>${r[i] !== null && r[i] !== undefined ? r[i] : 'NULL'}</td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    body.innerHTML = html;
+    info.textContent = `${result.total} 行`;
+    document.getElementById('rowCount').textContent = `${result.total} 行`;
+    return;
+  }
+
+  body.innerHTML = `<div class="results-msg success">✓ 执行完成</div>`;
+  info.textContent = '完成';
+}
+
+function updateSidebar() {
+  const list = document.getElementById('tableList');
+  const names = Object.keys(DB.tables);
+  const count = document.getElementById('tableCount');
+
+  if (names.length === 0) {
+    list.innerHTML = '<div class="tree-item" style="opacity:0.4"><span class="icon">—</span> 空数据库</div>';
+    count.textContent = '0 张表';
+    return;
+  }
+
+  let html = '';
+  names.sort();
+  names.forEach(name => {
+    const t = DB.tables[name];
+    const colStr = t.columns.map(c => c.name + ' ' + c.type.toLowerCase()).join(', ');
+    const rowCount = t.rows.length;
+    html += `<div class="tree-item"><span class="icon">📋</span> ${name}</div>`;
+    html += `<div class="tree-children"><div class="tree-item" style="font-size:0.7rem;opacity:0.5"><span class="icon">📊</span> ${t.columns.length} 列: ${colStr}</div>`;
+    html += `<div class="tree-item" style="font-size:0.7rem;opacity:0.5"><span class="icon">📄</span> ${rowCount} 行数据</div></div>`;
+  });
+  list.innerHTML = html;
+  count.textContent = `${names.length} 张表`;
+}
+
+function resetAll() {
+  Object.keys(DB.tables).forEach(k => delete DB.tables[k]);
+  document.getElementById('sqlInput').value = `-- 欢迎使用 MiniSQL Web UI！
+-- 试试执行下面这条 SQL：
+
+CREATE TABLE students (id INT, name STRING, score INT);
+INSERT INTO students VALUES (1, '张三', 85);
+INSERT INTO students VALUES (2, '李四', 92);
+INSERT INTO students VALUES (3, '王五', 78);
+SELECT * FROM students;`;
+
+  document.getElementById('resultsBody').innerHTML = `<div class="results-empty"><div class="icon">↺</div><p>已重置 · 数据已清空</p></div>`;
+  document.getElementById('resultsInfo').textContent = '已重置';
+  document.getElementById('rowCount').textContent = '0 行';
+  updateSidebar();
+}
+
+// ── Ctrl+Enter 执行 ──
+document.getElementById('sqlInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    executeSQL();
+  }
+});
+
+// ── 初始化 ──
+updateSidebar();
+
+// Run initial SQL
+setTimeout(executeSQL, 300);
+</script>
+</body>
+</html>

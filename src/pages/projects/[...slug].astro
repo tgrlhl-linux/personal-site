@@ -155,6 +155,7 @@ function escJS(str) {
                     <h3>🚀 在线体验</h3>
                     <a href={codeData.demoUrl} target="_blank" class="btn btn-outline demo-open">在新窗口打开 ↗</a>
                   </div>
+                  {codeData.note && <p class="demo-note">{codeData.note}</p>}
                   <div class="demo-frame-wrap">
                     <iframe src={codeData.demoUrl} class="demo-frame" title="在线演示"></iframe>
                   </div>
@@ -425,6 +426,7 @@ function escJS(str) {
     margin-bottom: 0.8rem;
   }
   .demo-inline .demo-hd h3 { margin: 0; }
+  .demo-note { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.8rem; padding: 0.5rem 0.8rem; background: var(--bg-hover); border-radius: 6px; border-left: 2px solid var(--accent); }
   .demo-frame-wrap {
     border: 1px solid var(--border);
     border-radius: 10px; overflow: hidden;

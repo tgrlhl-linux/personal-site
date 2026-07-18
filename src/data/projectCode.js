@@ -298,8 +298,10 @@ public class Tokenizer {
       { path: 'src/minisql/web/MiniQLServer.java', desc: '内嵌 HTTP Server', lines: 120 },
       { path: 'src/minisql/type/Value.java', desc: '值类型系统', lines: 56 },
     ],
-    hasDemo: false,
-    demoType: 'none',
+    hasDemo: true,
+    demoType: 'inline',
+    demoUrl: '/demos/minisql',
+    note: '浏览器内 SQL 引擎（纯 JS 实现，模拟 MiniSQL 语法和交互风格）',
   },
 
   // ─── HDFS 客户端 ─────────────────────────────────────────────────
