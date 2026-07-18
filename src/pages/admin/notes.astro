@@ -228,7 +228,7 @@ function showItem(id) {
     + '<div class="content-actions">'
     + '<a href="/admin/notes/edit/' + id + '" class="btn btn-pri">✏️ 编辑</a>'
     + '<button class="btn btn-del" id="deleteBtn" data-id="' + id + '">🗑️ 删除</button>'
-    + '<a href="/' + (item.type === 'note' ? 'notes' : item.type === 'project' ? 'projects' : 'hobbies') + '/' + (item.slug || id) + '" target="_blank" class="btn btn-sec">🔗 查看</a>'
+    + '<a href="/' + (item.type === 'note' ? 'notes' : item.type === 'project' ? 'projects' : 'hobbies') + '/' + (item.type === 'note' ? id : (item.slug || id)) + '" target="_blank" class="btn btn-sec">🔗 查看</a>'
     + '</div></div>';
 
   document.querySelectorAll('.tree-file').forEach(el => el.classList.remove('active'));
