@@ -924,381 +924,204 @@ login && main_menu`,
 demoUrl: '/demos/cli-terminal',
   },
 
-  // ─── 数据库大作业 ────────────────────────────────────────────────
+    // ─── 数据库大作业 ────────────────────────────────────────────────
   'database-project': {
-    tech: ['SQL', 'MySQL', 'E-R 图'],
+    tech: ['SQL', 'MySQL', '视图', '触发器', '存储过程', 'RBAC'],
     features: [
-      '需求分析 → 概念模型 → 逻辑设计 → 物理实现 完整流程',
-      'E-R 图实体关系设计',
-      '3NF 规范化验证',
-      'SQL 建表、索引、视图',
-      '存储过程 + 触发器 + 安全性控制',
+      '沉浸式剧本平台数据库设计（10 张表）',
+      '用户/剧本/角色/线索/打卡点/场次/订单/排班/进度/评价',
+      '触发器：订单支付自动更新场次人数 + NPC 排班冲突检测',
+      '视图：场次概览 + 剧本评分汇总',
+      '存储过程：场次运营报表生成',
+      'RBAC 四级角色权限体系（游客/NPC/运营/管理员）',
+      '50+ 条测试数据覆盖全部业务场景',
+      '复杂查询：嵌套子查询 / EXISTS / GROUP BY HAVING',
     ],
     githubUrl: 'https://github.com/tgrlhl-linux/personal-site/tree/master/projects-source/数据库原理/大作业二-数据库设计与实施',
-    highlights: '从需求分析到物理实现的完整数据库设计流程，覆盖 E-R 图、3NF 规范化、存储过程与触发器。',
+    highlights: '沉浸式剧本杀平台的完整数据库设计——从 E-R 建模到 3NF 规范化，覆盖 10 张业务表、触发器、存储过程、RBAC 权限体系。',
     snippets: [
       {
-        title: '数据库 Schema 设计',
-        description: '课程选课管理系统的数据库完整建表 SQL，包含学生、教师、课程、选课四个核心实体。',
+        title: '核心表结构（建表 DDL）',
+        description: '沉浸式剧本平台的核心数据模型，包含用户、剧本、角色、线索、打卡点 5 张主表。',
         language: 'sql',
         code: `-- =============================================
--- 数据库大作业二 — 课程选课管理系统
--- 作者: 童国裕
+-- 沉浸式剧本平台 — 核心表结构
+-- 作者: 童国睿
 -- =============================================
 
--- 学生表
-CREATE TABLE Student (
-    Sno CHAR(9) PRIMARY KEY,          -- 学号
-    Sname VARCHAR(20) NOT NULL,       -- 姓名
-    Ssex CHAR(2) CHECK(Ssex IN ('男','女')),
-    Sage SMALLINT,                    -- 年龄
-    Sdept VARCHAR(30)                 -- 所在系
-);
+-- 1. 用户表
+CREATE TABLE User (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    phone VARCHAR(11) NOT NULL UNIQUE,
+    nickname VARCHAR(50) NOT NULL,
+    role_type TINYINT NOT NULL DEFAULT 0
+        COMMENT '0-游客 1-运营 2-NPC 3-管理员',
+    status TINYINT NOT NULL DEFAULT 0,
+    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 教师表
-CREATE TABLE Teacher (
-    Tno CHAR(6) PRIMARY KEY,          -- 教师编号
-    Tname VARCHAR(20) NOT NULL,       -- 姓名
-    Tsex CHAR(2) CHECK(Tsex IN ('男','女')),
-    Ttitle VARCHAR(20),               -- 职称
-    Tdept VARCHAR(30)                 -- 所在系
-);
+-- 2. 剧本表
+CREATE TABLE Script (
+    script_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL COMMENT '剧本名称',
+    description TEXT,
+    difficulty TINYINT NOT NULL DEFAULT 1,
+    duration INT NOT NULL COMMENT '时长（分）',
+    min_players INT NOT NULL DEFAULT 1,
+    max_players INT NOT NULL,
+    cover_url VARCHAR(255),
+    status TINYINT NOT NULL DEFAULT 0,
+    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 课程表
-CREATE TABLE Course (
-    Cno CHAR(6) PRIMARY KEY,          -- 课程号
-    Cname VARCHAR(50) NOT NULL,       -- 课程名
-    Ccredit SMALLINT CHECK(Ccredit > 0),  -- 学分
-    Cpno CHAR(6),                     -- 先修课程号
-    Tno CHAR(6),                      -- 授课教师
-    FOREIGN KEY (Cpno) REFERENCES Course(Cno),
-    FOREIGN KEY (Tno) REFERENCES Teacher(Tno)
-);
+-- 3. 角色表
+CREATE TABLE Role (
+    role_id INT AUTO_INCREMENT PRIMARY KEY,
+    script_id INT NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    description TEXT,
+    is_key_role TINYINT NOT NULL DEFAULT 0,
+    sort_order INT NOT NULL DEFAULT 0,
+    FOREIGN KEY (script_id) REFERENCES Script(script_id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 选课表
-CREATE TABLE SC (
-    Sno CHAR(9),                      -- 学号
-    Cno CHAR(6),                      -- 课程号
-    Grade DECIMAL(5,2) CHECK(Grade >= 0 AND Grade <= 100),
-    Semester CHAR(11),                -- 学期
-    PRIMARY KEY (Sno, Cno),
-    FOREIGN KEY (Sno) REFERENCES Student(Sno) ON DELETE CASCADE,
-    FOREIGN KEY (Cno) REFERENCES Course(Cno) ON DELETE RESTRICT
-);
+-- 4. 线索表
+CREATE TABLE Clue (
+    clue_id INT AUTO_INCREMENT PRIMARY KEY,
+    script_id INT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    content TEXT NOT NULL,
+    clue_type TINYINT NOT NULL DEFAULT 0,
+    trigger_type TINYINT NOT NULL DEFAULT 0,
+    sequence_num INT NOT NULL,
+    FOREIGN KEY (script_id) REFERENCES Script(script_id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ── 索引 ──
-CREATE INDEX idx_sc_grade ON SC(Grade);
-CREATE INDEX idx_student_dept ON Student(Sdept);
-
--- ── 视图：学生成绩视图 ──
-CREATE VIEW v_StudentGrade AS
-SELECT s.Sno, s.Sname, c.Cname, sc.Grade, c.Ccredit
-FROM Student s
-JOIN SC sc ON s.Sno = sc.Sno
-JOIN Course c ON sc.Cno = c.Cno;
-`,
-        file: '大作业二.sql',
+-- 5. 打卡点表
+CREATE TABLE CheckPoint (
+    point_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    latitude DECIMAL(10,7) NOT NULL,
+    longitude DECIMAL(10,7) NOT NULL,
+    ar_content_url VARCHAR(255),
+    binding_clue_id INT,
+    is_required TINYINT NOT NULL DEFAULT 0,
+    FOREIGN KEY (binding_clue_id) REFERENCES Clue(clue_id)
+        ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
+        file: '大作业二.sql（建表部分）',
       },
       {
-        title: '存储过程与触发器',
-        description: '用于维护数据完整性、自动计算的存储过程和触发器。',
+        title: '触发器：订单支付与排班冲突检测',
+        description: '两个关键触发器：支付状态变更自动更新场次报名人数，NPC 排班时间冲突检测防止重复调度。',
         language: 'sql',
-        code: `-- ── 存储过程：计算学生平均绩点 ──
+        code: `-- 触发器1：订单支付 -> 场次人数自动更新
 DELIMITER //
-CREATE PROCEDURE sp_CalcGPA(IN p_Sno CHAR(9), OUT gpa DECIMAL(4,2))
-BEGIN
-    SELECT ROUND(SUM(
-        CASE
-            WHEN sc.Grade >= 90 THEN 4.0
-            WHEN sc.Grade >= 85 THEN 3.7
-            WHEN sc.Grade >= 80 THEN 3.3
-            WHEN sc.Grade >= 75 THEN 3.0
-            WHEN sc.Grade >= 70 THEN 2.7
-            WHEN sc.Grade >= 65 THEN 2.3
-            WHEN sc.Grade >= 60 THEN 2.0
-            ELSE 1.0
-        END * c.Ccredit
-    ) / SUM(c.Ccredit), 2) INTO gpa
-    FROM SC sc
-    JOIN Course c ON sc.Cno = c.Cno
-    WHERE sc.Sno = p_Sno;
-END//
-DELIMITER ;
-
--- 使用：CALL sp_CalcGPA('2400770044', @gpa); SELECT @gpa;
-
--- ── 触发器：自动记录成绩修改日志 ──
-CREATE TABLE GradeLog (
-    LogID INT AUTO_INCREMENT PRIMARY KEY,
-    Sno CHAR(9),
-    Cno CHAR(6),
-    OldGrade DECIMAL(5,2),
-    NewGrade DECIMAL(5,2),
-    ChangeTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    Operator VARCHAR(50)
-);
-
-DELIMITER //
-CREATE TRIGGER trg_GradeUpdate
-AFTER UPDATE ON SC
+CREATE TRIGGER trg_order_payment_update_session
+AFTER UPDATE ON \`Order\`
 FOR EACH ROW
 BEGIN
-    IF OLD.Grade != NEW.Grade THEN
-        INSERT INTO GradeLog(Sno, Cno, OldGrade, NewGrade, Operator)
-        VALUES (NEW.Sno, NEW.Cno, OLD.Grade, NEW.Grade, CURRENT_USER());
+    IF OLD.payment_status = 0 AND NEW.payment_status = 1 THEN
+        UPDATE \`Session\`
+        SET current_players = current_players + 1
+        WHERE session_id = NEW.session_id;
+    END IF;
+    IF OLD.payment_status = 1 AND NEW.payment_status = 2 THEN
+        UPDATE \`Session\`
+        SET current_players = current_players - 1
+        WHERE session_id = NEW.session_id;
     END IF;
 END//
 DELIMITER ;
 
--- ── 触发器：选课人数限制 ──
+-- 触发器2：NPC排班时间冲突检测
 DELIMITER //
-CREATE TRIGGER trg_EnrollLimit
-BEFORE INSERT ON SC
+CREATE TRIGGER trg_npcschedule_conflict_check
+BEFORE INSERT ON NpcSchedule
 FOR EACH ROW
 BEGIN
-    DECLARE enrolled INT;
-    SELECT COUNT(*) INTO enrolled
-    FROM SC WHERE Cno = NEW.Cno AND Semester = NEW.Semester;
-    IF enrolled >= 60 THEN
+    DECLARE conflict_count INT;
+    SELECT COUNT(*) INTO conflict_count
+    FROM NpcSchedule ns
+    JOIN \`Session\` s ON ns.session_id = s.session_id
+    JOIN \`Session\` s_new ON s_new.session_id = NEW.session_id
+    WHERE ns.npc_id = NEW.npc_id
+      AND ns.schedule_date = NEW.schedule_date
+      AND (
+          (s.start_time <= s_new.start_time AND s.end_time > s_new.start_time)
+          OR
+          (s_new.start_time <= s.start_time AND s_new.end_time > s.start_time)
+      );
+    IF conflict_count > 0 THEN
         SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = '选课人数已满（上限60人）';
+        SET MESSAGE_TEXT = '该NPC在此时间段已有排班冲突';
     END IF;
 END//
 DELIMITER ;`,
-        file: '大作业二.sql（存储过程部分）',
+        file: '大作业二.sql（触发器）',
+      },
+      {
+        title: '存储过程：场次运营报表',
+        description: '按剧本和时间范围生成运营数据，包含总订单数、总收入、逐场次明细、上座率。',
+        language: 'sql',
+        code: `DELIMITER //
+CREATE PROCEDURE proc_session_report(
+    IN p_script_id INT,
+    IN p_start_date DATE,
+    IN p_end_date DATE
+)
+BEGIN
+    DECLARE v_total_orders INT DEFAULT 0;
+    DECLARE v_total_revenue DECIMAL(12,2) DEFAULT 0;
+
+    SELECT COUNT(o.order_id), COALESCE(SUM(o.amount), 0)
+    INTO v_total_orders, v_total_revenue
+    FROM \`Session\` se
+    LEFT JOIN \`Order\` o
+        ON se.session_id = o.session_id AND o.payment_status = 1
+    WHERE (p_script_id IS NULL OR se.script_id = p_script_id)
+      AND DATE(se.start_time) BETWEEN p_start_date AND p_end_date;
+
+    -- 汇总输出
+    SELECT p_script_id AS script_id,
+           p_start_date AS date_from, p_end_date AS date_to,
+           v_total_orders AS paid_orders,
+           v_total_revenue AS revenue;
+
+    -- 逐场次明细
+    SELECT s.name AS script_name, se.session_id,
+           se.start_time,
+           CONCAT(se.current_players, '/', se.max_players) AS occupancy,
+           ROUND(se.current_players / se.max_players * 100, 1) AS rate,
+           se.price,
+           COUNT(o.order_id) AS order_count,
+           COALESCE(SUM(o.amount), 0) AS session_revenue
+    FROM \`Session\` se
+    JOIN Script s ON se.script_id = s.script_id
+    LEFT JOIN \`Order\` o
+        ON se.session_id = o.session_id AND o.payment_status = 1
+    WHERE (p_script_id IS NULL OR se.script_id = p_script_id)
+      AND DATE(se.start_time) BETWEEN p_start_date AND p_end_date
+    GROUP BY se.session_id
+    ORDER BY se.start_time;
+END//
+DELIMITER ;
+
+-- 调用：CALL proc_session_report(1, '2026-06-01', '2026-06-30');`,
+        file: '大作业二.sql（存储过程）',
       },
     ],
     fullFiles: [
-      { path: '大作业二.sql', desc: '完整数据库设计 SQL（建表/索引/视图/存储过程/触发器）', lines: 150 },
+      { path: '大作业二.sql', desc: '完整数据库设计（建表/视图/触发器/存储过程/权限/测试数据）', lines: 709 },
     ],
     hasDemo: true,
     demoType: 'inline',
-demoUrl: '/demos/sql-playground',
-  },
-
-  // ─── Cosmic 3D ──────────────────────────────────────────────────
-  'cosmic-3d': {
-    tech: ['Three.js', 'JavaScript', 'WebGL', 'Canvas'],
-    features: [
-      '粒子系统：数千颗星星动态渲染',
-      '星轨运动：星星沿轨道缓慢移动',
-      '交互控制：鼠标拖拽旋转 + 滚轮缩放',
-      '性能优化：BufferGeometry + PointsMaterial',
-    ],
-    githubUrl: 'https://github.com/tgrlhl-linux/personal-site',
-    highlights: '基于 Three.js 的 3D 宇宙星空，沉浸式粒子系统与动态星轨，纯前端可在线体验。',
-    snippets: [
-      {
-        title: '星空场景核心',
-        description: 'Three.js 场景初始化、粒子系统、动画循环。',
-        language: 'javascript',
-        code: `// Cosmic 3D — 三维宇宙可视化
-// 使用 Three.js 渲染动态星空场景
-
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
-// ── 场景、相机、渲染器 ──
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0a0a1a);
-
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-camera.position.z = 500;
-
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-document.getElementById('canvas').appendChild(renderer.domElement);
-
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
-controls.minDistance = 50;
-controls.maxDistance = 2000;
-
-// ── 粒子系统 ──
-const STAR_COUNT = 4000;
-const positions = new Float32Array(STAR_COUNT * 3);
-const colors = new Float32Array(STAR_COUNT * 3);
-const sizes = new Float32Array(STAR_COUNT);
-
-for (let i = 0; i < STAR_COUNT; i++) {
-    // 球面均匀分布
-    const radius = 200 + Math.random() * 800;
-    const theta = Math.random() * Math.PI * 2;
-    const phi = Math.acos(2 * Math.random() - 1);
-
-    positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-    positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
-    positions[i * 3 + 2] = radius * Math.cos(phi);
-
-    // 星星颜色：白色偏暖/冷随机
-    const temp = 0.6 + Math.random() * 0.4;
-    colors[i * 3] = temp;
-    colors[i * 3 + 1] = temp * (0.7 + Math.random() * 0.3);
-    colors[i * 3 + 2] = 0.6 + Math.random() * 0.4;
-
-    sizes[i] = 0.5 + Math.random() * 2.0;
-}
-
-const geometry = new THREE.BufferGeometry();
-geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-
-const texture = createStarTexture();
-const material = new THREE.PointsMaterial({
-    size: 2,
-    vertexColors: true,
-    map: texture,
-    blending: THREE.AdditiveBlending,
-    transparent: true,
-    depthWrite: false,
-});
-
-const stars = new THREE.Points(geometry, material);
-scene.add(stars);
-
-// ── 星轨（动态旋转粒子环）──
-function createOrbitRing(radius, color, speed) {
-    const count = 200;
-    const positions = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-        const angle = (i / count) * Math.PI * 2;
-        positions[i * 3] = Math.cos(angle) * radius;
-        positions[i * 3 + 1] = Math.sin(angle) * radius * 0.3;
-        positions[i * 3 + 2] = 0;
-    }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const mat = new THREE.PointsMaterial({ color, size: 1.5, transparent: true, opacity: 0.4 });
-    const ring = new THREE.Points(geo, mat);
-    ring.userData = { speed };
-    return ring;
-}
-
-// ── 动画循环 ──
-function animate() {
-    requestAnimationFrame(animate);
-    stars.rotation.y += 0.0001;
-    rings.forEach(ring => {
-        ring.rotation.z += ring.userData.speed;
-        ring.rotation.x += ring.userData.speed * 0.3;
-    });
-    controls.update();
-    renderer.render(scene, camera);
-}
-animate();
-
-// ── 响应式 ──
-window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-});`,
-        file: 'main.js',
-      },
-    ],
-    fullFiles: [
-      { path: 'index.html', desc: 'HTML 入口', lines: 40 },
-      { path: 'main.js', desc: 'Three.js 场景主逻辑', lines: 120 },
-    ],
-    hasDemo: true,
-    demoType: 'inline',
-    demoUrl: '/demos/cosmic-3d',
-  },
-
-  // ─── PPT 设计作品集 ──────────────────────────────────────────────
-  'ppt-design-works': {
-    tech: ['HTML', 'CSS', 'JavaScript', 'Python', 'pptxgenjs'],
-    features: [
-      'HTML 前端幻灯片（Anime 主题 / Ghost Stories）',
-      '程序化 PPT 生成（Python / pptxgenjs）',
-      '演示技巧与设计原则展示',
-      '暖色克制、纯版式、高密度内容',
-    ],
-    githubUrl: 'https://github.com/tgrlhl-linux/personal-site',
-    highlights: '从纯 HTML 前端幻灯片到 Python 程序化生成，探索演示文稿的多种创作方式。',
-    snippets: [
-      {
-        title: '前端幻灯片框架',
-        description: '纯 HTML/CSS/JavaScript 实现的幻灯片框架，支持键盘翻页、进度指示器和动画过渡。',
-        language: 'html',
-        code: `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Anime 主题演示</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, "Noto Sans SC", sans-serif;
-         background: #1a1a2e; color: #eee; overflow: hidden; }
-  .slide { display: none; width: 100vw; height: 100vh;
-           padding: 4rem; flex-direction: column; justify-content: center; }
-  .slide.active { display: flex; }
-  .slide h1 { font-size: 3rem; background: linear-gradient(135deg, #e94560, #f5a623);
-               -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .slide p { font-size: 1.2rem; color: #a0a0b0; margin-top: 1rem; line-height: 1.8; }
-  .nav { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
-          display: flex; gap: 0.5rem; }
-  .nav-dot { width: 10px; height: 10px; border-radius: 50%;
-              background: #333; cursor: pointer; transition: all 0.3s; }
-  .nav-dot.active { background: #e94560; transform: scale(1.3); }
-  .progress { position: fixed; top: 0; left: 0; height: 3px;
-               background: linear-gradient(90deg, #e94560, #f5a623);
-               transition: width 0.5s; }
-</style>
-</head>
-<body>
-<div class="progress" id="progress"></div>
-<div class="slide active"><h1>Anime 主题演示</h1><p>日系动画风格的 HTML 幻灯片框架</p></div>
-<div class="slide"><h1>设计理念</h1><p>暖色克制 · 纯版式 · 高密度内容 · 手动翻页</p></div>
-<div class="slide"><h1>颜色系统</h1><p>主色: #e94560 · 辅色: #f5a623 · 背景: #1a1a2e</p></div>
-
-<div class="nav" id="nav"></div>
-<script>
-  const slides = document.querySelectorAll('.slide');
-  const nav = document.getElementById('nav');
-  let current = 0;
-
-  slides.forEach((_, i) => {
-    const dot = document.createElement('div');
-    dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
-    dot.onclick = () => goTo(i);
-    nav.appendChild(dot);
-  });
-
-  function goTo(i) {
-    slides[current].classList.remove('active');
-    current = (i + slides.length) % slides.length;
-    slides[current].classList.add('active');
-    document.querySelectorAll('.nav-dot').forEach((d, j) =>
-      d.classList.toggle('active', j === current));
-    document.getElementById('progress').style.width = ((current+1)/slides.length*100)+'%';
-  }
-
-  document.addEventListener('keydown', e => {
-    if (e.key === 'ArrowRight') goTo(current + 1);
-    if (e.key === 'ArrowLeft') goTo(current - 1);
-  });
-</script>
-</body>
-</html>`,
-        file: 'anime-theme.html',
-      },
-    ],
-    fullFiles: [
-      { path: 'anime-theme.html', desc: 'Anime 主题前端幻灯片', lines: 65 },
-      { path: 'ghost-stories.html', desc: 'Ghost Stories 暗色叙事', lines: 80 },
-      { path: 'generator.py', desc: 'Python 程序化 PPT 生成', lines: 120 },
-    ],
-    hasDemo: true,
-    demoType: 'external',
-    demoUrl: 'https://ppt-works.vercel.app',
-  },
-
-  // ─── NarrativeAnalysis — 大数据电影叙事分析 ──────────────────────
+    demoUrl: '/demos/sql-playground',
+  },  // ─── NarrativeAnalysis — 大数据电影叙事分析 ──────────────────────
   'narrative-analysis': {
     tech: ['Python', 'Flask', 'Hadoop', 'HBase', 'Docker'],
     features: [
