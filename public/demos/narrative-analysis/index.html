@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>叙事计算 - 电影叙事结构分析</title>
+    <!-- ECharts CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, "Microsoft YaHei", sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a3c6e 0%, #2c5a9e 100%);
+            color: white;
+            padding: 24px 40px;
+            text-align: center;
+        }
+        .header h1 { font-size: 28px; letter-spacing: 4px; }
+        .header p { margin-top: 8px; opacity: 0.85; font-size: 14px; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .controls {
+            display: flex; gap: 12px; flex-wrap: wrap;
+            margin-bottom: 20px; align-items: center;
+        }
+        .controls select, .controls button {
+            padding: 8px 16px; border: 1px solid #d0d5dd;
+            border-radius: 8px; font-size: 14px;
+            background: white; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .controls button {
+            background: #1a3c6e; color: white; border: none;
+        }
+        .controls button:hover { background: #2c5a9e; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .grid-full { grid-column: 1 / -1; }
+        .card {
+            background: white; border-radius: 12px;
+            padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .card h2 {
+            font-size: 16px; color: #1a3c6e;
+            margin-bottom: 12px; padding-bottom: 8px;
+            border-bottom: 2px solid #e8ecf1;
+        }
+        .chart { width: 100%; height: 360px; }
+        .table-wrap {
+            max-height: 360px; overflow-y: auto;
+        }
+        table {
+            width: 100%; border-collapse: collapse; font-size: 13px;
+        }
+        th {
+            background: #f7f8fa; color: #666;
+            padding: 8px 12px; text-align: left;
+            position: sticky; top: 0;
+        }
+        td { padding: 6px 12px; border-bottom: 1px solid #eee; }
+        tr:hover { background: #f5f7fa; }
+        .badge {
+            display: inline-block; padding: 2px 10px;
+            border-radius: 12px; font-size: 12px;
+            color: white; font-weight: 500;
+        }
+        .badge.positive { background: #52c41a; }
+        .badge.negative { background: #ff4d4f; }
+        .badge.neutral { background: #999; }
+        .stats-row {
+            display: flex; gap: 16px; flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .stat-box {
+            flex: 1; min-width: 160px;
+            background: white; border-radius: 12px;
+            padding: 16px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .stat-box .num { font-size: 28px; font-weight: bold; color: #1a3c6e; }
+        .stat-box .label { font-size: 13px; color: #999; margin-top: 4px; }
+        .footer {
+            text-align: center; color: #999;
+            padding: 20px; font-size: 12px;
+        }
+        @media (max-width: 900px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🎬 叙事计算</h1>
+    <p>基于电影剧本大数据的叙事结构挖掘与分析系统 | 大数据与数据思维 课程项目</p>
+</div>
+
+<div class="container">
+
+    <!-- 统计概览 -->
+    <div class="stats-row" id="statsRow">
+        <div class="stat-box">
+            <div class="num" id="movieCount">-</div>
+            <div class="label">已分析电影</div>
+        </div>
+        <div class="stat-box">
+            <div class="num" id="sceneCount">-</div>
+            <div class="label">总场景数</div>
+        </div>
+        <div class="stat-box">
+            <div class="num" id="charCount">-</div>
+            <div class="label">角色对数</div>
+        </div>
+        <div class="stat-box">
+            <div class="num" id="totalEmotion">-</div>
+            <div class="label">平均情感净值</div>
+        </div>
+    </div>
+
+    <!-- 控制栏 -->
+    <div class="controls">
+        <label style="font-size:14px;font-weight:500;">选择电影：</label>
+        <select id="movieSelector" onchange="loadMovie(this.value)">
+            <option value="">-- 请选择 --</option>
+        </select>
+        <button onclick="loadComparison()">➕ 加入对比</button>
+        <span style="font-size:13px;color:#999;margin-left:8px;" id="compareHint">可叠加显示多部电影的情感曲线</span>
+    </div>
+
+    <!-- 主图表区 -->
+    <div class="grid-2">
+        <div class="card grid-full">
+            <h2>📈 情感曲线 — 逐场景情感净值</h2>
+            <div id="emotionChart" class="chart"></div>
+            <p style="font-size:12px;color:#999;text-align:center;margin-top:4px;">
+                横轴 = 场景序列 | 纵轴 = 情感净值（正向-负向） | ⚡ 标记 = 叙事转折点
+            </p>
+        </div>
+        <div class="card">
+            <h2>🔄 角色共现 TOP 10</h2>
+            <div id="cooccurChart" class="chart"></div>
+        </div>
+        <div class="card">
+            <h2>📊 场景详情</h2>
+            <div class="table-wrap" id="sceneTable">
+                <p style="color:#999;text-align:center;padding:40px;">请选择一部电影</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 对比区 -->
+    <div class="card" id="compareSection" style="display:none;margin-top:16px;">
+        <h2>🔄 多电影对比</h2>
+        <div id="compareChart" class="chart" style="height:300px;"></div>
+        <div style="text-align:right;margin-top:4px;">
+            <button onclick="clearComparison()" style="padding:4px 12px;border:1px solid #ddd;border-radius:6px;background:white;cursor:pointer;font-size:12px;">清空对比</button>
+        </div>
+    </div>
+
+</div>
+
+<div class="footer">
+    大数据与数据思维 · 期末大作业 · 叙事计算项目组
+</div>
+
+<script>
+// ============================================================
+// 数据存储
+// ============================================================
+const emotionData = {};     // { movieId: [{scene, name, pos, neg, net}, ...] }
+const cooccurData = {};    // { movieId: [{charA, charB, count}, ...] }
+const movieList = [];      // [{id, name}]
+let compareList = [];      // [movieId, ...]
+
+// ============================================================
+// 加载数据
+// ============================================================
+async function loadAllData() {
+    // 尝试加载情感分析结果
+    const emotionFiles = [
+        'data/emotion_results/part-r-00000',
+        'data/emotion_results/part-r-00001',
+        'data/emotion_results/part-r-00002',
+    ];
+    const cooccurFiles = [
+        'data/cooccur_results/part-r-00000',
+        'data/cooccur_results/part-r-00001',
+    ];
+
+    // 加载情感数据
+    for (const f of emotionFiles) {
+        try {
+            const res = await fetch(f);
+            const text = await res.text();
+            parseEmotionData(text);
+        } catch(e) { /* 文件可能不存在，跳过 */ }
+    }
+
+    // 加载共现数据
+    for (const f of cooccurFiles) {
+        try {
+            const res = await fetch(f);
+            const text = await res.text();
+            parseCooccurData(text);
+        } catch(e) { /* 跳过 */ }
+    }
+
+    // 如果未加载到真实数据，加载示例数据
+    if (Object.keys(emotionData).length === 0) {
+        try {
+            const res = await fetch('data/sample_movie.json');
+            const sample = await res.json();
+            loadSampleData(sample);
+        } catch(e) {
+            console.warn('未找到数据文件，使用内置示例数据');
+            loadBuiltinSample();
+        }
+    }
+
+    // 填充电影选择器
+    populateSelector();
+    updateStats();
+}
+
+function parseEmotionData(text) {
+    const lines = text.split('\n');
+    let currentMovie = null;
+    let headerSkipped = false;
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+
+        // 检测电影标题行
+        const movieMatch = trimmed.match(/^--- (.+) ---$/);
+        if (movieMatch) {
+            currentMovie = movieMatch[1];
+            headerSkipped = false;
+            if (!emotionData[currentMovie]) emotionData[currentMovie] = [];
+            continue;
+        }
+
+        if (trimmed.startsWith('scene\tname')) { headerSkipped = true; continue; }
+        if (!headerSkipped) continue;
+        if (!currentMovie) continue;
+
+        // 解析数据行: scene name pos neg net_score
+        const parts = trimmed.split('\t');
+        if (parts.length >= 5) {
+            const sceneIdx = parseInt(parts[0]) || 0;
+            const sceneName = parts[1] || '';
+            const pos = parseInt(parts[2]) || 0;
+            const neg = parseInt(parts[3]) || 0;
+            const net = parseFloat(parts[4]) || 0;
+            if (!emotionData[currentMovie]) emotionData[currentMovie] = [];
+            emotionData[currentMovie].push({ scene: sceneIdx, name: sceneName,
+                pos, neg, net: Math.round(net * 10000) / 10000 });
+        }
+    }
+}
+
+function parseCooccurData(text) {
+    const lines = text.split('\n');
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        const parts = trimmed.split('\t');
+        if (parts.length >= 4) {
+            const movieId = parts[0];
+            const charA = parts[1];
+            const charB = parts[2];
+            const count = parseInt(parts[3]) || 0;
+            if (!cooccurData[movieId]) cooccurData[movieId] = [];
+            cooccurData[movieId].push({ charA, charB, count });
+            // 加入电影列表
+            if (!movieList.find(m => m.id === movieId)) {
+                movieList.push({ id: movieId, name: movieId.replace(/_/g, ' ') });
+            }
+        }
+    }
+}
+
+function loadSampleData(sample) {
+    if (sample.movies) {
+        for (const movie of sample.movies) {
+            if (movie.scenes) {
+                emotionData[movie.id] = movie.scenes;
+            }
+            if (movie.cooccurrences) {
+                cooccurData[movie.id] = movie.cooccurrences;
+            }
+            if (!movieList.find(m => m.id === movie.id)) {
+                movieList.push({ id: movie.id, name: movie.name || movie.id });
+            }
+        }
+    }
+}
+
+function loadBuiltinSample() {
+    // 内置示例数据：两部电影
+    const movies = {
+        'The_Matrix': {
+            scenes: [
+                { scene:1, name:'INT. APARTMENT - NIGHT', pos:5, neg:8, net:-0.02 },
+                { scene:2, name:'INT. OFFICE - DAY', pos:12, neg:3, net:0.06 },
+                { scene:3, name:'EXT. STREET - NIGHT', pos:3, neg:15, net:-0.08 },
+                { scene:4, name:'INT. CAR - NIGHT', pos:8, neg:6, net:0.01 },
+                { scene:5, name:'INT. MORPHEUS APARTMENT - NIGHT', pos:20, neg:2, net:0.12 },
+                { scene:6, name:'EXT. ROOFTOP - DAWN', pos:15, neg:5, net:0.07 },
+                { scene:7, name:'INT. SUBWAY STATION - NIGHT', pos:6, neg:18, net:-0.08 },
+                { scene:8, name:'INT. ORACLE HOUSE - DAY', pos:14, neg:4, net:0.07 },
+                { scene:9, name:'EXT. CITY STREETS - DAY', pos:10, neg:12, net:-0.01 },
+                { scene:10, name:'INT. GOVERNMENT BUILDING - DAY', pos:4, neg:20, net:-0.11 },
+                { scene:11, name:'INT. SUBWAY - DAY', pos:18, neg:10, net:0.05 },
+                { scene:12, name:'INT. HOLLOW - DAY', pos:22, neg:6, net:0.11 },
+                { scene:13, name:'EXT. ROOFTOP - NIGHT', pos:16, neg:4, net:0.08 },
+                { scene:14, name:'INT. HELICOPTER - DAWN', pos:8, neg:14, net:-0.04 },
+                { scene:15, name:'EXT. PARKING LOT - DAWN', pos:25, neg:3, net:0.15 },
+                { scene:16, name:'INT. PHONE BOOTH - DAY', pos:30, neg:2, net:0.19 },
+            ],
+            cooccurrences: [
+                { charA:'NEO', charB:'MORPHEUS', count:38 },
+                { charA:'NEO', charB:'TRINITY', count:25 },
+                { charA:'MORPHEUS', charB:'TRINITY', count:18 },
+                { charA:'NEO', charB:'AGENT SMITH', count:15 },
+                { charA:'MORPHEUS', charB:'AGENT SMITH', count:10 },
+                { charA:'TRINITY', charB:'AGENT SMITH', count:8 },
+                { charA:'NEO', charB:'CYPHER', count:7 },
+                { charA:'MORPHEUS', charB:'CYPHER', count:5 },
+                { charA:'TRINITY', charB:'CYPHER', count:4 },
+                { charA:'NEO', charB:'ORACLE', count:6 },
+            ]
+        },
+        'The_Shawshank_Redemption': {
+            scenes: [
+                { scene:1, name:'INT. COURTHOUSE - DAY', pos:3, neg:20, net:-0.12 },
+                { scene:2, name:'INT. PRISON BUS - DAY', pos:2, neg:18, net:-0.11 },
+                { scene:3, name:'EXT. SHAWSHANK PRISON - DAY', pos:4, neg:22, net:-0.12 },
+                { scene:4, name:'INT. CELL BLOCK - DAY', pos:5, neg:15, net:-0.07 },
+                { scene:5, name:'INT. MESS HALL - DAY', pos:6, neg:12, net:-0.04 },
+                { scene:6, name:'EXT. EXERCISE YARD - DAY', pos:8, neg:10, net:-0.01 },
+                { scene:7, name:'INT. CELL - NIGHT', pos:10, neg:8, net:0.01 },
+                { scene:8, name:'INT. PRISON LIBRARY - DAY', pos:15, neg:5, net:0.07 },
+                { scene:9, name:'EXT. ROOF WORK - DAY', pos:22, neg:2, net:0.14 },
+                { scene:10, name:'INT. WARDEN OFFICE - DAY', pos:4, neg:16, net:-0.08 },
+                { scene:11, name:'INT. CELL - NIGHT', pos:8, neg:12, net:-0.03 },
+                { scene:12, name:'INT. INFIRMARY - DAY', pos:3, neg:20, net:-0.12 },
+                { scene:13, name:'INT. LIBRARY - DAY', pos:14, neg:6, net:0.06 },
+                { scene:14, name:'INT. CELL - NIGHT', pos:12, neg:4, net:0.06 },
+                { scene:15, name:'EXT. PRISON WALL - NIGHT', pos:25, neg:3, net:0.15 },
+                { scene:16, name:'EXT. BEACH - DAY', pos:30, neg:0, net:0.21 },
+            ],
+            cooccurrences: [
+                { charA:'ANDY', charB:'RED', count:42 },
+                { charA:'ANDY', charB:'WARDEN', count:20 },
+                { charA:'ANDY', charB:'HEYWOOD', count:15 },
+                { charA:'RED', charB:'WARDEN', count:12 },
+                { charA:'ANDY', charB:'TOMMY', count:10 },
+                { charA:'RED', charB:'HEYWOOD', count:9 },
+                { charA:'RED', charB:'TOMMY', count:7 },
+                { charA:'ANDY', charB:'HADLEY', count:6 },
+                { charA:'WARDEN', charB:'HADLEY', count:5 },
+                { charA:'RED', charB:'BROOKS', count:4 },
+            ]
+        }
+    };
+
+    for (const [id, data] of Object.entries(movies)) {
+        emotionData[id] = data.scenes;
+        cooccurData[id] = data.cooccurrences;
+        movieList.push({ id, name: id.replace(/_/g, ' ') });
+    }
+}
+
+function populateSelector() {
+    const sel = document.getElementById('movieSelector');
+    for (const m of movieList) {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = m.name;
+        sel.appendChild(opt);
+    }
+    if (movieList.length > 0) {
+        sel.value = movieList[0].id;
+        loadMovie(movieList[0].id);
+    }
+}
+
+function updateStats() {
+    document.getElementById('movieCount').textContent = Object.keys(emotionData).length;
+    let totalScenes = 0, totalChars = 0, totalNet = 0, sceneCount = 0;
+    for (const [mid, scenes] of Object.entries(emotionData)) {
+        totalScenes += scenes.length;
+        for (const s of scenes) { totalNet += s.net; sceneCount++; }
+    }
+    document.getElementById('sceneCount').textContent = totalScenes;
+    document.getElementById('totalEmotion').textContent =
+        sceneCount > 0 ? (totalNet / sceneCount).toFixed(4) : '-';
+
+    let pairCount = 0;
+    for (const pairs of Object.values(cooccurData)) pairCount += pairs.length;
+    document.getElementById('charCount').textContent = pairCount;
+}
+
+// ============================================================
+// 加载单个电影
+// ============================================================
+function loadMovie(movieId) {
+    if (!movieId || !emotionData[movieId]) return;
+
+    renderEmotionChart(movieId);
+    renderCooccurChart(movieId);
+    renderSceneTable(movieId);
+}
+
+function renderEmotionChart(movieId) {
+    const data = emotionData[movieId];
+    if (!data || data.length === 0) {
+        document.getElementById('emotionChart').innerHTML = '<p style="color:#999;text-align:center;padding:60px;">暂无数据</p>';
+        return;
+    }
+
+    const chart = echarts.init(document.getElementById('emotionChart'));
+    const scenes = data.map((d, i) => i + 1);
+    const netScores = data.map(d => d.net);
+    const posCounts = data.map(d => d.pos);
+    const negCounts = data.map(d => -d.neg);
+
+    // 检测转折点（ECR 模拟：二阶差分峰值）
+    const ecr = [];
+    for (let i = 1; i < data.length - 1; i++) {
+        ecr.push(Math.abs(netScores[i] - netScores[i-1]) + Math.abs(netScores[i+1] - netScores[i]));
+    }
+    const mean = ecr.reduce((a,b)=>a+b,0) / ecr.length;
+    const std = Math.sqrt(ecr.reduce((a,b)=>a+(b-mean)*(b-mean),0)/ecr.length);
+    const turningPoints = [];
+    for (let i = 0; i < ecr.length; i++) {
+        if (ecr[i] > mean + 0.5 * std) {
+            turningPoints.push(i + 1); // 场景索引
+        }
+    }
+
+    const option = {
+        tooltip: {
+            trigger: 'axis',
+            formatter: function(params) {
+                const idx = params[0].dataIndex;
+                const d = data[idx];
+                let html = `<strong>场景 ${d.scene}: ${d.name || ''}</strong><br/>`;
+                html += `正向词: ${d.pos} | 负向词: ${d.neg}<br/>`;
+                html += `<strong>情感净值: ${d.net >= 0 ? '+' : ''}${d.net.toFixed(4)}</strong>`;
+                if (turningPoints.includes(idx + 1)) html += '<br/><span style="color:#f00;">⚡ 叙事转折点</span>';
+                return html;
+            }
+        },
+        legend: { data: ['情感净值', '正向词', '负向词'], top: 0 },
+        grid: { left: 50, right: 20, bottom: 30, top: 40 },
+        xAxis: {
+            type: 'category',
+            data: scenes.map(s => 'S' + s),
+            axisLabel: { rotate: 45, fontSize: 10 }
+        },
+        yAxis: { type: 'value', name: '情感得分' },
+        series: [
+            {
+                name: '情感净值',
+                type: 'line',
+                data: netScores,
+                smooth: true,
+                lineStyle: { width: 3, color: '#1a3c6e' },
+                areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0,0,0,1,
+                        [{offset:0,color:'rgba(26,60,110,0.3)'},{offset:1,color:'rgba(26,60,110,0.02)'}])
+                },
+                markPoint: {
+                    data: turningPoints.map(tp => ({
+                        coord: [tp - 1, netScores[tp - 1]],
+                        symbol: 'pin', symbolSize: 35,
+                        itemStyle: { color: '#ff4d4f' },
+                        label: { show: false }
+                    }))
+                }
+            },
+            {
+                name: '正向词',
+                type: 'bar',
+                data: posCounts,
+                barWidth: 4,
+                itemStyle: { color: 'rgba(82,196,26,0.4)' },
+                yAxisIndex: 0
+            },
+            {
+                name: '负向词',
+                type: 'bar',
+                data: negCounts,
+                barWidth: 4,
+                itemStyle: { color: 'rgba(255,77,79,0.4)' },
+                yAxisIndex: 0
+            }
+        ]
+    };
+    chart.setOption(option);
+    window.addEventListener('resize', () => chart.resize());
+}
+
+function renderCooccurChart(movieId) {
+    const data = cooccurData[movieId];
+    if (!data || data.length === 0) {
+        document.getElementById('cooccurChart').innerHTML = '<p style="color:#999;text-align:center;padding:60px;">暂无数据</p>';
+        return;
+    }
+
+    const chart = echarts.init(document.getElementById('cooccurChart'));
+    const top10 = [...data].sort((a,b) => b.count - a.count).slice(0, 10);
+    const names = top10.map(d => d.charA + ' — ' + d.charB);
+    const counts = top10.map(d => d.count);
+    const colors = ['#1a3c6e','#2c5a9e','#4a7fc7','#6b9ad8','#8bb4e8',
+                    '#ff6b6b','#ff8585','#e74c3c','#c0392b','#a93226'];
+
+    const option = {
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+        grid: { left: 100, right: 20, top: 10, bottom: 20 },
+        xAxis: { type: 'value' },
+        yAxis: {
+            type: 'category',
+            data: names.reverse(),
+            axisLabel: { fontSize: 11 }
+        },
+        series: [{
+            type: 'bar',
+            data: counts.reverse().map((v, i) => ({
+                value: v,
+                itemStyle: { color: colors[counts.length - 1 - i] || '#1a3c6e' }
+            })),
+            barWidth: 20,
+            label: { show: true, position: 'right', fontSize: 11 }
+        }]
+    };
+    chart.setOption(option);
+    window.addEventListener('resize', () => chart.resize());
+}
+
+function renderSceneTable(movieId) {
+    const data = emotionData[movieId];
+    if (!data || data.length === 0) {
+        document.getElementById('sceneTable').innerHTML = '<p style="color:#999;text-align:center;padding:40px;">暂无数据</p>';
+        return;
+    }
+
+    let html = '<table><thead><tr><th>场景</th><th>名称</th><th>正向</th><th>负向</th><th>净值</th><th>情感</th></tr></thead><tbody>';
+    for (const d of data) {
+        const sentiment = d.net > 0.05 ? '积极' : d.net < -0.05 ? '消极' : '中性';
+        const badgeClass = d.net > 0.05 ? 'positive' : d.net < -0.05 ? 'negative' : 'neutral';
+        html += `<tr>
+            <td>${d.scene}</td>
+            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${d.name}">${d.name || '-'}</td>
+            <td>${d.pos}</td>
+            <td>${d.neg}</td>
+            <td>${d.net.toFixed(4)}</td>
+            <td><span class="badge ${badgeClass}">${sentiment}</span></td>
+        </tr>`;
+    }
+    html += '</tbody></table>';
+    document.getElementById('sceneTable').innerHTML = html;
+}
+
+// ============================================================
+// 电影对比功能
+// ============================================================
+function loadComparison() {
+    const sel = document.getElementById('movieSelector');
+    const movieId = sel.value;
+    if (!movieId) { alert('请先选择一部电影'); return; }
+    if (compareList.includes(movieId)) { alert('该电影已在对比列表中'); return; }
+    if (compareList.length >= 4) { alert('最多同时对比 4 部电影'); return; }
+    compareList.push(movieId);
+    renderComparison();
+}
+
+function clearComparison() {
+    compareList = [];
+    document.getElementById('compareSection').style.display = 'none';
+}
+
+function renderComparison() {
+    if (compareList.length < 2) return;
+
+    document.getElementById('compareSection').style.display = 'block';
+    const chart = echarts.init(document.getElementById('compareChart'));
+    const colors = ['#1a3c6e','#e74c3c','#27ae60','#f39c12'];
+    const allSeries = [];
+
+    compareList.forEach((mid, idx) => {
+        const data = emotionData[mid];
+        if (!data) return;
+        const name = movieList.find(m => m.id === mid)?.name || mid;
+        const netScores = data.map(d => d.net);
+        allSeries.push({
+            name: name,
+            type: 'line',
+            data: netScores,
+            smooth: true,
+            lineStyle: { width: 2.5, color: colors[idx % colors.length] },
+            symbol: 'none'
+        });
+    });
+
+    const option = {
+        tooltip: { trigger: 'axis' },
+        legend: { data: allSeries.map(s => s.name), top: 0 },
+        grid: { left: 50, right: 20, bottom: 30, top: 40 },
+        xAxis: { type: 'category', data: emotionData[compareList[0]]?.map((_,i) => 'S'+(i+1)) || [],
+                 axisLabel: { rotate: 45, fontSize: 10 } },
+        yAxis: { type: 'value', name: '情感净值' },
+        series: allSeries
+    };
+    chart.setOption(option);
+    window.addEventListener('resize', () => chart.resize());
+}
+
+// ============================================================
+// 启动
+// ============================================================
+window.onload = loadAllData;
+</script>
+
+</body>
+</html>

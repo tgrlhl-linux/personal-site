@@ -1504,8 +1504,9 @@ def get_emotion_curve(movie_id):
       { path: 'cluster/start-cluster.sh', desc: '集群启动脚本', lines: 55 },
       { path: 'frontend/index.html', desc: '前端可视化页面', lines: 320 },
     ],
-    hasDemo: false,
-    demoType: 'none',
+    hasDemo: true,
+    demoType: 'inline',
+    demoUrl: '/demos/narrative-analysis',
   },
 };
 
