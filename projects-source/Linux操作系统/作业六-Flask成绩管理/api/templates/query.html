@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>成绩查询</h1>
+<div class="card" style="padding:20px;margin-bottom:20px;">
+<form method="POST">
+    <div class="query-options">
+        <label><input type="radio" name="query_type" value="1" {{ 'checked' if query_type == '1' or not query_type }}> 按学号</label>
+        <label><input type="radio" name="query_type" value="2" {{ 'checked' if query_type == '2' }}> 姓名模糊</label>
+        <label><input type="radio" name="query_type" value="3" {{ 'checked' if query_type == '3' }}> 科目范围</label>
+        <label><input type="radio" name="query_type" value="4" {{ 'checked' if query_type == '4' }}> 组合查询</label>
+    </div>
+    <div class="query-inputs">
+        <div class="q-block" id="q1">
+            <input type="text" name="sid" placeholder="输入学号">
+        </div>
+        <div class="q-block" id="q2" style="display:none">
+            <input type="text" name="keyword" placeholder="输入姓名关键字">
+        </div>
+        <div class="q-block" id="q3" style="display:none">
+            <select name="subject_id">{% for s in subjects %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}</select>
+            <input type="number" name="min_score" placeholder="最低分" step="0.1">
+            <input type="number" name="max_score" placeholder="最高分" step="0.1">
+        </div>
+        <div class="q-block" id="q4" style="display:none">
+            <input type="text" name="name_kw" placeholder="姓名关键字">
+            <select name="subj_id"><option value="">不限科目</option>{% for s in subjects %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}</select>
+            <input type="number" name="min_s" placeholder="最低分" step="0.1">
+            <input type="number" name="max_s" placeholder="最高分" step="0.1">
+        </div>
+        <button type="submit" class="btn btn-primary">查询</button>
+    </div>
+</form>
+</div>
+<div id="results">
+{% if results is not none %}
+<div class="card" style="padding:20px;">
+{% if query_type == '1' and results.student %}
+<h2>{{ results.student.name }} ({{ results.student.id }}) 的成绩单</h2>
+<p>班级：{{ results.student.class_name }} | 学院：{{ results.student.college }} | 系：{{ results.student.department }}</p>
+<div class="stats-row">
+    <span class="stat-mini"><span class="num">{{ results.total }}</span> 总分</span>
+    <span class="stat-mini"><span class="num">{{ results.avg }}</span> 平均分</span>
+    <span class="stat-mini"><span class="num">{{ results.gpa }}</span> GPA</span>
+</div>
+<div class="table-container">
+<table class="table"><thead><tr><th>科目</th><th>学分</th><th>成绩</th><th>数值</th></tr></thead>
+<tbody>{% for sc in results.scores %}<tr><td>{{ sc.name }}</td><td>{{ sc.credit }}</td><td>{{ sc.raw_score or '-' }}</td><td>{{ '%.0f'|format(sc.numeric_score) if sc.numeric_score is not none else '-' }}</td></tr>{% endfor %}</tbody></table></div>
+{% elif query_type == '2' and results %}
+<h2>共找到 {{ results|length }} 人</h2>
+<div class="table-container">
+<table class="table"><thead><tr><th>学号</th><th>姓名</th><th>班级</th><th>总分</th><th>平均分</th></tr></thead>
+<tbody>{% for r in results %}<tr><td><a href="{{ url_for('student_detail', student_id=r.id) }}">{{ r.id }}</a></td><td>{{ r.name }}</td><td>{{ r.class_name }}</td><td>{{ r.total }}</td><td>{{ r.avg }}</td></tr>{% endfor %}</tbody></table></div>
+{% elif query_type == '3' and results %}
+<h2>《{{ results.subject_name }}》查询结果</h2>
+<div class="table-container">
+<table class="table"><thead><tr><th>学号</th><th>姓名</th><th>班级</th><th>成绩</th><th>数值</th></tr></thead>
+<tbody>{% for r in results.rows %}<tr><td>{{ r.id }}</td><td>{{ r.name }}</td><td>{{ r.class_name }}</td><td>{{ r.raw_score or '-' }}</td><td>{{ '%.0f'|format(r.numeric_score) if r.numeric_score is not none else '-' }}</td></tr>{% endfor %}</tbody></table></div>
+{% elif query_type == '4' and results %}
+<h2>共找到 {{ results|length }} 人</h2>
+<div class="table-container">
+<table class="table"><thead><tr><th>学号</th><th>姓名</th><th>班级</th><th>总分</th><th>平均分</th></tr></thead>
+<tbody>{% for r in results %}<tr><td><a href="{{ url_for('student_detail', student_id=r.id) }}">{{ r.id }}</a></td><td>{{ r.name }}</td><td>{{ r.class_name }}</td><td>{{ r.total }}</td><td>{{ r.avg }}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<p>未找到记录</p>{% endif %}
+</div>
+{% endif %}
+</div>
+<script>
+document.querySelectorAll('input[name="query_type"]').forEach(function(r){
+    r.addEventListener('change',function(){for(var i=1;i<=4;i++){document.getElementById('q'+i).style.display=(this.value==i)?'flex':'none';}});
+});
+</script>
+{% endblock %}

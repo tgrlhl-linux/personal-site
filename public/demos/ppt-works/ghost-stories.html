@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>勿 入</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Ma+Shan+Zheng&display=swap');
+
+  body{
+    background:#0a0806;
+    color:rgba(220,212,200,.85);
+    font-family:'Noto Serif SC',serif;
+    font-size:1.05rem;
+    line-height:2.2;
+    letter-spacing:.5px;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+
+  /* 噪点覆盖 */
+  body::after{
+    content:'';position:fixed;top:0;left:0;width:100vw;height:100vh;
+    pointer-events:none;z-index:999;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+    opacity:.6;
+  }
+
+  /* 扫描线 */
+  body::before{
+    content:'';position:fixed;top:0;left:0;width:100vw;height:100vh;
+    pointer-events:none;z-index:998;
+    background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 3px);
+  }
+
+  /* 晕影 */
+  .vignette{
+    position:fixed;top:0;left:0;width:100vw;height:100vh;
+    pointer-events:none;z-index:997;
+    background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.6) 100%);
+  }
+
+  /* ─── 导航 ─── */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:16px 32px;
+    background:linear-gradient(180deg,rgba(10,8,6,.95) 0%,transparent 100%);
+    backdrop-filter:blur(6px);
+  }
+  .nav-title{
+    font-family:'Ma Shan Zheng',cursive;
+    font-size:1.1rem;color:rgba(180,140,100,.4);letter-spacing:8px;
+  }
+  .nav-links{display:flex;gap:8px;flex-wrap:wrap}
+  .nav-links a{
+    color:rgba(180,140,100,.25);text-decoration:none;
+    font-size:.7rem;padding:4px 12px;
+    border:1px solid transparent;border-radius:3px;
+    transition:.3s;letter-spacing:2px;
+  }
+  .nav-links a:hover{color:rgba(196,154,60,.5);border-color:rgba(196,154,60,.15)}
+
+  /* ─── Hero ─── */
+  .hero{
+    min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:100px 20px 60px;
+    position:relative;
+  }
+  .hero::before{
+    content:'';position:absolute;top:0;left:0;width:100%;height:100%;
+    background:radial-gradient(ellipse at center,rgba(120,60,30,.06) 0%,transparent 70%);
+    pointer-events:none;
+  }
+  .hero-title{
+    font-family:'Ma Shan Zheng',cursive;
+    font-size:clamp(3rem,10vw,6rem);
+    color:rgba(196,154,60,.6);
+    letter-spacing:20px;
+    text-shadow:0 0 80px rgba(196,154,60,.1);
+    animation:fadeIn 2.5s ease;
+  }
+  .hero-title .ac{color:#8b2020}
+  .hero-sub{
+    font-size:clamp(.8rem,2vw,1rem);
+    color:rgba(180,140,100,.2);
+    letter-spacing:12px;margin-top:16px;
+  }
+  .hero-line{
+    width:1px;height:60px;
+    background:linear-gradient(180deg,rgba(196,154,60,.3) 0%,transparent 100%);
+    margin:30px auto 16px;
+  }
+
+  /* ─── 分隔 ─── */
+  .divider{
+    text-align:center;padding:40px 20px;
+    color:rgba(196,154,60,.2);
+    font-size:1.2rem;letter-spacing:12px;
+    font-family:'Ma Shan Zheng',cursive;
+  }
+
+  /* ─── 故事正文 ─── */
+  .story{
+    max-width:680px;margin:0 auto;padding:20px 28px 80px;
+    position:relative;z-index:1;
+  }
+  .story-card{
+    margin-bottom:60px;
+    opacity:0;transform:translateY(30px);
+    transition:all .8s ease;
+  }
+  .story-card.vis{opacity:1;transform:translateY(0)}
+
+  .s-number{
+    font-family:'Ma Shan Zheng',cursive;
+    font-size:3rem;color:rgba(139,32,32,.2);
+    line-height:1;margin-bottom:-4px;
+  }
+  .s-title{
+    font-family:'Ma Shan Zheng',cursive;
+    font-size:1.6rem;color:rgba(196,154,60,.5);
+    letter-spacing:4px;margin-bottom:4px;
+  }
+  .s-source{
+    font-size:.7rem;color:rgba(180,140,100,.2);
+    letter-spacing:2px;margin-bottom:16px;
+  }
+  .s-source em{color:rgba(139,32,32,.3);font-style:normal}
+  .s-body{
+    text-indent:2em;
+    color:rgba(220,212,200,.75);
+    font-size:.95rem;margin-bottom:14px;
+  }
+  .s-body:last-of-type{margin-bottom:0}
+  .s-moral{
+    margin-top:16px;padding:14px 18px;
+    border-left:2px solid rgba(196,154,60,.2);
+    background:rgba(196,154,60,.03);
+    border-radius:0 6px 6px 0;
+    font-size:.8rem;color:rgba(196,154,60,.4);
+    font-style:italic;
+  }
+
+  /* ─── 引用 ─── */
+  .quote{
+    max-width:620px;margin:0 auto;padding:30px 24px 50px;
+    text-align:center;position:relative;z-index:1;
+  }
+  .quote p{
+    font-size:1rem;color:rgba(180,140,100,.2);
+    line-height:2;letter-spacing:2px;
+  }
+  .quote p::before{content:'「';color:rgba(196,154,60,.15)}
+  .quote p::after{content:'」';color:rgba(196,154,60,.15)}
+  .quote .src{
+    font-size:.7rem;color:rgba(180,140,100,.1);
+    margin-top:8px;letter-spacing:4px;
+  }
+
+  /* ─── Footer ─── */
+  footer{
+    text-align:center;padding:40px 20px 30px;
+    border-top:1px solid rgba(180,140,100,.05);
+    position:relative;z-index:1;
+  }
+  footer p{font-size:.7rem;color:rgba(180,140,100,.12);letter-spacing:6px}
+
+  @keyframes fadeIn{
+    from{opacity:0;letter-spacing:40px;filter:blur(4px)}
+    to{opacity:1;letter-spacing:20px;filter:blur(0)}
+  }
+
+  @keyframes glitch{
+    0%{transform:translate(0)}
+    20%{transform:translate(-2px,1px)}
+    40%{transform:translate(2px,-1px)}
+    60%{transform:translate(-1px,2px)}
+    80%{transform:translate(1px,-2px)}
+    100%{transform:translate(0)}
+  }
+
+  @media(max-width:600px){
+    nav{padding:12px 16px}
+    .nav-title{font-size:.85rem}
+    .nav-links a{font-size:.6rem;padding:3px 8px}
+    .story{padding:10px 16px 60px}
+    .s-title{font-size:1.3rem}
+    .story-card{margin-bottom:40px}
+  }
+</style>
+</head>
+<body>
+<div class="vignette"></div>
+
+<nav>
+  <div class="nav-title">勿 入</div>
+  <div class="nav-links">
+    <a href="#s1">画皮</a>
+    <a href="#s2">聂小倩</a>
+    <a href="#s3">孟婆</a>
+    <a href="#s4">年兽</a>
+    <a href="#s5">钟馗</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <h1 class="hero-title">勿<span class="ac">入</span></h1>
+  <p class="hero-sub">五 则 中 国 鬼 事</p>
+  <div class="hero-line"></div>
+</section>
+
+<div class="quote">
+  <p>凡治怪也，必先正其心。心正而后神安，神安而后鬼服。</p>
+  <p class="src">——《论衡 · 订鬼》</p>
+</div>
+
+<div class="divider">◇ ◇ ◇</div>
+
+<div class="story" id="stories"></div>
+
+<div class="divider">◇ ◇ ◇</div>
+
+<div class="quote">
+  <p>姑妄言之姑听之，豆棚瓜架雨如丝。<br>料应厌作人间语，爱听秋坟鬼唱时。</p>
+  <p class="src">—— 王士禛 题《聊斋志异》</p>
+</div>
+
+<footer>
+  <p>灯 下 观 鬼 · 心 中 无 鬼</p>
+</footer>
+
+<script>
+const STORIES = [
+  {
+    id:'s1', num:'壹', title:'画皮', src:'《聊斋志异》 · 清 蒲松龄',
+    body:[
+      '太原王生，早行遇一女郎，抱独行。生见其风姿绰约，心相爱乐，乃邀至书斋同居。女自言："父母贪财，鬻妾于朱门。嫡妒甚，朝詈而夕楚辱，故逸出耳。"',
+      '生纳之。数日，微闻市中有道士言："君身邪气萦绕，恐有不测。"生不深信。一日自外归，欲窥女子所为。从窗隙窥之，见一狞鬼，面翠色，齿巉巉如锯。铺人皮于榻上，执彩笔而绘之。已而掷笔，举皮若振衣状，披于身，遂化为女子。',
+      '生大骇，急求道士。道士叹曰："此鬼亦可怜，觅代不得。然汝既招之，当自了之。"授一拂尘，令悬寝室。女子见拂尘，碎之如纸，径取生心而去。',
+      '生妻陈氏，悲痛欲绝。求道士，道士曰："不意此鬼乃尔凶狠。吾当为汝收之。"仗剑至，鬼欲遁，逐而击之。鬼仆地，化为一团浓烟。道士以葫芦纳之。',
+      '陈氏跪求救夫。道士曰："市上有疯者，卧粪土中。汝叩首哀求，或可有济。"陈氏忍臭跪求，疯者唾而笑，笑而唾，终以痰唾授陈氏。陈氏捧归，敷于心口，少顷，热气蒸腾，心口渐合，生竟复苏。'
+    ],
+    moral:'画皮画骨难画心。世上最险恶者，非面目狰狞之鬼，乃披着人皮之欲。'
+  },
+  {
+    id:'s2', num:'贰', title:'聂小倩', src:'《聊斋志异》 · 清 蒲松龄',
+    body:[
+      '浙江人宁采臣，性慷爽，生平无二色。赴金华，至北郭，解装兰若。寺中殿塔壮丽，然蓬蒿没人，似无行者。东西僧舍，门皆虚掩，惟南一小舍，户牖新掩。',
+      '夜有女子来，年约十八九，意态妖媚。宁叱曰："卿宜速去！我宁采臣，非登徒子比。"女逡巡欲遁，忽返身以黄金一锭置褥上。宁掇而掷诸庭曰："不义之物，污我囊橐！"',
+      '女惭而退，至户外谓曰："君信义士，妾不敢隐。妾聂小倩，年十八夭殁，葬寺侧。妖物役我以财色惑人，今无一可惑。愿从君归，乞藏骨于清静之所。"',
+      '宁毅然许之。越日，依女言掘骨，以衣衾敛之，携归葬于斋外。女竟从之归，入门伏拜曰："感君高义，愿执箕帚。"宁母惧，女操作如常人，事母至孝。',
+      '久之，人鬼殊途而情同母女。宁妻殁后，母欲纳之。女叹曰："妾无生理，若为人妇，恐损郎君。"宁曰："吾宁损寿，不忍负卿。"遂为夫妇。'
+    ],
+    moral:'鬼未必恶，人未必善。心正方能御外邪，至诚可以感幽冥。'
+  },
+  {
+    id:'s3', num:'叁', title:'孟婆汤', src:'民间传说',
+    body:[
+      '冥途之上，奈何桥头，有一位老妪名唤孟婆。她守着那口不知年月的大釜，釜中汤水日夜翻腾，青烟袅袅——这便是孟婆汤，又名忘忧汤。',
+      '相传孟婆生于西汉，幼读儒书，壮诵佛经，凡有前世之事、来生之因，无不洞悉。上天悯世人死后仍为情爱恩怨所苦，便敕令孟婆于奈何桥头煮汤，使过往鬼魂饮之，尽忘前尘。',
+      '汤有八味：一生的酸甜苦辣、爱恨嗔痴、悲欢离合，尽在其中。饮下此汤，前世的恩怨纠葛、刻骨铭心，皆化作一口温热滑过咽喉，再无痕迹。',
+      '有痴情者不肯饮，孟婆便叹道："你念念不忘，可她已过了桥，饮了汤。你守着的，不过是自己的执念罢了。"纵是铁石心肠，终抵不过那一碗汤的热气。',
+      '但也有传说，极少数人饮汤不效——非汤无功，乃其执念太深，深到连孟婆汤也无法化开。于是他们带着残缺的记忆坠入轮回，在茫茫人海中，总觉得有一个身影似曾相识。'
+    ],
+    moral:'忘记不是背叛，是慈悲。带着前世的重负，如何走好这一生的路？'
+  },
+  {
+    id:'s4', num:'肆', title:'年兽', src:'民间传说 · 上古',
+    body:[
+      '太古之时，深海之中有一种异兽，名曰"年"。其形若狮非狮，若麟非麟，头生独角，口吐云雾。年兽长居海底，每隔三百六十五日便上岸一次。',
+      '年兽一出，则山林震动，百兽奔逃。它闯入村落，啃食牲畜，践踏田禾，甚至伤人。每至岁末，百姓便扶老携幼逃入深山，以避年兽之害。',
+      '有一年岁末，村中来了一位白发老者。众人皆忙于逃难，独老者不入山。有老妇劝之，老者笑而不答。是夜，年兽闯入村中，但见一户人家门上贴大红纸，屋内烛火通明。',
+      '年兽怒吼一声，欲扑向门扉。忽然院内传来"噼啪"巨响——原是老者将竹节投入火中，竹节受热爆裂，声如雷霆。年兽大惊，浑身战栗，转身便逃入海中，从此再不敢上岸。',
+      '原来年兽有三怕：一怕红色，二怕火光，三怕响声。自此每到岁末，百姓便贴红联、燃爆竹、点灯笼，通宵守岁，以驱年兽。年复一年，便成了中国人最隆重的节日——过年。'
+    ],
+    moral:'最可怖的怪物，也有它的弱点。勇气与智慧，远比逃避更有力量。'
+  },
+  {
+    id:'s5', num:'伍', title:'钟馗嫁妹', src:'民间传说 · 唐',
+    body:[
+      '钟馗者，终南山人氏。生得豹头环眼，铁面虬鬓，相貌奇丑，然才华横溢，满腹经纶。唐武德年间，赴长安应试，一路过关斩将，竟中了状元。',
+      '殿试之日，唐高祖见其貌丑，心中不悦，曰："我朝取士，当以貌为先。"遂夺其状元，不予功名。钟馗愤极，一头撞死在殿阶之上。高祖悔之，以状元礼葬之。',
+      '钟馗死后，魂归地府。阎王怜其刚直，封为"驱魔大神"，赐青锋宝剑，专管人间妖魔鬼怪。钟馗受命，遍游天下，斩妖除邪，无所不能。',
+      '钟馗有一妹，名唤钟藜，自幼父母双亡，兄妹相依为命。钟馗死后，其妹孤苦无依。钟馗在冥界得知，心下不忍。他虽为神，仍难忘兄妹之情。',
+      '于是他率众鬼卒，张灯结彩，笙箫鼓乐，于夜间回到人间，将妹妹风光嫁与一正直书生。百鬼抬轿，灯火通明，笙歌彻夜——这便是"钟馗嫁妹"的佳话。人鬼殊途，而兄妹之情，跨越阴阳。'
+    ],
+    moral:'世间最重的不是功名，不是相貌，而是一份未了的情义。神鬼皆然。'
+  }
+];
+
+// 渲染
+const container = document.getElementById('stories');
+STORIES.forEach((s,i)=>{
+  const card = document.createElement('div');
+  card.className = 'story-card';
+  card.id = s.id;
+  card.innerHTML = `
+    <div class="s-number">${s.num}</div>
+    <h2 class="s-title">${s.title}</h2>
+    <p class="s-source">${s.src}</p>
+    ${s.body.map(p=>`<p class="s-body">${p}</p>`).join('')}
+    <div class="s-moral">${s.moral}</div>
+  `;
+  container.appendChild(card);
+
+  // 滚动动画
+  const obs = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting){card.classList.add('vis');obs.unobserve(card)}});
+  },{threshold:.15});
+  obs.observe(card);
+});
+
+// 首卡直接可见
+setTimeout(()=>{
+  document.querySelectorAll('.story-card').forEach(c=>{
+    const r=c.getBoundingClientRect();
+    if(r.top<window.innerHeight)c.classList.add('vis');
+  });
+},200);
+
+// 标题闪烁效果（偶发）
+setInterval(()=>{
+  if(Math.random()<.08){
+    const h=document.querySelector('.hero-title');
+    if(h)h.style.animation='glitch .15s ease';
+    setTimeout(()=>{if(h)h.style.animation=''},200);
+  }
+},3000);
+
+// Console 彩蛋
+console.log('%c 勿 入 ','background:#0a0806;color:#c49a3c;font-size:16px;padding:6px 14px;');
+console.log('%c 灯下观鬼，心中无鬼 ','color:rgba(180,140,100,.3);font-size:11px;');
+</script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}成绩管理系统{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    {% if session.get('user_id') %}
+    <header class="app-header">
+        <div class="header-inner">
+            <div class="header-brand">
+                <a href="{{ url_for('dashboard') }}" class="brand-link">成绩管理系统</a>
+            </div>
+            <nav class="header-nav">
+                <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.path == url_for('dashboard') %}active{% endif %}">首页</a>
+                <a href="{{ url_for('student_list') }}" class="nav-item {% if request.path.startswith('/students') %}active{% endif %}">学生</a>
+                <a href="{{ url_for('query_page') }}" class="nav-item {% if request.path == url_for('query_page') %}active{% endif %}">查询</a>
+                <a href="{{ url_for('sort_page') }}" class="nav-item {% if request.path == url_for('sort_page') %}active{% endif %}">排序</a>
+                {% if session.role in ('admin','teacher') %}
+                <a href="{{ url_for('batch_scores') }}" class="nav-item bonus {% if request.path == url_for('batch_scores') %}active{% endif %}">批量录入</a>
+                {% endif %}
+                <a href="{{ url_for('statistics') }}" class="nav-item bonus {% if request.path == url_for('statistics') %}active{% endif %}">统计报表</a>
+                {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('user_list') }}" class="nav-item {% if request.path == url_for('user_list') %}active{% endif %}">用户管理</a>
+                {% endif %}
+            </nav>
+            <div class="header-user">
+                <span>{{ session.get('username','') }} ({{ session.get('role','') }})</span>
+                {% if session.get('scope') and session.get('scope') != '*' %}
+                <span class="scope-badge" title="数据范围">{{ session.get('scope') }}</span>
+                {% endif %}
+                <a href="{{ url_for('logout') }}" class="btn-logout">退出</a>
+            </div>
+        </div>
+    </header>
+    {% endif %}
+    <main class="app-main">
+        <div class="main-inner">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    {% if session.get('user_id') %}
+    <footer class="app-footer">
+        <div class="footer-inner">
+            <span>Linux 作业六 - 成绩管理系统</span>
+            <span>2400770044</span>
+        </div>
+    </footer>
+    {% endif %}
+</body>
+</html>

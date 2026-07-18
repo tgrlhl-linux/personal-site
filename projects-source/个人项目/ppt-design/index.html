@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>从工具到伙伴 — AI 时代的认知跃迁</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;700&family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ===========================================
+   VIEWPORT-BASE.CSS (FIXED 16:9 STAGE)
+   =========================================== */
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #080c14; }
+.deck-viewport { position: fixed; inset: 0; overflow: hidden; background: #080c14; }
+.deck-stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; transform-origin: 0 0; background: transparent; }
+.slide { position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: hidden; display: block; visibility: hidden; opacity: 0; pointer-events: none; }
+.slide.active, .slide.visible { visibility: visible; opacity: 1; pointer-events: auto; z-index: 1; }
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+@media print {
+  html, body { width: 1920px; height: auto; overflow: visible; background: #111; }
+  .deck-viewport { position: static; overflow: visible; background: #111; }
+  .deck-stage { position: static; width: auto; height: auto; transform: none !important; background: none; }
+  .slide { position: relative; display: block !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; width: 1920px; height: 1080px; break-after: page; page-break-after: always; }
+  .slide:last-child { break-after: auto; page-break-after: auto; }
+  .deck-controls, .star-canvas { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; } }
+
+/* ===========================================
+   BROADSIDE × STARFIELD — THEME TOKENS
+   =========================================== */
+:root {
+  --ink: #0a0e1a;
+  --ink-alt: #111624;
+  --orange: #E85D26;
+  --orange-glow: rgba(232,93,38,0.25);
+  --cream: #F0ECE5;
+  --cream-muted: #888880;
+  --cream-hint: #505048;
+  --border: #1e2434;
+  --ink-on-orange: rgba(232,228,222,0.85);
+  --ink-on-orange-hint: rgba(232,228,222,0.55);
+  --font-display: 'Barlow', 'Noto Sans SC', sans-serif;
+  --font-chrome: 'IBM Plex Mono', monospace;
+  --ease-slide: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ===========================================
+   STAR FIELD CANVAS
+   =========================================== */
+.star-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===========================================
+   CHROME BAR
+   =========================================== */
+.chrome-bar {
+  position: absolute;
+  left: 105px; right: 105px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-chrome);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cream-hint);
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-enter);
+}
+.slide.visible .chrome-bar { opacity: 1; }
+.chrome-top { top: 60px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.chrome-bottom { bottom: 60px; padding-top: 16px; border-top: 1px solid var(--border); }
+.chrome-bar .orange-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); display: inline-block; margin-right: 12px; }
+.chrome-bar .slide-counter { font-size: 13px; color: var(--cream-hint); }
+
+/* ===========================================
+   GENERAL SLIDE BASE
+   =========================================== */
+.content-slide { background: var(--ink); }
+
+/* ===========================================
+   P1 — COVER: Deep Space + Floating Title
+   =========================================== */
+.slide-cover {
+  background: radial-gradient(ellipse at 30% 40%, rgba(30,20,60,0.6) 0%, transparent 50%),
+              radial-gradient(ellipse at 70% 60%, rgba(232,93,38,0.08) 0%, transparent 40%),
+              radial-gradient(ellipse at 50% 100%, rgba(10,14,26,1) 0%, transparent 70%),
+              linear-gradient(180deg, #060a14 0%, #0a0e1a 40%, #0e1424 100%);
+}
+.slide-cover .catalogue-num {
+  position: absolute; top: 40px; left: 50px;
+  font-family: var(--font-chrome); font-size: 18px; font-weight: 500;
+  letter-spacing: 0.1em; color: rgba(240,236,229,0.3);
+  opacity: 0; transform: translateY(-10px);
+  transition: all 0.8s var(--ease-enter) 0.2s; z-index: 2;
+}
+.slide-cover.visible .catalogue-num { opacity: 1; transform: translateY(0); }
+
+.slide-cover .cover-wrap {
+  position: absolute;
+  left: 100px; top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  transform-style: preserve-3d;
+  perspective: 800px;
+}
+
+/* The floating 3D title group */
+.slide-cover .float-group {
+  transform-style: preserve-3d;
+  transition: transform 0.15s ease-out;
+}
+
+.slide-cover .cover-label {
+  font-family: var(--font-chrome); font-size: 16px; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--orange); margin-bottom: 24px;
+  opacity: 0; transform: translateY(20px) translateZ(30px);
+  transition: all 0.6s var(--ease-enter) 0.4s;
+  text-shadow: 0 0 20px var(--orange-glow);
+}
+.slide-cover.visible .cover-label { opacity: 1; transform: translateY(0) translateZ(30px); }
+
+.slide-cover .cover-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 160px;
+  line-height: 0.88;
+  letter-spacing: -0.04em;
+  text-transform: lowercase;
+  color: var(--cream);
+  margin: 0;
+  filter: drop-shadow(0 4px 40px rgba(232,93,38,0.15));
+}
+.slide-cover .cover-title .line1 {
+  display: block;
+  opacity: 0; transform: translateY(40px) translateZ(0px);
+  transition: all 0.9s var(--ease-slide) 0.3s;
+}
+.slide-cover.visible .cover-title .line1 { opacity: 1; transform: translateY(0) translateZ(0px); }
+.slide-cover .cover-title .line2 {
+  display: block;
+  color: var(--orange);
+  text-shadow: 0 0 60px var(--orange-glow), 0 0 120px rgba(232,93,38,0.1);
+  opacity: 0; transform: translateY(60px) translateZ(40px);
+  transition: all 0.9s var(--ease-slide) 0.6s;
+}
+.slide-cover.visible .cover-title .line2 { opacity: 1; transform: translateY(0) translateZ(40px); }
+
+.slide-cover .cover-sub {
+  font-family: var(--font-display); font-weight: 500;
+  font-size: 28px;
+  color: rgba(240,236,229,0.5);
+  margin-top: 28px; letter-spacing: 0.04em;
+  opacity: 0; transform: translateY(20px) translateZ(20px);
+  transition: all 0.6s var(--ease-enter) 1s;
+}
+.slide-cover.visible .cover-sub { opacity: 1; transform: translateY(0) translateZ(20px); }
+
+.slide-cover .cover-meta {
+  position: absolute; bottom: 60px; left: 100px;
+  display: flex; align-items: center; gap: 16px;
+  font-family: var(--font-chrome); font-size: 13px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: rgba(240,236,229,0.25); z-index: 2;
+  opacity: 0;
+  transition: all 0.6s var(--ease-enter) 1.3s;
+}
+.slide-cover.visible .cover-meta { opacity: 1; }
+.slide-cover .cover-meta .sep { width: 24px; height: 1px; background: rgba(240,236,229,0.15); }
+
+/* Nebula glow behind cover title */
+.slide-cover .nebula-glow {
+  position: absolute;
+  left: 50%; top: 45%;
+  transform: translate(-50%, -50%);
+  width: 900px; height: 600px;
+  background: radial-gradient(ellipse, rgba(232,93,38,0.06) 0%, rgba(120,60,120,0.04) 30%, transparent 60%);
+  filter: blur(60px);
+  pointer-events: none; z-index: 1;
+}
+
+/* ===========================================
+   P2 — 2026 Status
+   =========================================== */
+.slide-2 { background: var(--ink); }
+.slide-2 .content-wrap {
+  position: absolute; left: 105px; top: 130px; right: 105px; bottom: 130px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.slide-2 .kicker {
+  font-family: var(--font-chrome); font-size: 14px; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--orange); margin-bottom: 20px;
+  opacity: 0; transform: translateY(15px);
+  transition: all 0.6s var(--ease-enter) 0.1s;
+}
+.slide-2.visible .kicker { opacity: 1; transform: translateY(0); }
+.slide-2 h2 {
+  font-family: var(--font-display); font-weight: 800; font-size: 86px;
+  line-height: 0.9; letter-spacing: -0.03em;
+  color: var(--cream); margin-bottom: 40px;
+  opacity: 0; transform: translateY(20px);
+  transition: all 0.6s var(--ease-enter) 0.3s;
+}
+.slide-2.visible h2 { opacity: 1; transform: translateY(0); }
+.slide-2 h2 .highlight { color: var(--orange); text-shadow: 0 0 30px var(--orange-glow); }
+
+.slide-2 .stat-row { display: flex; gap: 40px; margin-top: 10px; }
+.slide-2 .stat-item {
+  flex: 1; border-top: 1px solid var(--border); padding-top: 28px;
+  opacity: 0; transform: translateY(20px);
+  transition: all 0.6s var(--ease-enter) 0.5s;
+}
+.slide-2 .stat-item:nth-child(2) { transition-delay: 0.65s; }
+.slide-2 .stat-item:nth-child(3) { transition-delay: 0.8s; }
+.slide-2.visible .stat-item { opacity: 1; transform: translateY(0); }
+.slide-2 .stat-num {
+  font-family: var(--font-display); font-weight: 900; font-size: 105px;
+  line-height: 1; letter-spacing: -0.04em; color: var(--orange);
+}
+.slide-2 .stat-label {
+  font-family: var(--font-display); font-weight: 500; font-size: 22px;
+  color: var(--cream); margin-top: 8px; line-height: 1.4;
+}
+.slide-2 .stat-note {
+  font-family: var(--font-chrome); font-size: 13px;
+  letter-spacing: 0.06em; color: var(--cream-hint); margin-top: 6px;
+}
+.slide-2 .insight-line {
+  margin-top: 32px; padding-top: 24px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 16px;
+  font-family: var(--font-display); font-weight: 500; font-size: 22px;
+  color: var(--cream-muted);
+  opacity: 0;
+  transition: all 0.6s var(--ease-enter) 1s;
+}
+.slide-2.visible .insight-line { opacity: 1; }
+.slide-2 .insight-line .slash { color: var(--orange); font-family: var(--font-chrome); font-weight: 700; }
+
+/* ===========================================
+   P3 — Three Collaboration Modes
+   =========================================== */
+.slide-3 { background: var(--ink); }
+.slide-3 .content-wrap {
+  position: absolute; left: 105px; top: 130px; right: 105px; bottom: 130px;
+}
+.slide-3 .kicker {
+  font-family: var(--font-chrome); font-size: 14px; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--orange); margin-bottom: 16px;
+  opacity: 0; transform: translateY(15px);
+  transition: all 0.6s var(--ease-enter) 0.1s;
+}
+.slide-3.visible .kicker { opacity: 1; transform: translateY(0); }
+.slide-3 h2 {
+  font-family: var(--font-display); font-weight: 800; font-size: 72px;
+  line-height: 0.9; letter-spacing: -0.03em;
+  color: var(--cream); margin-bottom: 40px;
+  opacity: 0; transform: translateY(20px);
+  transition: all 0.6s var(--ease-enter) 0.3s;
+}
+.slide-3.visible h2 { opacity: 1; transform: translateY(0); }
+
+.slide-3 .card-row { display: flex; gap: 30px; height: 560px; }
+.slide-3 .mode-card {
+  flex: 1; border: 1px solid var(--border);
+  padding: 36px 30px; display: flex; flex-direction: column;
+  position: relative; overflow: hidden;
+  transform-style: preserve-3d;
+  opacity: 0; transform: translateY(30px) rotateX(2deg);
+  transition: all 0.7s var(--ease-enter) 0.4s, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.slide-3 .mode-card:nth-child(2) { transition-delay: 0.55s; }
+.slide-3 .mode-card:nth-child(3) { transition-delay: 0.7s; }
+.slide-3.visible .mode-card { opacity: 1; transform: translateY(0) rotateX(0deg); }
+.slide-3 .mode-card:hover {
+  border-color: var(--orange);
+  box-shadow: 0 0 50px rgba(232,93,38,0.1);
+}
+.slide-3 .mode-card .card-icon { font-size: 48px; margin-bottom: 20px; }
+.slide-3 .mode-card .card-tag {
+  font-family: var(--font-chrome); font-size: 12px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--orange); margin-bottom: 12px;
+}
+.slide-3 .mode-card .card-title {
+  font-family: var(--font-display); font-weight: 700; font-size: 40px;
+  line-height: 1.05; letter-spacing: -0.02em; color: var(--cream); margin-bottom: 14px;
+}
+.slide-3 .mode-card .card-desc {
+  font-family: var(--font-display); font-weight: 400; font-size: 20px;
+  line-height: 1.55; color: var(--cream-muted); flex: 1;
+}
+.slide-3 .mode-card .card-era {
+  font-family: var(--font-chrome); font-size: 12px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--cream-hint);
+  margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border);
+}
+.slide-3 .mode-card::before {
+  content: ''; position: absolute; left: 0; top: 0;
+  width: 3px; height: 0; background: var(--orange);
+  transition: height 0.5s var(--ease-enter);
+}
+.slide-3 .mode-card:hover::before { height: 100%; }
+
+/* ===========================================
+   P4 — Personal OS Upgrade
+   =========================================== */
+.slide-4 { background: var(--ink); }
+.slide-4 .content-wrap {
+  position: absolute; left: 105px; top: 130px; right: 105px; bottom: 130px;
+}
+.slide-4 .kicker {
+  font-family: var(--font-chrome); font-size: 14px; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--orange); margin-bottom: 16px;
+  opacity: 0; transform: translateY(15px);
+  transition: all 0.6s var(--ease-enter) 0.1s;
+}
+.slide-4.visible .kicker { opacity: 1; transform: translateY(0); }
+.slide-4 h2 {
+  font-family: var(--font-display); font-weight: 800; font-size: 72px;
+  line-height: 0.9; letter-spacing: -0.03em;
+  color: var(--cream); margin-bottom: 36px;
+  opacity: 0; transform: translateY(20px);
+  transition: all 0.6s var(--ease-enter) 0.3s;
+}
+.slide-4.visible h2 { opacity: 1; transform: translateY(0); }
+
+.slide-4 .layer-stack { display: flex; flex-direction: column; gap: 6px; }
+.slide-4 .layer-item {
+  display: flex; align-items: stretch;
+  border: 1px solid var(--border);
+  opacity: 0; transform: translateY(20px);
+  transition: all 0.6s var(--ease-enter);
+  transition-delay: calc(0.15s * var(--i, 0));
+}
+.slide-4.visible .layer-item { opacity: 1; transform: translateY(0); }
+.slide-4 .layer-item:nth-child(1) { --i: 0; }
+.slide-4 .layer-item:nth-child(2) { --i: 1; }
+.slide-4 .layer-item:nth-child(3) { --i: 2; }
+.slide-4 .layer-item:nth-child(4) { --i: 3; }
+.slide-4 .layer-num {
+  width: 80px; display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-chrome); font-size: 28px; font-weight: 700;
+  color: var(--orange); background: var(--ink-alt); flex-shrink: 0;
+}
+.slide-4 .layer-body { padding: 20px 28px; flex: 1; display: flex; align-items: center; gap: 20px; }
+.slide-4 .layer-title {
+  font-family: var(--font-display); font-weight: 700; font-size: 36px;
+  letter-spacing: -0.02em; color: var(--cream);
+  white-space: nowrap; min-width: 160px;
+}
+.slide-4 .layer-desc {
+  font-family: var(--font-display); font-weight: 400; font-size: 20px;
+  line-height: 1.5; color: var(--cream-muted);
+}
+
+/* ===========================================
+   P5 — Depth × Speed
+   =========================================== */
+.slide-5 { background: var(--ink); }
+.slide-5 .content-wrap {
+  position: absolute; left: 105px; top: 130px; right: 105px; bottom: 130px;
+}
+.slide-5 .kicker {
+  font-family: var(--font-chrome); font-size: 14px; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--orange); margin-bottom: 16px;
+  opacity: 0; transform: translateY(15px);
+  transition: all 0.6s var(--ease-enter) 0.1s;
+}
+.slide-5.visible .kicker { opacity: 1; transform: translateY(0); }
+.slide-5 h2 {
+  font-family: var(--font-display); font-weight: 800; font-size: 66px;
+  line-height: 0.9; letter-spacing: -0.03em;
+  color: var(--cream); margin-bottom: 32px;
+  opacity: 0; transform: translateY(20px);
+  transition: all 0.6s var(--ease-enter) 0.3s;
+}
+.slide-5.visible h2 { opacity: 1; transform: translateY(0); }
+.slide-5 h2 .amp { color: var(--orange); font-weight: 900; }
+
+.slide-5 .panel-row { display: flex; height: 340px; }
+.slide-5 .panel {
+  flex: 1; padding: 32px; display: flex; flex-direction: column;
+  opacity: 0; transform: translateY(20px);
+  transition: all 0.6s var(--ease-enter) 0.5s;
+}
+.slide-5 .panel:first-child { border-right: 1px solid var(--border); }
+.slide-5 .panel:nth-child(2) { transition-delay: 0.65s; padding-left: 36px; }
+.slide-5.visible .panel { opacity: 1; transform: translateY(0); }
+.slide-5 .panel-tag {
+  font-family: var(--font-chrome); font-size: 12px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--orange); margin-bottom: 10px;
+}
+.slide-5 .panel-title {
+  font-family: var(--font-display); font-weight: 700; font-size: 36px;
+  color: var(--cream); letter-spacing: -0.02em; margin-bottom: 12px;
+}
+.slide-5 .panel-body {
+  font-family: var(--font-display); font-weight: 400; font-size: 20px;
+  line-height: 1.6; color: var(--cream-muted); flex: 1;
+}
+.slide-5 .fusion-box {
+  margin-top: 24px; padding: 24px 32px;
+  border: 1px solid var(--orange);
+  display: flex; align-items: center; gap: 24px;
+  opacity: 0;
+  transition: all 0.6s var(--ease-enter) 1s;
+}
+.slide-5.visible .fusion-box { opacity: 1; }
+.slide-5 .fusion-box .fusion-icon { font-size: 36px; flex-shrink: 0; }
+.slide-5 .fusion-box .fusion-text {
+  font-family: var(--font-display); font-weight: 600; font-size: 26px;
+  color: var(--cream); letter-spacing: -0.01em;
+}
+
+/* ===========================================
+   P6 — Consume → Create
+   =========================================== */
+.slide-6 { background: var(--ink); }
+.slide-6 .content-wrap {
+  position: absolute; left: 105px; top: 130px; right: 105px; bottom: 130px;
+}
+.slide-6 .kicker {
+  font-family: var(--font-chrome); font-size: 14px; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--orange); margin-bottom: 16px;
+  opacity: 0; transform: translateY(15px);
+  transition: all 0.6s var(--ease-enter) 0.1s;
+}
+.slide-6.visible .kicker { opacity: 1; transform: translateY(0); }
+.slide-6 h2 {
+  font-family: var(--font-display); font-weight: 800; font-size: 72px;
+  line-height: 0.9; letter-spacing: -0.03em;
+  color: var(--cream); margin-bottom: 32px;
+  opacity: 0; transform: translateY(20px);
+  transition: all 0.6s var(--ease-enter) 0.3s;
+}
+.slide-6.visible h2 { opacity: 1; transform: translateY(0); }
+
+.slide-6 .tier-stack { display: flex; flex-direction: column-reverse; gap: 8px; }
+.slide-6 .tier {
+  display: flex; align-items: stretch; border: 1px solid var(--border); overflow: hidden;
+  opacity: 0; transform: translateY(15px);
+  transition: all 0.6s var(--ease-enter);
+}
+.slide-6 .tier:nth-child(3) { transition-delay: 0.4s; }
+.slide-6 .tier:nth-child(2) { transition-delay: 0.55s; }
+.slide-6 .tier:nth-child(1) { transition-delay: 0.7s; }
+.slide-6.visible .tier { opacity: 1; transform: translateY(0); }
+.slide-6 .tier-mark {
+  width: 100px; display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 900; font-size: 48px;
+  letter-spacing: -0.04em; flex-shrink: 0; background: var(--ink-alt);
+}
+.slide-6 .tier:nth-child(1) .tier-mark { color: var(--orange); background: rgba(232,93,38,0.08); }
+.slide-6 .tier-body { padding: 22px 28px; flex: 1; }
+.slide-6 .tier-title {
+  font-family: var(--font-display); font-weight: 700; font-size: 32px;
+  letter-spacing: -0.02em; color: var(--cream); margin-bottom: 6px;
+}
+.slide-6 .tier-desc {
+  font-family: var(--font-display); font-weight: 400; font-size: 19px;
+  line-height: 1.5; color: var(--cream-muted);
+}
+.slide-6 .tier-arrow {
+  text-align: center; font-size: 18px; color: var(--cream-hint);
+  line-height: 1; padding: 2px 0;
+  opacity: 0; transition: all 0.5s var(--ease-enter);
+}
+.slide-6 .tier-arrow { transition-delay: 0.5s; }
+.slide-6 .tier-arrow:nth-child(2) { transition-delay: 0.65s; }
+.slide-6.visible .tier-arrow { opacity: 1; }
+
+/* ===========================================
+   P7 — Actions
+   =========================================== */
+.slide-7 { background: var(--ink); }
+.slide-7 .content-wrap {
+  position: absolute; left: 105px; top: 130px; right: 105px; bottom: 130px;
+}
+.slide-7 .kicker {
+  font-family: var(--font-chrome); font-size: 14px; font-weight: 500;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--orange); margin-bottom: 16px;
+  opacity: 0; transform: translateY(15px);
+  transition: all 0.6s var(--ease-enter) 0.1s;
+}
+.slide-7.visible .kicker { opacity: 1; transform: translateY(0); }
+.slide-7 h2 {
+  font-family: var(--font-display); font-weight: 800; font-size: 72px;
+  line-height: 0.9; letter-spacing: -0.03em;
+  color: var(--cream); margin-bottom: 32px;
+  opacity: 0; transform: translateY(20px);
+  transition: all 0.6s var(--ease-enter) 0.3s;
+}
+.slide-7.visible h2 { opacity: 1; transform: translateY(0); }
+
+.slide-7 .checklist { display: flex; flex-direction: column; gap: 12px; }
+.slide-7 .check-item {
+  display: flex; align-items: center; gap: 18px;
+  padding: 16px 24px; border: 1px solid var(--border);
+  opacity: 0; transform: translateX(-20px);
+  transition: all 0.5s var(--ease-enter);
+}
+.slide-7 .check-item:nth-child(1) { transition-delay: 0.4s; }
+.slide-7 .check-item:nth-child(2) { transition-delay: 0.5s; }
+.slide-7 .check-item:nth-child(3) { transition-delay: 0.6s; }
+.slide-7 .check-item:nth-child(4) { transition-delay: 0.7s; }
+.slide-7.visible .check-item { opacity: 1; transform: translateX(0); }
+.slide-7 .check-item .check-mark {
+  font-family: var(--font-chrome); font-weight: 700; font-size: 22px;
+  color: var(--orange); flex-shrink: 0; width: 30px; text-align: center;
+}
+.slide-7 .check-item .check-text {
+  font-family: var(--font-display); font-weight: 500; font-size: 26px;
+  color: var(--cream); letter-spacing: -0.01em;
+}
+.slide-7 .check-note {
+  font-family: var(--font-display); font-weight: 400; font-size: 20px;
+  color: var(--cream-muted); margin-top: 32px; padding-top: 24px;
+  border-top: 1px solid var(--border); text-align: center;
+  opacity: 0; transition: all 0.6s var(--ease-enter) 1s;
+}
+.slide-7.visible .check-note { opacity: 1; }
+
+/* ===========================================
+   P8 — END: Deep Space + Floating Quote
+   =========================================== */
+.slide-end {
+  background: radial-gradient(ellipse at 60% 30%, rgba(232,93,38,0.2) 0%, transparent 45%),
+              radial-gradient(ellipse at 30% 70%, rgba(20,10,40,0.5) 0%, transparent 40%),
+              linear-gradient(180deg, #0a0e1a 0%, #0e1424 50%, #080c14 100%);
+}
+.slide-end .catalogue-num {
+  position: absolute; top: 40px; left: 50px;
+  font-family: var(--font-chrome); font-size: 18px; font-weight: 500;
+  letter-spacing: 0.1em; color: rgba(240,236,229,0.25); z-index: 2;
+  opacity: 0; transition: all 0.8s var(--ease-enter) 0.2s;
+}
+.slide-end.visible .catalogue-num { opacity: 1; }
+
+.slide-end .end-content {
+  position: absolute; left: 120px; right: 120px;
+  top: 50%; transform: translateY(-50%);
+  z-index: 2; transform-style: preserve-3d; perspective: 800px;
+}
+.slide-end .end-float-group {
+  transform-style: preserve-3d;
+  transition: transform 0.15s ease-out;
+}
+.slide-end .end-quote {
+  font-family: var(--font-display); font-weight: 900; font-size: 90px;
+  line-height: 1.12; letter-spacing: -0.03em;
+  color: var(--cream); max-width: 1400px;
+  filter: drop-shadow(0 4px 30px rgba(232,93,38,0.1));
+  opacity: 0; transform: translateY(30px);
+  transition: all 0.8s var(--ease-slide) 0.4s;
+}
+.slide-end.visible .end-quote { opacity: 1; transform: translateY(0); }
+.slide-end .end-quote .highlight-line {
+  color: var(--orange);
+  text-shadow: 0 0 40px var(--orange-glow), 0 0 80px rgba(232,93,38,0.08);
+}
+.slide-end .end-quote .sub-line {
+  font-weight: 500; font-size: 34px;
+  color: rgba(240,236,229,0.55); margin-top: 24px; display: block;
+}
+.slide-end .end-quote .clincher {
+  font-weight: 900; font-size: 48px;
+  color: var(--orange); letter-spacing: -0.02em;
+  text-shadow: 0 0 50px var(--orange-glow);
+  margin-top: 16px; display: block;
+}
+
+.slide-end .end-mark {
+  position: absolute; bottom: 60px; left: 120px;
+  display: flex; align-items: center; gap: 16px;
+  font-family: var(--font-chrome); font-size: 13px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: rgba(240,236,229,0.25); z-index: 2;
+  opacity: 0; transition: all 0.6s var(--ease-enter) 1.2s;
+}
+.slide-end.visible .end-mark { opacity: 1; }
+.slide-end .end-mark .sep { width: 24px; height: 1px; background: rgba(240,236,229,0.12); }
+.slide-end .end-mark .square { width: 8px; height: 8px; background: var(--cream); display: inline-block; opacity: 0.5; }
+
+/* End slide nebula */
+.slide-end .nebula-glow {
+  position: absolute; left: 55%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 800px; height: 700px;
+  background: radial-gradient(ellipse, rgba(232,93,38,0.05) 0%, transparent 50%);
+  filter: blur(80px);
+  pointer-events: none; z-index: 1;
+}
+
+/* ===========================================
+   NAVIGATION
+   =========================================== */
+.deck-controls {
+  position: fixed; bottom: 18px; left: 50%;
+  transform: translateX(-50%); z-index: 1000;
+  display: flex; align-items: center; gap: 10px;
+}
+.nav-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: rgba(240,236,229,0.15);
+  cursor: pointer; transition: all 0.3s var(--ease-enter); border: none;
+}
+.nav-dot.active { background: var(--orange); width: 28px; border-radius: 6px; }
+.nav-dot:hover { background: rgba(240,236,229,0.3); }
+
+.control-counter {
+  position: fixed; bottom: 22px; right: 40px;
+  font-family: var(--font-chrome); font-size: 13px;
+  letter-spacing: 0.1em; color: var(--cream-hint); z-index: 999;
+}
+.keyboard-hint {
+  position: fixed; bottom: 22px; left: 40px;
+  font-family: var(--font-chrome); font-size: 11px;
+  letter-spacing: 0.08em; color: rgba(240,236,229,0.12); z-index: 999;
+}
+</style>
+</head>
+<body>
+
+<!-- Star Field Canvas (behind everything) -->
+<canvas class="star-canvas" id="starCanvas"></canvas>
+
+<div class="deck-viewport">
+<main class="deck-stage" id="deckStage">
+
+<!-- ==========================================
+     SLIDE 1: COVER — Deep Space + Floating Title
+     ========================================== -->
+<section class="slide slide-cover active" data-slide="1">
+  <div class="catalogue-num">essay / 01</div>
+  <div class="nebula-glow"></div>
+  <div class="cover-wrap" id="coverFloat">
+    <div class="float-group" id="coverTilt">
+      <div class="cover-label">from tool to partner</div>
+      <h1 class="cover-title">
+        <span class="line1">从工具到伙伴</span>
+        <span class="line2">AI 时代的认知跃迁</span>
+      </h1>
+      <div class="cover-sub">the cognitive leap — 2026</div>
+    </div>
+  </div>
+  <div class="cover-meta">
+    <span>智能共生</span><span class="sep"></span>
+    <span>个人操作系统</span><span class="sep"></span>
+    <span>08 页长文</span>
+  </div>
+</section>
+
+<!-- ==========================================
+     SLIDE 2: 2026
+     ========================================== -->
+<section class="slide content-slide slide-2" data-slide="2">
+  <div class="chrome-bar chrome-top"><span><span class="orange-dot"></span>context</span><span class="slide-counter">02 / 08</span></div>
+  <div class="content-wrap">
+    <div class="kicker">/ 2026 landscape</div>
+    <h2>AI 已成为 <span class="highlight">水电基础设施</span></h2>
+    <div class="stat-row">
+      <div class="stat-item">
+        <div class="stat-num">87%</div>
+        <div class="stat-label">知识工作者日常使用<br>AI 工具辅助工作</div>
+        <div class="stat-note">source: mckinsey global institute 2026</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">3.2×</div>
+        <div class="stat-label">人机协作团队的产出<br>效率提升倍数</div>
+        <div class="stat-note">source: harvard business review 2025</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">12mo</div>
+        <div class="stat-label">主流 AI 模型能力翻倍<br>的平均周期</div>
+        <div class="stat-note">source: epoché ai index 2026</div>
+      </div>
+    </div>
+    <div class="insight-line">
+      <span class="slash">/</span>
+      关键转折：从「能用」到「好用」 · 从「工具」到「协作者」
+    </div>
+  </div>
+  <div class="chrome-bar chrome-bottom"><span>essay · 2026</span><span>从工具到伙伴</span></div>
+</section>
+
+<!-- ==========================================
+     SLIDE 3: Three Modes
+     ========================================== -->
+<section class="slide content-slide slide-3" data-slide="3">
+  <div class="chrome-bar chrome-top"><span><span class="orange-dot"></span>framework</span><span class="slide-counter">03 / 08</span></div>
+  <div class="content-wrap">
+    <div class="kicker">/ three modes of collaboration</div>
+    <h2>三种人机协作模式</h2>
+    <div class="card-row">
+      <div class="mode-card">
+        <div class="card-icon">⚙️</div>
+        <div class="card-tag">tool mode</div>
+        <div class="card-title">工具模式</div>
+        <div class="card-desc">你命令，它执行。标准的输入输出关系，AI 是精确的指令执行者，不主动、不思考、不质疑。</div>
+        <div class="card-era">传统计算范式</div>
+      </div>
+      <div class="mode-card">
+        <div class="card-icon">🧑‍✈️</div>
+        <div class="card-tag">copilot mode</div>
+        <div class="card-title">副驾模式</div>
+        <div class="card-desc">你主导，它辅助。AI 提供建议、草稿、备选方案，你来决策、修改、定稿。当前的主流协作形态。</div>
+        <div class="card-era">当前主流</div>
+      </div>
+      <div class="mode-card">
+        <div class="card-icon">🤝</div>
+        <div class="card-tag">partner mode</div>
+        <div class="card-title">伙伴模式</div>
+        <div class="card-desc">你引导，它共创。AI 不再是工具，而是思维的延伸——它能主动提出你没想到的角度，挑战你的假设。</div>
+        <div class="card-era">正在到来</div>
+      </div>
+    </div>
+  </div>
+  <div class="chrome-bar chrome-bottom"><span>essay · 2026</span><span>从工具到伙伴</span></div>
+</section>
+
+<!-- ==========================================
+     SLIDE 4: Personal OS
+     ========================================== -->
+<section class="slide content-slide slide-4" data-slide="4">
+  <div class="chrome-bar chrome-top"><span><span class="orange-dot"></span>framework</span><span class="slide-counter">04 / 08</span></div>
+  <div class="content-wrap">
+    <div class="kicker">/ personal os upgrade</div>
+    <h2>个人操作系统升级</h2>
+    <div class="layer-stack">
+      <div class="layer-item" style="--i:0">
+        <div class="layer-num">04</div>
+        <div class="layer-body">
+          <div class="layer-title">🧠 元认知</div>
+          <div class="layer-desc">知道自己要什么——比会用什么工具重要一万倍</div>
+        </div>
+      </div>
+      <div class="layer-item" style="--i:1">
+        <div class="layer-num">03</div>
+        <div class="layer-body">
+          <div class="layer-title">⚖️ 判断力</div>
+          <div class="layer-desc">AI 给的答案，你来负责。辨别真伪、权衡取舍是人的职责</div>
+        </div>
+      </div>
+      <div class="layer-item" style="--i:2">
+        <div class="layer-num">02</div>
+        <div class="layer-body">
+          <div class="layer-title">💬 提问能力</div>
+          <div class="layer-desc">好问题 > 好答案——AI 时代最稀缺的技能是提出对的问题</div>
+        </div>
+      </div>
+      <div class="layer-item" style="--i:3">
+        <div class="layer-num">01</div>
+        <div class="layer-body">
+          <div class="layer-title">📡 信息筛选力</div>
+          <div class="layer-desc">输入质量决定输出质量——在信息洪流中保持清醒</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="chrome-bar chrome-bottom"><span>essay · 2026</span><span>从工具到伙伴</span></div>
+</section>
+
+<!-- ==========================================
+     SLIDE 5: Depth × Speed
+     ========================================== -->
+<section class="slide content-slide slide-5" data-slide="5">
+  <div class="chrome-bar chrome-top"><span><span class="orange-dot"></span>insight</span><span class="slide-counter">05 / 08</span></div>
+  <div class="content-wrap">
+    <div class="kicker">/ depth × speed</div>
+    <h2>深度思考 <span class="amp">×</span> 效率至上</h2>
+    <div class="panel-row">
+      <div class="panel">
+        <div class="panel-tag">⚡ efficiency trap</div>
+        <div class="panel-title">效率派陷阱</div>
+        <div class="panel-body">用 AI 加速「做」的一切，却渐渐忘了「为什么做」。速度上去了，方向可能偏了。</div>
+      </div>
+      <div class="panel">
+        <div class="panel-tag">🧘 depth trap</div>
+        <div class="panel-title">深度派陷阱</div>
+        <div class="panel-body">抗拒工具，坚守低效的「纯手工」思考，用战术上的勤奋掩盖战略上的懒惰。</div>
+      </div>
+    </div>
+    <div class="fusion-box">
+      <div class="fusion-icon">⟡</div>
+      <div class="fusion-text">不做选择题，做乘法 —— AI 处理「怎么做」，人类聚焦「为什么」</div>
+    </div>
+  </div>
+  <div class="chrome-bar chrome-bottom"><span>essay · 2026</span><span>从工具到伙伴</span></div>
+</section>
+
+<!-- ==========================================
+     SLIDE 6: Consume → Create
+     ========================================== -->
+<section class="slide content-slide slide-6" data-slide="6">
+  <div class="chrome-bar chrome-top"><span><span class="orange-dot"></span>progression</span><span class="slide-counter">06 / 08</span></div>
+  <div class="content-wrap">
+    <div class="kicker">/ consume → create</div>
+    <h2>从消费到创造</h2>
+    <div class="tier-stack">
+      <div class="tier">
+        <div class="tier-mark">03</div>
+        <div class="tier-body">
+          <div class="tier-title">🎯 创造层</div>
+          <div class="tier-desc">AI 作为思维的延伸——做一个人做不成的事。你不是在用 AI，你与 AI 共同创造。</div>
+        </div>
+      </div>
+      <div class="tier-arrow">▲</div>
+      <div class="tier">
+        <div class="tier-mark">02</div>
+        <div class="tier-body">
+          <div class="tier-title">🔧 定制层</div>
+          <div class="tier-desc">调 prompt、搭工作流、驯化工具。从被动接受到主动掌控，开始构建自己的 AI 系统。</div>
+        </div>
+      </div>
+      <div class="tier-arrow">▲</div>
+      <div class="tier">
+        <div class="tier-mark">01</div>
+        <div class="tier-body">
+          <div class="tier-title">📖 消费层</div>
+          <div class="tier-desc">用 AI 回答问题、生成内容、完成单点任务。这是起点，不是终点。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="chrome-bar chrome-bottom"><span>essay · 2026</span><span>从工具到伙伴</span></div>
+</section>
+
+<!-- ==========================================
+     SLIDE 7: Actions
+     ========================================== -->
+<section class="slide content-slide slide-7" data-slide="7">
+  <div class="chrome-bar chrome-top"><span><span class="orange-dot"></span>action</span><span class="slide-counter">07 / 08</span></div>
+  <div class="content-wrap">
+    <div class="kicker">/ start where you are</div>
+    <h2>行动的起点</h2>
+    <div class="checklist">
+      <div class="check-item"><span class="check-mark">/</span><span class="check-text">每天花 10 分钟优化一个工作流</span></div>
+      <div class="check-item"><span class="check-mark">/</span><span class="check-text">把一个重复性任务交给 AI</span></div>
+      <div class="check-item"><span class="check-mark">/</span><span class="check-text">每周写一篇「AI 辅助思考」笔记</span></div>
+      <div class="check-item"><span class="check-mark">/</span><span class="check-text">保持 skepticism：质疑一切输出</span></div>
+    </div>
+    <div class="check-note">不焦虑 · 不跟风 · 做具体的事</div>
+  </div>
+  <div class="chrome-bar chrome-bottom"><span>essay · 2026</span><span>从工具到伙伴</span></div>
+</section>
+
+<!-- ==========================================
+     SLIDE 8: END — Deep Space + Floating Quote
+     ========================================== -->
+<section class="slide slide-end" data-slide="8">
+  <div class="catalogue-num">essay / 08</div>
+  <div class="nebula-glow" style="left:50%;top:45%;width:900px;height:800px;"></div>
+  <div class="end-content" id="endFloat">
+    <div class="end-float-group" id="endTilt">
+      <div class="end-quote">
+        AI 不会取代你<br>
+        <span class="highlight-line">会用 AI 的人也不会取代你</span><br>
+        <span class="sub-line">取代你的是——</span>
+        <span class="clincher">比你更会用 AI × 比你思考更深的人</span>
+      </div>
+    </div>
+  </div>
+  <div class="end-mark">
+    <span class="square"></span><span class="sep"></span>
+    <span>好消息是 · 门槛从来没这么低过</span>
+  </div>
+</section>
+
+</main>
+</div>
+
+<!-- ==========================================
+     NAVIGATION
+     ========================================== -->
+<nav class="deck-controls" id="deckControls"></nav>
+<div class="control-counter" id="controlCounter"></div>
+<div class="keyboard-hint">← → navigate</div>
+
+<script>
+/* ===========================================
+   SLIDE PRESENTATION CONTROLLER
+   =========================================== */
+class SlidePresentation {
+    constructor() {
+        this.slides = document.querySelectorAll('.slide');
+        this.current = 0;
+        this.stage = document.getElementById('deckStage');
+        this.total = this.slides.length;
+        this.setupStageScale();
+        this.setupNavigation();
+        this.buildNavDots();
+        this.updateCounter();
+        this.showSlide(0);
+    }
+
+    setupStageScale() {
+        const scale = () => {
+            const f = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+            this.stage.style.transform = `translate(${(window.innerWidth - 1920 * f) / 2}px, ${(window.innerHeight - 1080 * f) / 2}px) scale(${f})`;
+        };
+        scale();
+        window.addEventListener('resize', scale);
+    }
+
+    setupNavigation() {
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); this.next(); }
+            else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); this.prev(); }
+        });
+        let wt = false;
+        document.addEventListener('wheel', (e) => {
+            if (wt) return; wt = true; setTimeout(() => { wt = false; }, 600);
+            if (e.deltaY > 0) this.next(); else this.prev();
+        }, { passive: true });
+        let tx = 0;
+        document.addEventListener('touchstart', (e) => { tx = e.changedTouches[0].screenX; }, { passive: true });
+        document.addEventListener('touchend', (e) => { const d = tx - e.changedTouches[0].screenX; if (Math.abs(d) > 50) d > 0 ? this.next() : this.prev(); }, { passive: true });
+    }
+
+    buildNavDots() {
+        const c = document.getElementById('deckControls');
+        for (let i = 0; i < this.total; i++) {
+            const d = document.createElement('button');
+            d.className = 'nav-dot'; d.setAttribute('aria-label', `slide ${i + 1}`);
+            d.addEventListener('click', () => this.showSlide(i));
+            c.appendChild(d);
+        }
+    }
+
+    updateCounter() {
+        const el = document.getElementById('controlCounter');
+        if (el) el.textContent = `${String(this.current + 1).padStart(2, '0')} / ${String(this.total).padStart(2, '0')}`;
+        document.querySelectorAll('.nav-dot').forEach((d, i) => d.classList.toggle('active', i === this.current));
+    }
+
+    next() { if (this.current < this.total - 1) this.showSlide(this.current + 1); }
+    prev() { if (this.current > 0) this.showSlide(this.current - 1); }
+
+    showSlide(index) {
+        this.current = index;
+        this.slides.forEach((s, i) => {
+            s.classList.toggle('active', i === index);
+            s.classList.toggle('visible', i === index);
+        });
+        this.updateCounter();
+    }
+}
+
+/* ===========================================
+   STAR FIELD SYSTEM — 3 depth layers
+   =========================================== */
+class StarField {
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.layers = [];
+        this.mouseX = 0.5;
+        this.mouseY = 0.5;
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+        document.addEventListener('mousemove', (e) => {
+            this.mouseX = e.clientX / window.innerWidth;
+            this.mouseY = e.clientY / window.innerHeight;
+        });
+        this.init();
+        this.animate();
+    }
+
+    resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+    }
+
+    init() {
+        // Layer configs: [count, baseSize, speed, colors]
+        const configs = [
+            { count: 80,  size: 0.5, speed: 0.03, colors: ['#888', '#666', '#555'] },          // far — tiny, dim
+            { count: 120, size: 1.0, speed: 0.06, colors: ['#ccc', '#aaa', '#ffd7b0'] },        // mid — white/warm
+            { count: 50,  size: 1.8, speed: 0.10, colors: ['#fff', '#ffb380', '#e85d26'] },     // near — bright, orange tint
+            { count: 8,   size: 3.5, speed: 0.15, colors: ['#fff', '#ff9944', '#e85d26'] },     // hero stars with glow
+        ];
+
+        configs.forEach((cfg) => {
+            const stars = [];
+            for (let i = 0; i < cfg.count; i++) {
+                stars.push({
+                    x: Math.random() * this.canvas.width,
+                    y: Math.random() * this.canvas.height,
+                    size: cfg.size * (0.6 + Math.random() * 0.8),
+                    speed: cfg.speed * (0.5 + Math.random() * 0.5),
+                    color: cfg.colors[Math.floor(Math.random() * cfg.colors.length)],
+                    phase: Math.random() * Math.PI * 2,
+                    twinkleSpeed: 0.5 + Math.random() * 1.5,
+                    isHero: cfg.count <= 10,
+                    baseOpacity: 0.3 + Math.random() * 0.7,
+                });
+            }
+            this.layers.push({ stars, speed: cfg.speed, baseSize: cfg.size });
+        });
+    }
+
+    animate() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Parallax offset from mouse
+        const px = (this.mouseX - 0.5) * 4;
+        const py = (this.mouseY - 0.5) * 4;
+
+        this.layers.forEach((layer, li) => {
+            const layerPx = px * (li + 1) * 0.3;
+            const layerPy = py * (li + 1) * 0.3;
+
+            layer.stars.forEach((star) => {
+                const time = Date.now() * 0.001;
+                const twinkle = 0.5 + 0.5 * Math.sin(time * star.twinkleSpeed + star.phase);
+                const opacity = star.baseOpacity * (0.5 + 0.5 * twinkle);
+
+                // Position with parallax + slow drift
+                const sx = (star.x + layerPx) % this.canvas.width;
+                const sy = (star.y + layerPy + (time * star.speed * 2) % this.canvas.height) % this.canvas.height;
+
+                // Draw star
+                this.ctx.beginPath();
+                this.ctx.arc(sx, sy, star.size, 0, Math.PI * 2);
+                this.ctx.fillStyle = star.color;
+                this.ctx.globalAlpha = opacity;
+                this.ctx.fill();
+
+                // Hero star glow
+                if (star.isHero) {
+                    this.ctx.beginPath();
+                    this.ctx.arc(sx, sy, star.size * 4, 0, Math.PI * 2);
+                    this.ctx.fillStyle = star.color;
+                    this.ctx.globalAlpha = opacity * 0.12;
+                    this.ctx.fill();
+                }
+
+                this.ctx.globalAlpha = 1;
+            });
+        });
+
+        requestAnimationFrame(() => this.animate());
+    }
+}
+
+/* ===========================================
+   3D FLOATING TITLE — Mouse parallax on cover & end
+   =========================================== */
+class Float3D {
+    constructor(containerId, groupId, intensity) {
+        this.group = document.getElementById(groupId);
+        this.container = document.getElementById(containerId);
+        this.intensity = intensity || 4;
+        if (!this.group || !this.container) return;
+
+        document.addEventListener('mousemove', (e) => {
+            const rect = this.container.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const dx = (e.clientX - cx) / rect.width;
+            const dy = (e.clientY - cy) / rect.height;
+            const rotY = dx * this.intensity;
+            const rotX = -dy * this.intensity;
+            this.group.style.transform = `rotateY(${rotY}deg) rotateX(${rotX}deg)`;
+        });
+
+        // Reset on leave
+        document.addEventListener('mouseleave', () => {
+            this.group.style.transform = 'rotateY(0deg) rotateX(0deg)';
+        });
+    }
+}
+
+/* ===========================================
+   INIT
+   =========================================== */
+new SlidePresentation();
+new StarField(document.getElementById('starCanvas'));
+new Float3D('coverFloat', 'coverTilt', 3);
+new Float3D('endFloat', 'endTilt', 3);
+</script>
+</body>
+</html>

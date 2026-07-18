@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+    <h1>{{ student.name }} <small>{{ student.id }}</small></h1>
+    <div class="header-actions">
+        {% if session.role in ('admin','teacher') %}
+        <a href="{{ url_for('edit_student', student_id=student.id) }}" class="btn btn-primary">编辑</a>
+        <form method="POST" action="{{ url_for('delete_student', student_id=student.id) }}" style="display:inline" onsubmit="return confirm('确认删除？');">
+            <button type="submit" class="btn btn-danger">删除</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+<div class="info-grid">
+    <div class="info-item"><strong>学号：</strong>{{ student.id }}</div>
+    <div class="info-item"><strong>班级：</strong>{{ student.class_name or '-' }}</div>
+    <div class="info-item"><strong>学院：</strong>{{ student.college or '-' }}</div>
+    <div class="info-item"><strong>系：</strong>{{ student.department or '-' }}</div>
+</div>
+<div class="stats-row">
+    <div class="stat-mini"><span class="num">{{ total }}</span> 总分</div>
+    <div class="stat-mini"><span class="num">{{ avg }}</span> 平均分</div>
+    <div class="stat-mini"><span class="num">{{ count }}</span> 有效科目</div>
+    <div class="stat-mini"><span class="num">{{ gpa }}</span> 加权GPA</div>
+    <div class="stat-mini"><span class="num">{{ total_credit }}</span> 总学分</div>
+</div>
+<h2>各科成绩</h2>
+<div class="table-container">
+<table class="table">
+    <thead><tr><th>#</th><th>科目</th><th>学分</th><th>成绩</th><th>数值</th></tr></thead>
+    <tbody>
+        {% for sc in scores %}
+        <tr>
+            <td>{{ loop.index }}</td><td>{{ sc.name }}</td><td>{{ sc.credit }}</td>
+            <td class="{% if sc.numeric_score is not none and sc.numeric_score < 60 %}score-fail{% elif sc.numeric_score is not none and sc.numeric_score >= 90 %}score-excellent{% endif %}">
+                {{ sc.raw_score if sc.raw_score else '-' }}
+            </td>
+            <td>{{ '%.0f'|format(sc.numeric_score) if sc.numeric_score is not none else '-' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

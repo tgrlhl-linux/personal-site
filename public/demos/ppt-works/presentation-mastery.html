@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>演示设计科学 · 二十章</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>:root{--c-primary:#f0a030;--c-primary-s:#f0c868;--c-secondary:#00d4ff;--c-accent:#ff6b6b;--c-bg:#05060f;--c-bg-card:rgba(255,255,255,0.03);--c-bg-hover:rgba(255,255,255,0.06);--c-bg-glow:rgba(240,160,48,0.08);--c-text:#eae4dc;--c-text-1:rgba(255,255,255,0.78);--c-text-2:rgba(255,255,255,0.55);--c-text-3:rgba(255,255,255,0.32);--c-text-4:rgba(255,255,255,0.16);--c-border:rgba(255,255,255,0.06);--c-border-h:rgba(240,160,48,0.25);--grad-warm:linear-gradient(90deg,var(--c-primary),var(--c-accent));--grad-gold:linear-gradient(135deg,var(--c-primary-s),var(--c-primary),var(--c-accent));--grad-cool:linear-gradient(135deg,var(--c-secondary),#6b5bff);--grad-text:linear-gradient(135deg,var(--c-primary-s),var(--c-primary),var(--c-accent));--fs-micro:clamp(0.5rem,0.6vw,0.625rem);--fs-small:clamp(0.6rem,0.75vw,0.75rem);--fs-body:clamp(0.68rem,0.9vw,0.875rem);--fs-lead:clamp(0.78rem,1.05vw,1rem);--fs-h4:clamp(0.95rem,1.4vw,1.333rem);--fs-h3:clamp(1.15rem,1.85vw,1.777rem);--fs-h2:clamp(1.4rem,2.4vw,2.369rem);--fs-h1:clamp(1.7rem,3.2vw,3.157rem);--fs-display:clamp(2.2rem,5vw,4.209rem);--sp-1:.25rem;--sp-2:.5rem;--sp-3:.75rem;--sp-4:1rem;--sp-5:1.5rem;--sp-6:2rem;--sp-7:3rem;--sp-8:4rem;--r-sm:4px;--r-md:8px;--r-lg:12px;--r-full:50%;--ease:cubic-bezier(0.22,1,0.36,1)}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--c-bg);font-family:'Noto Sans SC','Inter',sans-serif;color:var(--c-text);-webkit-font-smoothing:antialiased}
+#three-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
+.slides-container{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none}
+.slide{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;padding:5.5vh 6vw;opacity:0;visibility:hidden;transition:opacity .7s var(--ease),visibility .7s;pointer-events:none;overflow-y:auto}
+.slide.active{opacity:1;visibility:visible;pointer-events:auto}
+.slide-number{position:fixed;bottom:3.5vh;right:3.5vw;font-size:var(--fs-small);color:var(--c-text-3);font-weight:300;letter-spacing:.12em;z-index:10;pointer-events:none;font-variant-numeric:tabular-nums;font-family:'Inter',sans-serif}
+.slide-title{font-size:var(--fs-h1);font-weight:800;letter-spacing:-.015em;line-height:1.12;margin-bottom:var(--sp-1);position:relative}
+.slide-title::after{content:'';display:block;width:clamp(36px,4vw,64px);height:2.5px;background:var(--grad-warm);margin-top:.25em;border-radius:2px}
+.slide-title .en{display:block;font-size:clamp(.65rem,.8vw,.85rem);font-weight:400;color:var(--c-text-3);letter-spacing:.1em;margin-top:.15em;line-height:1.4;font-family:'Inter','Noto Sans SC',sans-serif}
+.content-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-5);margin-top:var(--sp-2);max-width:100%}
+.content-grid.three{grid-template-columns:1fr 1fr 1fr}
+.content-grid.four{grid-template-columns:1fr 1fr 1fr 1fr}
+.col-body{font-size:var(--fs-body);line-height:1.75;color:var(--c-text-1)}
+.col-body p{margin-bottom:var(--sp-2)}
+.col-body strong,.hl{color:var(--c-primary-s);font-weight:600}
+.col-body .tag{display:inline-block;background:var(--c-bg-glow);padding:0 .3em;border-radius:2px;color:var(--c-primary-s);font-weight:500;font-size:var(--fs-small)}
+.col-body ul{list-style:none;padding:0}
+.col-body li{padding:.2em 0;padding-left:1em;position:relative}
+.col-body li::before{content:'\203A';position:absolute;left:0;color:var(--c-primary);font-weight:700}
+.col-body .sub-title{color:var(--c-primary);font-weight:700;font-size:.95em;margin-bottom:var(--sp-2);letter-spacing:.04em}
+.col-body .divider{height:1px;background:linear-gradient(90deg,var(--c-bg-glow),transparent);margin:var(--sp-3) 0}
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);margin-top:var(--sp-3)}
+.card-grid.three{grid-template-columns:1fr 1fr 1fr}
+.card-grid.four{grid-template-columns:1fr 1fr 1fr 1fr}
+.card{background:var(--c-bg-card);border:1px solid var(--c-border);border-radius:var(--r-md);padding:var(--sp-4) var(--sp-5);transition:all .35s var(--ease)}
+.card:hover{background:var(--c-bg-hover);border-color:var(--c-border-h);transform:translateY(-2px)}
+.card .tag{font-size:var(--fs-small);font-weight:300;color:var(--c-text-3);letter-spacing:.12em;margin-bottom:var(--sp-1)}
+.card .ct{font-size:var(--fs-lead);font-weight:700;color:var(--c-primary-s);margin-bottom:var(--sp-1)}
+.card .cd{font-size:var(--fs-small);line-height:1.6;color:var(--c-text-2)}
+.card-primary{border-color:var(--c-primary);background:linear-gradient(160deg,rgba(240,160,48,.06),transparent)}
+.card-primary:hover{border-color:var(--c-primary);background:rgba(240,160,48,.09)}
+.card-secondary{border-color:rgba(0,212,255,.2);background:linear-gradient(160deg,rgba(0,212,255,.04),transparent)}
+.card-secondary:hover{border-color:rgba(0,212,255,.35)}
+.card-crap-r{border-style:dashed}
+.card-crap-a{background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.02) 0,rgba(255,255,255,.02) 1px,transparent 1px,transparent 20px)}
+.card-crap-p{padding:var(--sp-2) var(--sp-3)}
+.card-crap-p .ct{margin-bottom:0}
+.card-crap-p .cd{margin-top:var(--sp-1)}
+.plist{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2);margin-top:var(--sp-2);max-width:90%}
+.pitem{display:flex;align-items:flex-start;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);background:rgba(255,255,255,.015);border-radius:var(--r-sm);border-left:2px solid var(--c-border-h)}
+.pnum{font-size:var(--fs-h4);font-weight:900;color:var(--c-primary);line-height:1;min-width:1.4em;text-align:center}
+.ptxt{font-size:var(--fs-small);line-height:1.6;color:var(--c-text-1)}
+.ptxt strong{color:var(--c-primary-s);font-weight:700}
+.srow{display:flex;gap:var(--sp-5);margin-top:var(--sp-3);flex-wrap:wrap}
+.sitem{text-align:center}
+.snum{font-size:var(--fs-h1);font-weight:900;background:linear-gradient(135deg,var(--c-primary-s),var(--c-primary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1}
+.slabel{font-size:var(--fs-micro);color:var(--c-text-3);margin-top:var(--sp-1);letter-spacing:.08em}
+.swatch-row{display:flex;gap:var(--sp-4);margin-top:var(--sp-2);flex-wrap:wrap}
+.swatch{display:flex;flex-direction:column;align-items:center;gap:var(--sp-1)}
+.swatch-c{width:clamp(2rem,3.5vw,3rem);height:clamp(2rem,3.5vw,3rem);border-radius:var(--r-full);border:1.5px solid var(--c-border);box-shadow:0 4px 16px rgba(0,0,0,.4)}
+.swatch-l{font-size:var(--fs-micro);color:var(--c-text-3)}
+.frow{display:flex;gap:var(--sp-5);margin-top:var(--sp-2)}
+.fsamp{flex:1;padding:var(--sp-3) var(--sp-4);background:var(--c-bg-card);border-radius:var(--r-sm);border:1px solid var(--c-border)}
+.fsamp .fl{font-size:var(--fs-micro);color:var(--c-text-3);margin-bottom:var(--sp-2);letter-spacing:.08em}
+.fsamp .ft{font-size:var(--fs-lead);line-height:1.3}
+.fsamp .ft.sans{font-family:'Noto Sans SC','Inter',sans-serif;font-weight:700}
+.fsamp .ft.serif{font-family:'Noto Serif SC',serif;font-weight:600}
+.fsamp .ft.mono{font-family:'Consolas','Courier New',monospace}
+.pyramid-visual{display:flex;flex-direction:column;align-items:center;gap:3px;padding:var(--sp-4) 0;justify-content:center}
+.pyramid-layer{clip-path:polygon(6% 0%,94% 0%,100% 100%,0% 100%);padding:var(--sp-4) var(--sp-5);text-align:center;transition:all .3s var(--ease);cursor:default}
+.pyramid-layer:hover{transform:scale(1.04);z-index:2}
+.layer-d{background:linear-gradient(135deg,rgba(240,160,48,.12),rgba(240,160,48,.03));border-bottom:1px solid rgba(240,160,48,.18)}
+.layer-i{background:linear-gradient(135deg,rgba(240,200,104,.15),rgba(240,160,48,.05));border-bottom:1px solid rgba(240,200,104,.22)}
+.layer-k{background:linear-gradient(135deg,rgba(255,107,107,.12),rgba(240,160,48,.05));border-bottom:1px solid rgba(255,107,107,.18)}
+.layer-w{background:linear-gradient(135deg,rgba(255,107,107,.2),rgba(240,160,48,.12));border-bottom:1px solid var(--c-accent);box-shadow:0 0 30px rgba(255,107,107,.1)}
+.pyr-lbl{display:block;font-size:var(--fs-lead);font-weight:700;color:var(--c-text);letter-spacing:.04em}
+.pyr-desc{display:block;font-size:var(--fs-small);color:var(--c-text-2);margin-top:var(--sp-1)}
+.pmatrix{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2);margin-top:var(--sp-2);max-width:500px}
+.pm-cell{padding:var(--sp-3) var(--sp-4);border-radius:var(--r-md);text-align:center;border:1px solid var(--c-border);transition:all .3s var(--ease)}
+.pm-cell:hover{transform:translateY(-2px)}
+.pm-cell .hl{display:block;font-size:var(--fs-small);margin-bottom:var(--sp-1)}
+.pm-hh{background:linear-gradient(160deg,rgba(240,160,48,.08),transparent);border-color:rgba(240,160,48,.2)}
+.pm-hl{background:linear-gradient(160deg,rgba(0,212,255,.06),transparent);border-color:rgba(0,212,255,.15)}
+.pm-lh{background:rgba(255,255,255,.015)}
+.pm-ll{background:rgba(255,255,255,.01);opacity:.6}
+.cdemo{display:flex;flex-direction:column;gap:var(--sp-2)}
+.crow{display:flex;align-items:center;gap:var(--sp-4);padding:var(--sp-2) var(--sp-3);background:var(--c-bg-card);border-radius:var(--r-sm);border-left:2px solid var(--c-primary)}
+.clbl{font-size:var(--fs-micro);color:var(--c-text-3);letter-spacing:.06em;min-width:2.5em}
+.c-lg{font-size:var(--fs-h2);font-weight:800;color:var(--c-text)}
+.c-sm{font-size:var(--fs-body);color:var(--c-text-3)}
+.c-cw{color:var(--c-accent);font-weight:700;font-size:var(--fs-lead)}
+.c-cc{color:var(--c-secondary);font-weight:300;font-size:var(--fs-body)}
+.c-wh{font-weight:900;font-size:var(--fs-h3);color:var(--c-text)}
+.c-wl{font-weight:300;font-size:var(--fs-h4);color:var(--c-text-3)}
+.c-sd{letter-spacing:-.02em;font-weight:700;padding:2px 4px;background:rgba(255,255,255,.04);font-size:var(--fs-body)}
+.c-sr{display:inline-flex;align-items:center;justify-content:center;width:2.2em;height:2.2em;border-radius:var(--r-full);background:rgba(240,160,48,.12);font-size:var(--fs-micro)}
+.c-ss{display:inline-flex;align-items:center;justify-content:center;width:2em;height:2em;border-radius:var(--r-sm);background:rgba(0,212,255,.1);font-size:var(--fs-micro)}
+.cw-outer{position:relative;width:clamp(130px,15vw,190px);height:clamp(130px,15vw,190px)}
+.cw-ring{width:100%;height:100%;border-radius:var(--r-full);background:conic-gradient(red,#ff8800,yellow,#88ff00,lime,#00ff88,aqua,#0088ff,blue,#8800ff,magenta,#ff0088,red);box-shadow:0 0 40px rgba(255,255,255,.04),0 0 80px rgba(240,160,48,.03)}
+.cw-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:38%;height:38%;border-radius:var(--r-full);background:var(--c-bg);display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px solid var(--c-border)}
+.cw-h,.cw-s,.cw-v{font-size:var(--fs-micro);font-weight:700;letter-spacing:.06em;line-height:1.2}
+.cw-h{color:var(--c-primary)}.cw-s{color:var(--c-secondary)}.cw-v{color:var(--c-accent)}
+.cm{position:absolute;width:1.5em;height:1.5em;border-radius:var(--r-full);display:flex;align-items:center;justify-content:center;font-size:var(--fs-micro);font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5);transform:translate(-50%,-50%);border:1.5px solid rgba(255,255,255,.15)}
+.sgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--sp-3);margin-top:var(--sp-2)}
+.scard{background:var(--c-bg-card);border:1px solid var(--c-border);border-radius:var(--r-md);padding:var(--sp-3);text-align:center;transition:all .35s var(--ease)}
+.scard:hover{border-color:var(--c-border-h);transform:translateY(-3px)}
+.sname{font-size:var(--fs-micro);font-weight:700;color:var(--c-text-2);margin-bottom:var(--sp-2);letter-spacing:.04em}
+.sbar{display:flex;gap:var(--sp-1);justify-content:center}
+.sbar span{width:1.5em;height:1.5em;border-radius:var(--r-sm);border:1px solid var(--c-border)}
+.srule{text-align:center;margin-top:var(--sp-4);font-size:var(--fs-lead);letter-spacing:.08em;color:var(--c-text-2)}
+.svis{display:flex;flex-direction:column;gap:var(--sp-2);justify-content:center;padding:var(--sp-3) 0}
+.sstep{display:flex;align-items:center;gap:var(--sp-3);font-weight:700;color:var(--c-text);line-height:1.2;padding:var(--sp-1) var(--sp-3);border-left:3px solid var(--c-primary);transition:all .2s var(--ease)}
+.sstep:hover{background:var(--c-bg-card);padding-left:var(--sp-4);border-left-width:4px}
+.sv{font-size:.45em;font-weight:400;color:var(--c-text-3);letter-spacing:.04em;min-width:4em}
+.cshow{display:flex;flex-direction:column;gap:var(--sp-4)}
+.csec{background:var(--c-bg-card);border:1px solid var(--c-border);border-radius:var(--r-md);padding:var(--sp-3)}
+.clbl-mini{font-size:var(--fs-micro);color:var(--c-text-3);letter-spacing:.08em;margin-bottom:var(--sp-2)}
+.bchart{display:flex;align-items:flex-end;gap:var(--sp-3);height:90px}
+.bcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:var(--sp-1)}
+.bcol span{font-size:var(--fs-micro);color:var(--c-text-3)}
+.bfill{width:55%;background:var(--grad-warm);border-radius:3px 3px 0 0;transition:height .8s var(--ease);min-height:4px}
+.lchart{width:100%;height:75px}
+.cpanel{background:var(--c-bg-card);border-radius:var(--r-md);padding:var(--sp-4);border:1px solid var(--c-border);transition:all .35s var(--ease)}
+.cpanel.bad{border-color:rgba(255,107,107,.12)}
+.cpanel.good{border-color:rgba(0,212,255,.12)}
+.clabel{font-size:var(--fs-micro);font-weight:700;letter-spacing:.06em;margin-bottom:var(--sp-3)}
+.cpanel.bad .clabel{color:var(--c-accent)}
+.cpanel.good .clabel{color:var(--c-secondary)}
+.iscore{font-size:var(--fs-micro);text-align:center;margin-top:var(--sp-2);color:var(--c-text-3)}
+.nvis{display:flex;align-items:center;justify-content:center;padding:var(--sp-2) 0}
+.nsvg{width:100%;height:auto;max-height:170px}
+.ec{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;height:100%;gap:var(--sp-6)}
+.ehe{margin-bottom:var(--sp-2)}
+.ehe-en{font-size:var(--fs-small);letter-spacing:.3em;color:var(--c-text-3);font-weight:300}
+.ehe-cn{font-size:var(--fs-display);font-weight:900;letter-spacing:-.02em;background:var(--grad-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.15}
+.er{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--sp-2);max-width:620px}
+.er-item{font-size:var(--fs-small);color:var(--c-text-2);display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-1) var(--sp-4);background:var(--c-bg-card);border:1px solid var(--c-border);border-radius:20px;transition:all .35s var(--ease)}
+.er-item:hover{border-color:var(--c-border-h);background:var(--c-bg-hover);transform:translateY(-2px)}
+.er-n{font-weight:900;color:var(--c-primary);font-size:var(--fs-small)}
+.er-cta{border-color:var(--c-accent);background:rgba(255,107,107,.05)}
+.er-cta .er-n{color:var(--c-accent)}
+.ecta{margin-top:var(--sp-2)}
+.ecta-t{font-size:var(--fs-lead);font-weight:700;color:var(--c-primary-s);letter-spacing:.08em}
+.ecta-bar{width:60px;height:2px;background:var(--grad-warm);margin:var(--sp-3) auto 0;border-radius:2px}
+.nav-bar{position:fixed;bottom:2.2vh;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:7px;z-index:20;background:rgba(0,0,0,.45);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:7px 14px;border-radius:18px;border:1px solid var(--c-border)}
+.nav-dot{width:5px;height:5px;border-radius:var(--r-full);background:var(--c-text-4);border:none;cursor:pointer;transition:all .45s var(--ease)}
+.nav-dot:hover{background:var(--c-text-2)}
+.nav-dot.active{width:18px;border-radius:3px;background:var(--grad-warm)}
+.nav-arrow{background:none;border:none;color:var(--c-text-3);font-size:1.1rem;cursor:pointer;padding:3px 5px;transition:color .3s;line-height:1;font-family:'Inter',sans-serif}
+.nav-arrow:hover{color:var(--c-text-1)}
+.slide::-webkit-scrollbar{width:3px}
+.slide::-webkit-scrollbar-track{background:transparent}
+.slide::-webkit-scrollbar-thumb{background:var(--c-bg-glow);border-radius:2px}
+@media(max-width:1024px){.content-grid,.content-grid.three,.content-grid.four{grid-template-columns:1fr!important}.card-grid.four{grid-template-columns:1fr 1fr}.plist,.pmatrix{max-width:100%!important}.sgrid{grid-template-columns:repeat(3,1fr)}.pyramid-visual{max-width:70%}}
+@media(max-width:640px){.slide{padding:3.5vh 4vw}.card-grid,.card-grid.three,.card-grid.four{grid-template-columns:1fr!important}.plist{grid-template-columns:1fr!important}.frow,.srow{flex-direction:column}.nav-bar{gap:5px;padding:5px 10px}.sgrid{grid-template-columns:repeat(2,1fr)}.pyramid-visual{max-width:100%}}
+</style>
+</head>
+<body>
+
+<div id="three-canvas"></div>
+<div class="slide-number" id="slideNumber">01 / 20</div>
+
+<div class="slides-container" id="slidesContainer">
+
+<!-- ══ S01: COVER ══ -->
+<div class="slide cover active" data-i="0">
+  <div style="text-align:center">
+    <div style="font-size:clamp(2.8rem,7vw,5.8rem);font-weight:900;letter-spacing:-.03em;line-height:1.05;
+      background:linear-gradient(135deg,#f0c868 0%,#f08030 50%,#ff6b6b 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.2em">
+      演示设计科学
+    </div>
+    <div style="font-size:clamp(.85rem,1.8vw,1.5rem);font-weight:300;color:rgba(255,255,255,.45);letter-spacing:.25em;margin-bottom:1.8em">
+      PRESENTATION DESIGN SCIENCE
+    </div>
+    <div style="font-size:.75rem;color:rgba(255,255,255,.15);letter-spacing:.12em">
+      从信息到影响力的视觉工程 · 二十章全览
+    </div>
+  </div>
+</div>
+
+<!-- ══ S02: AGENDA ══ -->
+<div class="slide" data-i="1">
+  <div class="slide-title">内容路径<span class="en">Agenda · 二十章</span></div>
+  <div class="card-grid four" style="margin-top:.6em">
+    <div class="card"><div class="tag">01–04</div><div class="ct">信息架构</div><div class="cd">DIKW 金字塔 · MECE · 优先级矩阵</div></div>
+    <div class="card"><div class="tag">05–08</div><div class="ct">视觉原则</div><div class="cd">CRAP 四原则深度拆解 · 实操案例</div></div>
+    <div class="card"><div class="tag">09–12</div><div class="ct">色彩系统</div><div class="cd">色轮 · 配色方案 · 心理学 · WCAG</div></div>
+    <div class="card"><div class="tag">13–15</div><div class="ct">字体排印</div><div class="cd">分类 · 配对 · 模度 · 中文排版</div></div>
+    <div class="card"><div class="tag">16–17</div><div class="ct">数据可视化</div><div class="cd">图表选择 · 数据墨水比 · 极简</div></div>
+    <div class="card"><div class="tag">18</div><div class="ct">动效设计</div><div class="cd">缓动 · 时序 · 黄金法则</div></div>
+    <div class="card"><div class="tag">19</div><div class="ct">叙事弧线</div><div class="cd">三段式结构 · 演讲心法</div></div>
+    <div class="card"><div class="tag">20</div><div class="ct">七条法则</div><div class="cd">影响力框架 · 终章</div></div>
+  </div>
+</div>
+
+<!-- ══ S03: DIKW ══ -->
+<div class="slide" data-i="2">
+  <div class="slide-title">信息架构 · DIKW<span class="en">Data → Information → Knowledge → Wisdom</span></div>
+  <div class="content-grid" style="grid-template-columns:1.2fr 1fr">
+    <div class="pyramid-visual">
+      <div class="pyramid-layer layer-w" style="width:28%">
+        <span class="pyr-lbl">Wisdom</span>
+        <span class="pyr-desc">可行动的判断</span>
+      </div>
+      <div class="pyramid-layer layer-k" style="width:48%">
+        <span class="pyr-lbl">Knowledge</span>
+        <span class="pyr-desc">可复用的模式</span>
+      </div>
+      <div class="pyramid-layer layer-i" style="width:68%">
+        <span class="pyr-lbl">Information</span>
+        <span class="pyr-desc">结构化数据</span>
+      </div>
+      <div class="pyramid-layer layer-d" style="width:88%">
+        <span class="pyr-lbl">Data</span>
+        <span class="pyr-desc">原始事实</span>
+      </div>
+    </div>
+    <div class="col-body">
+      <p><span class="sub-title">转化漏斗</span></p>
+      <p>演示的本质是将 <span class="hl">Data</span> 转化为 <span class="hl">Wisdom</span>。</p>
+      <p>观众带走的不是数字，是决策。</p>
+      <p style="margin-top:var(--sp-4)"><span class="tag">这页在转化链的哪一环？</span></p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S04: MECE + PRIORITY ══ -->
+<div class="slide" data-i="3">
+  <div class="slide-title">MECE 与内容优先级<span class="en">Mutually Exclusive, Collectively Exhaustive</span></div>
+  <div class="content-grid wide">
+    <div class="col-body">
+      <p><span class="sub-title">MECE 原则</span></p>
+      <p>相互独立，完全穷尽——分类时不重叠、不遗漏。</p>
+      <p>✅ 好的分类：<span class="tag">收入按地区分</span> × <span class="tag">按产品线分</span><br>
+      ❌ 坏的分类：「国内 + 国际 + 电商」——电商与渠道概念重叠</p>
+      <p style="margin-top:var(--sp-3)">MECE 的演示价值：框架覆盖所有关键信息，观众不会觉得「漏了什么」。</p>
+    </div>
+    <div class="col-body">
+      <p><span class="sub-title">内容优先级矩阵</span></p>
+      <p>每页一个核心信息。<span class="hl">One Slide, One Message.</span></p>
+      <div class="divider"></div>
+      <div class="pmatrix">
+        <div class="pm-cell pm-hh"><span class="hl">高重要性</span> + <span class="hl">高复杂度</span><br><span class="tag">拆为多页</span></div>
+        <div class="pm-cell pm-hl"><span class="hl">高重要性</span> + <span class="hl" style="color:var(--c-secondary)">低复杂度</span><br><span class="tag">突出展示</span></div>
+        <div class="pm-cell pm-lh"><span style="color:var(--c-text-2)">低重要性</span> + <span class="hl">高复杂度</span><br><span class="tag">简化</span></div>
+        <div class="pm-cell pm-ll"><span style="color:var(--c-text-2)">低重要性</span> + <span style="color:var(--c-text-2)">低复杂度</span><br><span class="tag">附录或口述</span></div>
+      </div>
+    </div>
+  </div>
+</div><!-- ══ S05: CRAP OVERVIEW ══ -->
+<div class="slide" data-i="4">
+  <div class="slide-title">视觉四原则总览<span class="en">CRAP — The Four Pillars of Visual Design</span></div>
+  <div class="card-grid four" style="margin-top:.4em">
+    <div class="card card-primary">
+      <div class="tag">01</div><div class="ct">✨ 对比 Contrast</div>
+      <div class="cd">通过大小/颜色/粗细/留白的差异创造层级。无对比则无焦点——目光需被引导而非漫游。</div>
+    </div>
+    <div class="card card-crap-r">
+      <div class="tag">02</div><div class="ct">♾ 重复 Repetition</div>
+      <div class="cd">一致的字体/配色/间距建立系统感。重复不是单调——是视觉品牌的语言。</div>
+    </div>
+    <div class="card card-secondary card-crap-a">
+      <div class="tag">03</div><div class="ct">← 对齐 Alignment</div>
+      <div class="cd">每个元素都与至少一个其他元素有视觉联系。左对齐是中/英文阅读的天然选择。</div>
+    </div>
+    <div class="card card-crap-p">
+      <div class="tag">04</div><div class="ct">↕ 亲密性 Proximity</div>
+      <div class="cd">相关项靠近，不相关项分开。间距定义关系——元素间的距离反映逻辑关联度。</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S06: CONTRAST DEEP ══ -->
+<div class="slide" data-i="5">
+  <div class="slide-title">对比深度解析<span class="en">Contrast — Creating Visual Hierarchy</span></div>
+  <div class="content-grid" style="grid-template-columns:1fr 1.2fr">
+    <div class="col-body">
+      <p><span class="sub-title">对比的维度</span></p>
+      <p><span class="hl">大小 · 颜色 · 粗细 · 留白 · 形状</span></p>
+      <p>如果两个元素不同，就让它们 <span class="hl">明显不同</span>。</p>
+      <p style="margin-top:var(--sp-3)"><span class="tag">测试</span>：眯眼看——分不清层级则对比不足。</p>
+    </div>
+    <div class="cdemo">
+      <div class="crow"><span class="clbl">大小</span><span class="c-lg">大</span><span class="c-sm">小</span></div>
+      <div class="crow"><span class="clbl">颜色</span><span class="c-cw">暖色前进</span><span class="c-cc">冷色后退</span></div>
+      <div class="crow"><span class="clbl">粗细</span><span class="c-wh">粗 900</span><span class="c-wl">细 300</span></div>
+      <div class="crow"><span class="clbl">留白</span><span class="c-sd">密集</span><span style="margin-left:var(--sp-6);color:var(--c-text-3);font-size:var(--fs-body)">稀疏</span></div>
+      <div class="crow"><span class="clbl">形状</span><span class="c-sr">圆</span><span class="c-ss">方</span></div>
+    </div>
+  </div>
+</div><!-- ══ S07: REPETITION + ALIGNMENT ══ -->
+<div class="slide" data-i="6">
+  <div class="slide-title">重复 · 对齐<span class="en">Repetition &amp; Alignment — Consistency is Trust</span></div>
+  <div class="content-grid wide">
+    <div class="col-body">
+      <p><span class="sub-title">重复的力量</span></p>
+      <p>• 标题位置固定 → 观众形成阅读惯性<br>
+      • 配色系统一致 → 每种颜色有固定语义<br>
+      • 间距系统统一 → 呼吸感贯穿全文<br>
+      • 图标风格一致 → 线框/填充/面性，选一种到底</p>
+      <p style="margin-top:.4em"><span class="hl">一致性建立信任。</span> 随意的变化让观众觉得你不专业。</p>
+    </div>
+    <div class="col-body">
+      <p><span class="sub-title">对齐的艺术</span></p>
+      <p>• <span class="hl">左对齐</span> — 阅读效率最高，中文默认选择<br>
+      • <span class="hl">居中对齐</span> — 用于封面、引语、少量文字<br>
+      • <span class="hl">右对齐</span> — 数字/数据表格的天然对齐方式<br>
+      • <span class="hl">网格系统</span> — 用隐形的行/列对齐所有元素</p>
+      <p style="margin-top:.4em">❌ 禁用随意拖放——每个元素的位置都应有理由。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S08: PROXIMITY ══ -->
+<div class="slide" data-i="7">
+  <div class="slide-title">亲密性排版案例<span class="en">Proximity — Distance Defines Relationship</span></div>
+  <div class="content-grid wide">
+    <div class="col-body">
+      <p><span class="sub-title">间距层级法则</span></p>
+      <p>• <span class="hl">4px / 8px / 16px / 32px / 64px</span> — 推荐间距体系<br>
+      • 同组元素间距 &lt; 组间间距 &lt; 区域间距<br>
+      • 标题与正文间距 &lt; 上下页间距</p>
+      <p style="margin-top:.4em"><span class="tag">检验方法</span>：快速扫视幻灯片——如果 2 秒内分不清信息分组，间距需要调整。</p>
+    </div>
+    <div class="col-body">
+      <p><span class="sub-title">常见错误</span></p>
+      <p>❌ 标题离上边内容比离下边内容更近<br>
+      ❌ 图注与图之间距离超过图与下一段文字的距离<br>
+      ❌ 相关按钮/链接分散在页面各处<br>
+      ❌ 所有元素等距排列（没有组感）</p>
+      <p style="margin-top:.4em">✅ 修正方法：先逻辑分组，再物理分组。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S09: COLOR WHEEL ══ -->
+<div class="slide" data-i="8">
+  <div class="slide-title">色彩原理 · 色轮<span class="en">Color Theory — The Foundation</span></div>
+  <div class="content-grid" style="grid-template-columns:1fr 1.3fr">
+    <div style="display:flex;justify-content:center;align-items:center">
+      <div class="cw-outer">
+        <div class="cw-ring"></div>
+        <div class="cw-center">
+          <span class="cw-h">H</span>
+          <span class="cw-s">S</span>
+          <span class="cw-v">V</span>
+        </div>
+        <span class="cm" style="background:#ff0000;top:13%;left:78%">R</span>
+        <span class="cm" style="background:#ffcc00;top:33%;left:90%">Y</span>
+        <span class="cm" style="background:#00cc00;top:61%;left:82%">G</span>
+        <span class="cm" style="background:#00cccc;top:80%;left:56%">C</span>
+        <span class="cm" style="background:#0000ff;top:68%;left:22%">B</span>
+        <span class="cm" style="background:#cc00cc;top:40%;left:15%">M</span>
+      </div>
+    </div>
+    <div class="col-body">
+      <p><span class="sub-title">色轮基础</span></p>
+      <p><span class="hl">原色</span> — 红/黄/蓝（RYB）<br>
+      <span class="hl">间色</span> — 橙/绿/紫<br>
+      <span class="hl">复色</span> — 黄橙、蓝绿等</p>
+      <div class="divider"></div>
+      <p><span class="hl">色相 H</span> 0–360°<br>
+      <span class="hl">饱和度 S</span> 0–100%<br>
+      <span class="hl">明度 V</span> 0–100%</p>
+      <p style="margin-top:var(--sp-3)"><span class="tag">💡 秘诀</span> 降低饱和度 10–20% 更高级</p>
+    </div>
+  </div>
+</div><!-- ══ S10: COLOR SCHEMES ══ -->
+<div class="slide" data-i="9">
+  <div class="slide-title">配色方案五种<span class="en">Color Schemes — Harmonious Combinations</span></div>
+  <div class="sgrid">
+    <div class="scard">
+      <div class="sname">Monochromatic</div>
+      <div class="sbar">
+        <span style="background:hsl(35,70%,25%)"></span>
+        <span style="background:hsl(35,70%,40%)"></span>
+        <span style="background:hsl(35,70%,55%)"></span>
+        <span style="background:hsl(35,70%,70%)"></span>
+        <span style="background:hsl(35,70%,85%)"></span>
+      </div>
+    </div>
+    <div class="scard">
+      <div class="sname">Analogous</div>
+      <div class="sbar">
+        <span style="background:hsl(200,75%,45%)"></span>
+        <span style="background:hsl(220,75%,50%)"></span>
+        <span style="background:hsl(240,65%,55%)"></span>
+        <span style="background:hsl(260,55%,50%)"></span>
+        <span style="background:hsl(280,45%,45%)"></span>
+      </div>
+    </div>
+    <div class="scard">
+      <div class="sname">Complementary</div>
+      <div class="sbar">
+        <span style="background:hsl(210,75%,50%)"></span>
+        <span style="background:hsl(210,55%,35%)"></span>
+        <span style="background:hsl(30,85%,50%)"></span>
+        <span style="background:hsl(30,75%,35%)"></span>
+        <span style="background:hsl(30,65%,25%)"></span>
+      </div>
+    </div>
+    <div class="scard">
+      <div class="sname">Split Compl.</div>
+      <div class="sbar">
+        <span style="background:hsl(0,75%,48%)"></span>
+        <span style="background:hsl(0,55%,35%)"></span>
+        <span style="background:hsl(160,65%,42%)"></span>
+        <span style="background:hsl(200,65%,42%)"></span>
+        <span style="background:hsl(160,45%,30%)"></span>
+      </div>
+    </div>
+    <div class="scard">
+      <div class="sname">Triadic</div>
+      <div class="sbar">
+        <span style="background:hsl(0,75%,48%)"></span>
+        <span style="background:hsl(120,65%,42%)"></span>
+        <span style="background:hsl(240,65%,52%)"></span>
+        <span style="background:hsl(0,45%,35%)"></span>
+        <span style="background:hsl(120,45%,30%)"></span>
+      </div>
+    </div>
+  </div>
+  <div class="srule"><span class="hl">60%</span> 主色 · <span class="hl" style="color:var(--c-secondary)">30%</span> 辅色 · <span class="hl" style="color:var(--c-accent)">10%</span> 强调色</div>
+</div><!-- ══ S11: PSYCHOLOGY ══ -->
+<div class="slide" data-i="10">
+  <div class="slide-title">色彩心理学<span class="en">Color Psychology &amp; Cultural Context</span></div>
+  <div class="content-grid wide">
+    <div class="col-body">
+      <p><span class="sub-title">色彩联想</span></p>
+      <p>🔴 <span class="hl">红</span> — 能量/紧迫/激情/危险（也代表节庆）<br>
+      🟠 <span class="hl">橙</span> — 活力/友好/温暖/平价<br>
+      🟡 <span class="hl">黄</span> — 乐观/注意/年轻/不稳定<br>
+      🟢 <span class="hl">绿</span> — 自然/健康/环保/金融<br>
+      🔵 <span class="hl">蓝</span> — 信任/专业/冷静/科技（最受欢迎）<br>
+      🟣 <span class="hl">紫</span> — 奢华/创意/神秘/高端<br>
+      ⚫ <span class="hl">黑/灰</span> — 高级/权威/极简</p>
+    </div>
+    <div class="col-body">
+      <p><span class="sub-title">文化与行业差异</span></p>
+      <p>• 中国红 = 喜庆，中东绿 = 神圣，西方白 = 纯洁<br>
+      • 金融 → 蓝/绿（稳定），科技 → 蓝/紫（创新）<br>
+      • 食品 → 红/橙/黄（开胃），环保 → 绿/棕（自然）</p>
+      <p style="margin-top:.5em"><span class="tag">核心</span>：你的色彩选择传递了隐性的品牌信息——确保它与你想表达的情感一致。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S12: WCAG ══ -->
+<div class="slide" data-i="11">
+  <div class="slide-title">可访问性 · WCAG<span class="en">Accessibility — Design for Everyone</span></div>
+  <div class="content-grid wide">
+    <div class="col-body">
+      <p><span class="sub-title">对比度标准</span></p>
+      <p>• <span class="hl">AA 级</span>：正文 ≥ 4.5:1，大字号 ≥ 3:1<br>
+      • <span class="hl">AAA 级</span>：正文 ≥ 7:1，大字号 ≥ 4.5:1</p>
+      <p style="margin-top:.4em">🌐 全球约 <span class="hl">2.2 亿人</span>有视觉障碍。高对比度设计让所有人受益——包括投影仪环境。</p>
+    </div>
+    <div class="col-body">
+      <p><span class="sub-title">色盲安全设计</span></p>
+      <p>• 红绿色盲最常见（约 8% 男性）<br>
+      • ❌ 避免 红/绿 搭配作为区分的唯一手段<br>
+      • ✅ 搭配形状/图案/文字标签传递信息</p>
+      <p style="margin-top:.4em"><span class="tag">工具</span>：WebAIM Contrast Checker · Sim Daltonism</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S13: TYPOGRAPHY BASICS ══ -->
+<div class="slide" data-i="12">
+  <div class="slide-title">字体分类<span class="en">Type Classification — Choosing the Right Voice</span></div>
+  <div class="content-grid wide">
+    <div class="col-body">
+      <p><span class="sub-title">四大分类</span></p>
+      <p>• <span class="hl">衬线 Serif</span> — 有装饰脚，传统/正式/可信<br>
+      &nbsp;&nbsp;宋体、Times New Roman、Noto Serif<br>
+      • <span class="hl">无衬线 Sans-Serif</span> — 无脚，现代/干净/科技<br>
+      &nbsp;&nbsp;黑体、Helvetica、Noto Sans、Inter<br>
+      • <span class="hl">展示 Display</span> — 装饰性，仅用于大标题<br>
+      • <span class="hl">等宽 Mono</span> — 代码/数据/技术感</p>
+    </div>
+    <div class="col-body">
+      <p><span class="sub-title">演示与阅读的差异</span></p>
+      <p>• 幻灯片 = <span class="hl">无衬线</span> 占优（远距离可读性）<br>
+      • 印刷正文 = <span class="hl">衬线</span> 占优（阅读引导）<br>
+      • 屏幕正文 = 两者皆可，看品牌调性</p>
+      <div class="frow" style="margin-top:.4em">
+        <div class="fsamp"><div class="fl">SANS-SERIF</div><div class="ft sans">黑体 · Inter · 标题首选</div></div>
+        <div class="fsamp"><div class="fl">SERIF</div><div class="ft serif">宋体 · Noto Serif · 正文佳选</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S14: PAIRING + MODULE ══ -->
+<div class="slide" data-i="13">
+  <div class="slide-title">字体配对 · 模度比例<span class="en">Font Pairing &amp; Modular Scale</span></div>
+  <div class="content-grid" style="grid-template-columns:1fr 1.2fr">
+    <div class="col-body">
+      <p><span class="sub-title">配对黄金法则</span></p>
+      <p><span class="hl">对比 + 和谐</span> = 展示字体 + 通用字体</p>
+      <p>• Noto Sans SC + Noto Serif SC<br>
+      • Inter + Source Serif<br>
+      ⚠️ 不超过 <span class="hl">2 个字族</span></p>
+      <p style="margin-top:var(--sp-4)"><span class="sub-title">推荐比例</span></p>
+      <p><span class="hl">1.333</span>（纯五度）★ 通用推荐</p>
+    </div>
+    <div class="svis">
+      <div class="sstep" style="font-size:var(--fs-display);--c-s:var(--c-accent)"><span class="sv">4.209rem</span> 展示 Display</div>
+      <div class="sstep" style="font-size:var(--fs-h1);--c-s:var(--c-primary-s)"><span class="sv">3.157rem</span> 大标题 H1</div>
+      <div class="sstep" style="font-size:var(--fs-h2);--c-s:var(--c-primary)"><span class="sv">2.369rem</span> 标题 H2</div>
+      <div class="sstep" style="font-size:var(--fs-h3);--c-s:var(--c-primary)"><span class="sv">1.777rem</span> 小标题 H3</div>
+      <div class="sstep" style="font-size:var(--fs-h4);--c-s:var(--c-secondary)"><span class="sv">1.333rem</span> 引言 H4</div>
+      <div class="sstep" style="font-size:var(--fs-body);--c-s:var(--c-text-2)"><span class="sv">0.875rem</span> 正文 Body</div>
+    </div>
+  </div>
+</div><!-- ══ S15: CHINESE TYPO ══ -->
+<div class="slide" data-i="14">
+  <div class="slide-title">中文排版专项<span class="en">Chinese Typesetting — Unique Challenges</span></div>
+  <div class="content-grid wide">
+    <div class="col-body">
+      <p><span class="sub-title">核心参数</span></p>
+      <p>• 行高 <span class="hl">1.6–1.8</span> — 方块字需要呼吸空间<br>
+      • 段落间距 = 行高 × 1.2~1.5<br>
+      • 每行 <span class="hl">25–35 字</span> — 过长易疲劳，过短破坏节奏<br>
+      • 最小字号 ≥ <span class="hl">12px</span>（屏幕）、≥ <span class="hl">18px</span>（投影）</p>
+    </div>
+    <div class="col-body">
+      <p><span class="sub-title">标点与细节</span></p>
+      <p>• 引号统一 「」『』 或 “”——全文保持一致<br>
+      • 破折号用 <span class="hl">——</span>（两个 em dash），不是 - 或 --<br>
+      • 省略号用 <span class="hl">……</span>（两个 ..），不是 ... 或 …<br>
+      • 中英文混排时，英文两侧加 <span class="hl">薄空格</span>（thin space）<br>
+      • 幻灯片慎用「首行缩进」——用段落间距取代</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S16: DATA VIZ ══ -->
+<div class="slide" data-i="15">
+  <div class="slide-title">数据可视化 · 图表选择<span class="en">Choose the Right Chart for Your Data</span></div>
+  <div class="content-grid" style="grid-template-columns:1fr 1.3fr">
+    <div class="col-body">
+      <p><span class="sub-title">数据 → 图表映射</span></p>
+      <p>📊 <span class="hl">比较</span> → 柱状图<br>
+      📈 <span class="hl">趋势</span> → 折线图<br>
+      🥧 <span class="hl">构成</span> → 饼图 / 堆叠图<br>
+      📉 <span class="hl">分布</span> → 散点图</p>
+      <p style="margin-top:var(--sp-3)"><span class="tag">一图一信息，复杂图表分步构建</span></p>
+    </div>
+    <div class="cshow">
+      <div class="csec">
+        <div class="clbl-mini">Bar Chart — 柱状图</div>
+        <div class="bchart">
+          <div class="bcol"><div class="bfill" style="height:75%"></div><span>Q1</span></div>
+          <div class="bcol"><div class="bfill" style="height:45%"></div><span>Q2</span></div>
+          <div class="bcol"><div class="bfill" style="height:92%"></div><span>Q3</span></div>
+          <div class="bcol"><div class="bfill" style="height:60%"></div><span>Q4</span></div>
+          <div class="bcol"><div class="bfill" style="height:80%"></div><span>Q5</span></div>
+        </div>
+      </div>
+      <div class="csec">
+        <div class="clbl-mini">Line Chart — 折线图</div>
+        <svg class="lchart" viewBox="0 0 200 70">
+          <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="var(--c-primary-s)"/><stop offset="100%" stop-color="var(--c-accent)"/></linearGradient>
+          <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--c-primary)"/><stop offset="100%" stop-color="transparent"/></linearGradient></defs>
+          <polyline points="0,55 35,40 70,48 105,20 140,28 175,10 200,18" fill="none" stroke="url(#lg)" stroke-width="2" vector-effect="non-scaling-stroke"/>
+          <polygon points="0,55 0,70 200,70 200,18 175,10 140,28 105,20 70,48 35,40 0,55" fill="url(#ag)" opacity="0.12"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div><!-- ══ S17: DATA MINIMALISM ══ -->
+<div class="slide" data-i="16">
+  <div class="slide-title">极简数据设计<span class="en">Data-Ink Ratio &amp; Graphical Excellence</span></div>
+  <div class="content-grid" style="grid-template-columns:1fr 1fr">
+    <div class="cpanel bad">
+      <div class="clabel">BEFORE · 低数据墨水比 ≈ 35%</div>
+      <svg viewBox="0 0 200 120" style="width:100%;height:auto">
+        <line x1="30" y1="15" x2="190" y2="15" stroke="rgba(255,255,255,.06)" stroke-dasharray="2,2"/>
+        <line x1="30" y1="35" x2="190" y2="35" stroke="rgba(255,255,255,.06)" stroke-dasharray="2,2"/>
+        <line x1="30" y1="55" x2="190" y2="55" stroke="rgba(255,255,255,.06)" stroke-dasharray="2,2"/>
+        <line x1="30" y1="75" x2="190" y2="75" stroke="rgba(255,255,255,.06)" stroke-dasharray="2,2"/>
+        <rect x="35" y="40" width="18" height="55" fill="rgba(240,160,48,.25)" stroke="rgba(240,160,48,.45)" rx="2"/>
+        <rect x="37" y="42" width="14" height="51" fill="rgba(240,160,48,.1)"/>
+        <rect x="65" y="22" width="18" height="73" fill="rgba(0,212,255,.25)" stroke="rgba(0,212,255,.45)" rx="2"/>
+        <rect x="125" y="50" width="18" height="45" fill="rgba(255,107,107,.25)" stroke="rgba(255,107,107,.45)" rx="2"/>
+        <rect x="155" y="32" width="18" height="63" fill="rgba(107,91,255,.25)" stroke="rgba(107,91,255,.45)" rx="2"/>
+        <rect x="95" y="14" width="18" height="81" fill="rgba(240,200,104,.25)" stroke="rgba(240,200,104,.45)" rx="2"/>
+      </svg>
+    </div>
+    <div class="cpanel good">
+      <div class="clabel">AFTER · 高数据墨水比 ≈ 82%</div>
+      <svg viewBox="0 0 200 100" style="width:100%;height:auto">
+        <rect x="35" y="36" width="18" height="60" fill="var(--c-primary)" rx="1"/>
+        <rect x="65" y="18" width="18" height="78" fill="var(--c-secondary)" rx="1"/>
+        <rect x="95" y="10" width="18" height="86" fill="var(--c-primary-s)" rx="1"/>
+        <rect x="125" y="46" width="18" height="50" fill="var(--c-accent)" rx="1"/>
+        <rect x="155" y="28" width="18" height="68" fill="var(--c-secondary)" rx="1"/>
+        <line x1="30" y1="96" x2="190" y2="96" stroke="rgba(255,255,255,.12)"/>
+      </svg>
+    </div>
+  </div>
+</div><!-- ══ S18: MOTION ══ -->
+<div class="slide" data-i="17">
+  <div class="slide-title">动效设计原则<span class="en">Motion with Purpose</span></div>
+  <div class="content-grid wide">
+    <div class="col-body">
+      <p><span class="sub-title">动效三大目的</span></p>
+      <p>1. <span class="hl">引导注意力</span> — 动势告诉观众看哪里<br>
+      2. <span class="hl">提供反馈</span> — 状态变化有视觉回应<br>
+      3. <span class="hl">建立空间感</span> — 动效解释元素的空间关系</p>
+      <p style="margin-top:.4em"><span class="sub-title">缓动曲线</span></p>
+      <p>• <span class="hl">ease-in-out</span> — 自然运动，推荐首选<br>
+      • <span class="hl">ease-out</span> — 元素进入（缓缓停下）<br>
+      ❌ 避免 <code>linear</code> — 机械感</p>
+    </div>
+    <div class="col-body">
+      <p><span class="sub-title">黄金法则</span></p>
+      <p>• 动效时长 <span class="hl">200–500ms</span> — 太短看不见，太长拖沓<br>
+      • 页面切换 ≤ <span class="hl">400ms</span><br>
+      • 一页不超过 <span class="hl">3 种动效</span><br>
+      • <span class="hl">Staggered</span> (错开) > 同步变化 —— 制造节奏感<br>
+      • 动效必须有叙事目的——不然就是噪音</p>
+      <p style="margin-top:.5em">"Motion without purpose is distraction."</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S19: NARRATIVE ══ -->
+<div class="slide" data-i="18">
+  <div class="slide-title">叙事弧线 · 演讲心法<span class="en">The Art of Storytelling in Presentations</span></div>
+  <div class="content-grid" style="grid-template-columns:1.3fr 1fr">
+    <div class="nvis">
+      <svg class="nsvg" viewBox="0 0 400 170">
+        <defs><linearGradient id="ag2" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="var(--c-secondary)"/><stop offset="40%" stop-color="var(--c-primary)"/><stop offset="100%" stop-color="var(--c-accent)"/></linearGradient>
+        <filter id="gf"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+        <line x1="0" y1="150" x2="400" y2="150" stroke="rgba(255,255,255,.03)" stroke-dasharray="4,4"/>
+        <line x1="0" y1="75" x2="400" y2="75" stroke="rgba(255,255,255,.03)" stroke-dasharray="4,4"/>
+        <path d="M10 140 Q40 140 75 130 Q120 120 170 65 Q200 25 230 25 Q270 25 310 75 Q345 120 390 130" fill="none" stroke="url(#ag2)" stroke-width="2.5" filter="url(#gf)"/>
+        <path d="M10 140 Q40 140 75 130 Q120 120 170 65 Q200 25 230 25 Q270 25 310 75 Q345 120 390 130 L390 150 L10 150 Z" fill="url(#ag2)" opacity="0.05"/>
+        <circle cx="30" cy="138" r="4" fill="var(--c-secondary)"/>
+        <text x="30" y="162" text-anchor="middle" fill="var(--c-text-3)" font-size="9">开头 10–15%</text>
+        <circle cx="200" cy="25" r="5" fill="var(--c-primary)"/>
+        <text x="200" y="16" text-anchor="middle" fill="var(--c-primary-s)" font-size="10" font-weight="700">高潮</text>
+        <circle cx="370" cy="132" r="4" fill="var(--c-accent)"/>
+        <text x="370" y="162" text-anchor="middle" fill="var(--c-text-3)" font-size="9">结尾 10%</text>
+        <text x="200" y="95" text-anchor="middle" fill="rgba(255,255,255,.06)" font-size="9" letter-spacing="4">主 体 70–80%</text>
+      </svg>
+    </div>
+    <div class="col-body">
+      <p><span class="sub-title">三段式结构</span></p>
+      <p><span class="hl">1. 开头 10–15%</span><br>→ 钩子：数据冲击 / 故事 / 问题<br>→ 回答 "Why should I care?"</p>
+      <p><span class="hl">2. 主体 70–80%</span><br>→ 问题 → 分析 → 方案 → 证据</p>
+      <p><span class="hl">3. 结尾 10%</span><br>→ 核心信息 + 行动号召 (CTA)</p>
+      <p style="margin-top:var(--sp-3)"><span class="tag">开场 90 秒决定去留</span></p>
+    </div>
+  </div>
+</div><!-- ══ S20: 7 LAWS + END ══ -->
+<div class="slide" data-i="19">
+  <div class="ec">
+    <div class="ehe">
+      <div class="ehe-en">DESIGN IS</div>
+      <div class="ehe-cn">看得见的思考</div>
+    </div>
+    <div class="er">
+      <div class="er-item"><span class="er-n">01</span>一页一件事</div>
+      <div class="er-item"><span class="er-n">02</span>图优于表，表优于文</div>
+      <div class="er-item"><span class="er-n">03</span>少即是多</div>
+      <div class="er-item"><span class="er-n">04</span>对比创造层级</div>
+      <div class="er-item"><span class="er-n">05</span>一致性建立信任</div>
+      <div class="er-item"><span class="er-n">06</span>留白是设计元素</div>
+      <div class="er-item er-cta"><span class="er-n">07</span>演示不是说教，是引导</div>
+    </div>
+    <div class="ecta">
+      <div class="ecta-t">从今天开始，设计每一页</div>
+      <div class="ecta-bar"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /slides-container -->
+
+<!-- Navigation -->
+<div class="nav-bar" id="navBar">
+  <button class="nav-arrow" id="prevBtn">‹</button>
+  <div id="navDots"></div>
+  <button class="nav-arrow" id="nextBtn">›</button>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+/* ═══════════════════════════════════════════════
+   CONFIG
+   ═══════════════════════════════════════════════ */
+const TOTAL = 20;
+let current = 0;
+let moving = false;
+
+/* ═══════════════════════════════════════════════
+   SCENE SETUP
+   ═══════════════════════════════════════════════ */
+const container = document.getElementById('three-canvas');
+const W = window.innerWidth, H = window.innerHeight;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x05060f);
+
+const camera = new THREE.PerspectiveCamera(40, W / H, 0.1, 120);
+camera.position.set(0, 0, 12);
+
+const renderer = new THREE.WebGLRenderer({ alpha: false, antialias: true });
+renderer.setSize(W, H);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+container.appendChild(renderer.domElement);
+
+/* ── Post-Processing: Bloom ── */
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(W, H), 0.5, 0.15, 0.08
+);
+composer.addPass(bloomPass);
+
+/* ═══════════════════════════════════════════════
+   LIGHTS
+   ═══════════════════════════════════════════════ */
+const ambient = new THREE.AmbientLight(0x304070, 0.4);
+scene.add(ambient);
+const dl1 = new THREE.DirectionalLight(0xf0a030, 1.8);
+dl1.position.set(10, 10, 10);
+scene.add(dl1);
+const dl2 = new THREE.DirectionalLight(0x00d4ff, 0.8);
+dl2.position.set(-8, -4, 6);
+scene.add(dl2);
+
+/* ═══════════════════════════════════════════════
+   STARFIELD — 3 Layers
+   ═══════════════════════════════════════════════ */
+function glowTexture(size = 64) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+  g.addColorStop(0, 'rgba(255,255,255,1)');
+  g.addColorStop(0.15, 'rgba(255,240,220,0.85)');
+  g.addColorStop(0.4, 'rgba(255,200,160,0.35)');
+  g.addColorStop(0.7, 'rgba(200,180,255,0.1)');
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+  return new THREE.CanvasTexture(c);
+}
+
+const starTex = glowTexture(64);
+
+function starLayer(count, sizeBase, spread, opacity, twSpeed, twPhase) {
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(count * 3);
+  const colorArr = new Float32Array(count * 3);
+  const colors = [new THREE.Color(0xffeedd), new THREE.Color(0xf0c868),
+                  new THREE.Color(0xaaccff), new THREE.Color(0xffccaa),
+                  new THREE.Color(0xffffff)];
+  for (let i = 0; i < count; i++) {
+    const r = spread[0] + Math.random() * (spread[1] - spread[0]);
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    pos[i*3] = r * Math.sin(phi) * Math.cos(theta);
+    pos[i*3+1] = r * Math.cos(phi);
+    pos[i*3+2] = r * Math.sin(phi) * Math.sin(theta);
+    const c = colors[Math.floor(Math.random() * colors.length)];
+    colorArr[i*3] = c.r; colorArr[i*3+1] = c.g; colorArr[i*3+2] = c.b;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colorArr, 3));
+
+  const mat = new THREE.PointsMaterial({
+    size: sizeBase * 0.06,
+    map: starTex,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    transparent: true,
+    opacity,
+    vertexColors: true,
+    sizeAttenuation: true,
+  });
+  const pts = new THREE.Points(geo, mat);
+  pts.userData = { isStarLayer: true, baseOpacity: opacity, speed: twSpeed, phase: twPhase };
+  return pts;
+}
+
+// Three layers for parallax depth — each with its own twinkle rhythm
+const farStars  = starLayer(1500, 0.4, [18, 40], 0.45, 0.3, 0);
+const midStars  = starLayer(1000, 0.7, [10, 25], 0.65, 0.5, 1.2);
+const nearStars = starLayer(500,  1.0, [5, 14],  0.8,  0.7, 2.5);
+scene.add(farStars);
+scene.add(midStars);
+scene.add(nearStars);
+
+/* ═══════════════════════════════════════════════
+   DYNAMIC PARTICLE STREAMS — spiral galaxy flow
+   ═══════════════════════════════════════════════ */
+const STREAM_N = 2000;
+const sPos = new Float32Array(STREAM_N * 3);
+const sCol = new Float32Array(STREAM_N * 3);
+const sDat = [];
+const pal = [0xffeedd,0xf0c868,0x6bc8ff,0xff88aa,0x88ffbb];
+
+for (let i = 0; i < STREAM_N; i++) {
+  const a = Math.random() * Math.PI * 2;
+  const r = Math.random() * 12;
+  const c = new THREE.Color(pal[Math.floor(Math.random()*pal.length)]);
+  sDat.push({ angle: a, radius: r, y: (Math.random()-0.5)*4,
+    spd: 0.12+Math.random()*0.35, life: Math.random(),
+    maxL: 3+Math.random()*4, col: c });
+  sPos[i*3]=Math.cos(a)*r; sPos[i*3+1]=sDat[i].y; sPos[i*3+2]=Math.sin(a)*r;
+  sCol[i*3]=c.r; sCol[i*3+1]=c.g; sCol[i*3+2]=c.b;
+}
+const sGeo = new THREE.BufferGeometry();
+sGeo.setAttribute('position',new THREE.BufferAttribute(sPos,3));
+sGeo.setAttribute('color',new THREE.BufferAttribute(sCol,3));
+const sMat = new THREE.PointsMaterial({
+  size:0.15, map:starTex, blending:THREE.AdditiveBlending,
+  depthWrite:false, transparent:true, opacity:0.85,
+  vertexColors:true, sizeAttenuation:true,
+});
+const sMesh = new THREE.Points(sGeo, sMat);
+scene.add(sMesh);
+
+let streamSizeBias = 1.0; // animate for breath
+
+function updateStream(dt, time) {
+  streamSizeBias = 0.85 + 0.15 * Math.sin(time * 0.3);
+  sMat.size = 0.15 * streamSizeBias;
+  const p = sGeo.attributes.position.array;
+  for (let i = 0; i < STREAM_N; i++) {
+    const d = sDat[i];
+    d.life += dt;
+    if (d.life >= d.maxL) {
+      d.angle = Math.random()*Math.PI*2;
+      d.radius = 0.1+Math.random()*0.8;
+      d.y = (Math.random()-0.5)*3;
+      d.spd = 0.12+Math.random()*0.35;
+      d.life = 0; d.maxL = 3+Math.random()*4;
+      p[i*3]=Math.cos(d.angle)*d.radius; p[i*3+1]=d.y; p[i*3+2]=Math.sin(d.angle)*d.radius;
+      continue;
+    }
+    d.angle += d.spd*dt*(0.5+d.radius*0.12);
+    d.radius += d.spd*dt*2.2;
+    if (d.radius > 13) { d.radius = 13; d.life = d.maxL; }
+    p[i*3]=Math.cos(d.angle)*d.radius;
+    p[i*3+1]=d.y+Math.sin(d.angle*2+time*0.3)*0.2;
+    p[i*3+2]=Math.sin(d.angle)*d.radius;
+  }
+  sGeo.attributes.position.needsUpdate = true;
+}
+
+/* ═══════════════════════════════════════════════
+   EXPLOSIVE BURST SYSTEM — supernova-style
+   ═══════════════════════════════════════════════ */
+const BURST_MAX = 1200;
+const bPos = new Float32Array(BURST_MAX*3);
+const bCol = new Float32Array(BURST_MAX*3);
+const bDat = Array.from({length:BURST_MAX},()=>({
+  alive:false, x:0,y:0,z:0, vx:0,vy:0,vz:0,
+  life:0, maxL:1, sz:0.05, cr:1,cg:1,cb:1
+}));
+let bCount = 0;
+
+function triggerBurst(cx,cy,cz, count=300, spread=1, type=-1) {
+  if (bCount+count > BURST_MAX) return;
+  burstEnergy = Math.min(1, burstEnergy + 0.5); // pulse
+  if (type < 0) type = Math.floor(Math.random() * 4); // 0=sphere, 1=ring, 2=dual, 3=jet
+
+  // Burst color palette
+  const palettes = [
+    { r:[1,0.95,0.9], g:[0.9,0.65,0.3], b:[0.7,0.2,0.05] }, // gold/warm
+    { r:[0.6,0.4,1], g:[0.8,0.6,1], b:[1,0.8,1] },         // cool blue-white
+    { r:[1,0.9,0.5], g:[0.5,0.3,0.8], b:[0.8,0.4,1] },     // purple-pink
+    { r:[0.5,0.8,1], g:[0.9,0.7,0.9], b:[1,0.5,0.6] },     // cyan-coral
+  ];
+  const pal = palettes[Math.floor(Math.random() * palettes.length)];
+
+  let placed = 0;
+  for (let i=0; i<BURST_MAX && placed<count; i++) {
+    if (!bDat[i].alive) {
+      const d = bDat[i]; d.alive = true; bCount++;
+      placed++;
+      let theta, phi;
+      switch (type) {
+        case 1: // Ring burst — constrained to a disk
+          theta = Math.random()*Math.PI*2;
+          phi = (Math.random()-0.5)*0.3;
+          break;
+        case 2: // Dual-lobe — two opposite jets
+          theta = (Math.floor(Math.random()*2)) * Math.PI + (Math.random()-0.5)*0.6;
+          phi = (Math.random()-0.5)*0.6;
+          break;
+        case 3: // Focused jet — narrow cone
+          theta = Math.random()*Math.PI*2;
+          phi = (Math.random()-0.5)*0.25;
+          break;
+        default: // Spherical
+          theta = Math.random()*Math.PI*2;
+          phi = Math.acos(2*Math.random()-1);
+      }
+      const spd = 5+Math.random()*20;
+      d.vx = spd*Math.sin(phi)*Math.cos(theta);
+      d.vy = spd*Math.cos(phi);
+      d.vz = spd*Math.sin(phi)*Math.sin(theta);
+      d.x = cx+(Math.random()-0.5)*spread;
+      d.y = cy+(Math.random()-0.5)*spread;
+      d.z = cz+(Math.random()-0.5)*spread;
+      d.life = 0; d.maxL = 0.5+Math.random()*1.5;
+      d.sz = 0.06+Math.random()*0.4;
+      // Pick color from palette with randomness
+      const mix = Math.random();
+      d.cr = pal.r[0]*mix + pal.r[1]*(1-mix)*Math.random() + pal.r[2]*0.1;
+      d.cg = pal.g[0]*mix + pal.g[1]*(1-mix)*Math.random() + pal.g[2]*0.1;
+      d.cb = pal.b[0]*mix + pal.b[1]*(1-mix)*Math.random() + pal.b[2]*0.1;
+    }
+  }
+}
+
+let burstEnergy = 0; // 0-1, decays after each burst
+
+function updateBurst(dt) {
+  bCount = 0;
+  // Decay energy
+  burstEnergy *= 0.96;
+  // Pulse size with energy
+  bMat.size = 0.30 + burstEnergy * 0.25;
+
+  for (let i=0; i<BURST_MAX; i++) {
+    const d = bDat[i];
+    if (!d.alive) { bPos[i*3]=0;bPos[i*3+1]=-50;bPos[i*3+2]=0; continue; }
+    d.life += dt;
+    if (d.life >= d.maxL) { d.alive = false; continue; }
+    bCount++;
+    const prog = d.life/d.maxL;
+    // Decelerate
+    const drag = 0.97 - prog * 0.04; // more drag as particle ages
+    d.vx *= drag; d.vy *= drag; d.vz *= drag;
+    d.x += d.vx*dt; d.y += d.vy*dt; d.z += d.vz*dt;
+    bPos[i*3]=d.x; bPos[i*3+1]=d.y; bPos[i*3+2]=d.z;
+    const fade = Math.max(0, 1-prog*prog*prog);
+    bCol[i*3]=d.cr*burstEnergy + d.cr*(1-burstEnergy)*0.5;
+    bCol[i*3+1]=d.cg; bCol[i*3+2]=d.cb;
+  }
+  bGeo.attributes.position.needsUpdate = true;
+  bGeo.attributes.color.needsUpdate = true;
+}
+
+const bGeo = new THREE.BufferGeometry();
+bGeo.setAttribute('position',new THREE.BufferAttribute(bPos,3));
+bGeo.setAttribute('color',new THREE.BufferAttribute(bCol,3));
+let burstSizePulse = 1.0;
+const bMat = new THREE.PointsMaterial({
+  size:0.30, map:starTex, blending:THREE.AdditiveBlending,
+  depthWrite:false, transparent:true, opacity:1.0,
+  vertexColors:true, sizeAttenuation:true,
+});
+const bMesh = new THREE.Points(bGeo, bMat);
+scene.add(bMesh);
+
+// Trigger initial burst — big one
+triggerBurst(0, 0, -6, 500, 2, 0);
+// Schedule periodic bursts
+let nextBurst = 1.0;
+
+/* ═══════════════════════════════════════════════
+   3D SLIDE OBJECTS
+   ═══════════════════════════════════════════════ */
+const slideObjs = [];
+
+function mkObj(index, fn) {
+  const g = new THREE.Group();
+  fn(g);
+  g.visible = false;
+  g.userData.slide = index;
+  scene.add(g);
+  slideObjs.push(g);
+  return g;
+}
+
+function glowMat(color, opts = {}) {
+  return new THREE.MeshPhysicalMaterial({
+    color, metalness: opts.metalness ?? 0.15,
+    roughness: opts.roughness ?? 0.3,
+    transparent: true, opacity: opts.opacity ?? 0.35,
+    emissive: color, emissiveIntensity: opts.emissive ?? 0.08,
+    wireframe: opts.wireframe ?? false,
+    ...opts.extra
+  });
+}
+
+/* ── Pyramid (slide 2: DIKW) ── */
+let pyramid;
+mkObj(2, g => {
+  const m = glowMat(0xf0a030, { emissive: 0.08 });
+  const p = new THREE.Mesh(new THREE.ConeGeometry(2.5, 3, 4), m);
+  p.rotation.y = Math.PI / 4;
+  p.position.set(-5.5, -0.5, -4);
+  pyramid = p;
+  g.add(p);
+});
+
+/* ── Color torus (slide 8: color theory) ── */
+let colorRing;
+mkObj(8, g => {
+  const m = glowMat(0x00d4ff, { emissive: 0.15 });
+  const t = new THREE.Mesh(new THREE.TorusGeometry(1.4, 0.05, 24, 64), m);
+  t.position.set(5.5, 0.5, -3.5);
+  colorRing = t;
+  g.add(t);
+  // Small colored spheres around
+  const hues = [0xf0a030, 0xff6b6b, 0x00d4ff, 0x6b5bff, 0x50c878];
+  hues.forEach((h, i) => {
+    const ang = (i / hues.length) * Math.PI * 2;
+    const sm = new THREE.MeshPhysicalMaterial({
+      color: h, emissive: h, emissiveIntensity: 0.1,
+      metalness: 0.2, roughness: 0.3,
+    });
+    const sp = new THREE.Mesh(new THREE.SphereGeometry(0.08, 12, 12), sm);
+    sp.position.set(5.5 + Math.cos(ang) * 1.4, 0.5 + Math.sin(ang) * 1.4, -3.5);
+    g.add(sp);
+  });
+});
+
+/* ── Data bars (slide 15: data viz) ── */
+let bars = [];
+mkObj(15, g => {
+  const bcols = [0xf0a030, 0xf0c868, 0x00d4ff, 0xff6b6b, 0x6b5bff];
+  bcols.forEach((c, i) => {
+    const h = 0.4 + Math.random() * 1.6;
+    const m = glowMat(c, { opacity: 0.4 });
+    const b = new THREE.Mesh(new THREE.BoxGeometry(0.25, h, 0.25), m);
+    b.position.set(i * 0.6 - 1.2, h/2, 0);
+    bars.push({ mesh: b, baseH: h });
+    g.add(b);
+  });
+  g.position.set(-4.5, -0.3, -3);
+});
+
+/* ── Wave tube (slide 17: motion) ── */
+let waveMesh;
+mkObj(17, g => {
+  const pts = [];
+  for (let i = 0; i <= 60; i++) {
+    const t = i / 60;
+    pts.push(new THREE.Vector3(
+      (t - 0.5) * 4.5,
+      Math.sin(t * Math.PI * 5) * 0.7 * (1 - t * 0.2),
+      0
+    ));
+  }
+  const curve = new THREE.CatmullRomCurve3(pts);
+  const m = glowMat(0xf0a030, { wireframe: true, opacity: 0.25, emissive: 0.12 });
+  const tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 100, 0.025, 6, false), m);
+  g.add(tube);
+  waveMesh = tube;
+  g.position.set(4.5, 0.2, -3.5);
+});
+
+/* ── Contrast cubes (slide 5: contrast) ── */
+mkObj(5, g => {
+  const m1 = glowMat(0xf0a030, { opacity: 0.5, emissive: 0.12 });
+  const big = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), m1);
+  big.position.set(-1, 0, 0);
+  g.add(big);
+  const m2 = glowMat(0x00d4ff, { opacity: 0.2, emissive: 0.05 });
+  const small = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), m2);
+  small.position.set(1.5, 0, 0);
+  g.add(small);
+  g.position.set(-4, 0.5, -4);
+});
+
+/* ── Spiral (slide 18: narrative) ── */
+let spiralMesh;
+mkObj(18, g => {
+  const spts = [];
+  for (let i = 0; i <= 200; i++) {
+    const t = i / 200;
+    const a = t * Math.PI * 6;
+    const r = t * 1.5;
+    spts.push(new THREE.Vector3(
+      Math.cos(a) * r,
+      Math.sin(a) * r * 0.4,
+      t * 2 - 1
+    ));
+  }
+  const curve = new THREE.CatmullRomCurve3(spts);
+  const m = glowMat(0xf0c868, { wireframe: true, opacity: 0.2, emissive: 0.1 });
+  spiralMesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 200, 0.015, 4, false), m);
+  g.add(spiralMesh);
+  g.position.set(4.5, 0, -4);
+});
+
+/* ── Ambient ring ── */
+const ringMat = new THREE.MeshPhysicalMaterial({
+  color: 0xf0c868, metalness: 0.4, roughness: 0.2,
+  transparent: true, opacity: 0.06, wireframe: true,
+});
+const ring = new THREE.Mesh(new THREE.TorusGeometry(4, 0.015, 12, 80), ringMat);
+ring.rotation.x = Math.PI / 3;
+ring.position.set(0, 1, -10);
+scene.add(ring);
+
+/* ── Floating small cubes (ambient) ── */
+const floatCubes = [];
+for (let i = 0; i < 6; i++) {
+  const s = 0.12 + Math.random() * 0.2;
+  const m = new THREE.MeshPhysicalMaterial({
+    color: 0xff6b6b, metalness: 0.2, roughness: 0.3,
+    transparent: true, opacity: 0.08, wireframe: true,
+  });
+  const cube = new THREE.Mesh(new THREE.BoxGeometry(s, s, s), m);
+  const theta = Math.random() * Math.PI * 2;
+  const r = 3 + Math.random() * 5;
+  cube.position.set(Math.cos(theta)*r, (Math.random()-0.5)*4, Math.sin(theta)*r - 6);
+  cube.userData = {
+    floatS: 0.2 + Math.random() * 0.4,
+    floatP: Math.random() * Math.PI * 2,
+    rotS: 0.3 + Math.random() * 0.6,
+    baseY: cube.position.y,
+  };
+  scene.add(cube);
+  floatCubes.push(cube);
+}
+
+/* ═══════════════════════════════════════════════
+   CAMERA PATH SYSTEM — Catmull-Rom Curves
+   ═══════════════════════════════════════════════ */
+// Each slide's 3D camera position (the "resting place" in space)
+const SLIDE_CAM = [
+  { x: 0, y: 0, z: 12 },    // 0  cover
+  { x: 0, y: 0.4, z: 9.5 },  // 1  agenda
+  { x: -1, y: 0, z: 8.5 },   // 2  DIKW
+  { x: 1.2, y: -0.2, z: 8 }, // 3  MECE
+  { x: 0.5, y: 0.6, z: 9 },  // 4  CRAP overview
+  { x: -1.8, y: 0, z: 7.5 }, // 5  contrast
+  { x: 1.5, y: 0.3, z: 7.5 },// 6  rep+align
+  { x: -0.5, y: -0.4, z: 8 },// 7  proximity
+  { x: 0, y: 0.9, z: 9 },    // 8  color wheel
+  { x: 1.8, y: 0, z: 8 },    // 9  color schemes
+  { x: -1.5, y: -0.3, z: 7 } // 10 psychology
+];
+// Second half: reverse the pattern to avoid drift
+for (let i = 11; i < TOTAL; i++) {
+  const prev = SLIDE_CAM[i - 1];
+  SLIDE_CAM[i] = {
+    x: -prev.x * 0.7,
+    y: prev.y + (i % 3 === 0 ? 0.5 : -0.2),
+    z: prev.z + (i < 15 ? -0.3 : 0.3) * (i % 2 === 0 ? 1 : -1),
+  };
+}
+// Clamp last few
+SLIDE_CAM[19] = { x: 0, y: 0, z: 12 };
+
+// Generate cinematic transition curve
+function makeCurve(from, to, style) {
+  const f = new THREE.Vector3(from.x, from.y, from.z);
+  const t = new THREE.Vector3(to.x, to.y, to.z);
+
+  // Midpoint with offset for cinematic swoop
+  const mid = new THREE.Vector3().addVectors(f, t).multiplyScalar(0.5);
+
+  // Additional control points for cinematic feel
+  const dx = t.x - f.x, dy = t.y - f.y, dz = t.z - f.z;
+  const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+
+  // Sway control points — creates the "flying through space" feel
+  const perpX = -dy * 0.5, perpY = dx * 0.4;
+
+  // Style variations
+  let c1, c2;
+  switch (style % 5) {
+    case 0: // Dive: dip down then rise
+      c1 = new THREE.Vector3(f.x + dx*0.25 + perpX*0.3, f.y + dy*0.25 - dist*0.15, f.z + dz*0.25);
+      c2 = new THREE.Vector3(f.x + dx*0.75 + perpX*0.5, f.y + dy*0.75 - dist*0.1, f.z + dz*0.75);
+      break;
+    case 1: // Swing: wide arc to the side
+      c1 = new THREE.Vector3(f.x + dx*0.3 + perpX*1.2, f.y + dy*0.3 + perpY, f.z + dz*0.3 + dist*0.1);
+      c2 = new THREE.Vector3(f.x + dx*0.7 + perpX*0.8, f.y + dy*0.7 + perpY*0.5, f.z + dz*0.7 + dist*0.05);
+      break;
+    case 2: // Zoom: push in then pull out
+      c1 = new THREE.Vector3(f.x + dx*0.2, f.y + dy*0.2, f.z + dz*0.2 - dist*0.2);
+      c2 = new THREE.Vector3(f.x + dx*0.8, f.y + dy*0.8, f.z + dz*0.8 - dist*0.1);
+      break;
+    case 3: // Float: gentle S-curve
+      c1 = new THREE.Vector3(f.x + dx*0.3 + perpX*0.6, f.y + dy*0.3 + dist*0.08, f.z + dz*0.3);
+      c2 = new THREE.Vector3(f.x + dx*0.7 + perpX*0.3, f.y + dy*0.7 - dist*0.08, f.z + dz*0.7);
+      break;
+    case 4: // Roll: corkscrew-like (mild)
+      c1 = new THREE.Vector3(f.x + dx*0.3 + perpX*0.9, f.y + dy*0.3 + perpY*0.6, f.z + dz*0.3 + dist*0.05);
+      c2 = new THREE.Vector3(f.x + dx*0.7 - perpX*0.6, f.y + dy*0.7 - perpY*0.4, f.z + dz*0.7 - dist*0.05);
+      break;
+    default:
+      c1 = new THREE.Vector3(f.x + dx*0.3, f.y + dy*0.3, f.z + dz*0.3);
+      c2 = new THREE.Vector3(f.x + dx*0.7, f.y + dy*0.7, f.z + dz*0.7);
+  }
+  return new THREE.CatmullRomCurve3([f, c1, c2, t]);
+}
+
+/* ═══════════════════════════════════════════════
+   SLIDE NAVIGATION
+   ═══════════════════════════════════════════════ */
+const slides = document.querySelectorAll('.slide');
+const navDots = document.getElementById('navDots');
+
+for (let i = 0; i < TOTAL; i++) {
+  const d = document.createElement('button');
+  d.className = 'nav-dot' + (i === 0 ? ' active' : '');
+  d.dataset.i = i;
+  d.addEventListener('click', () => go(i));
+  navDots.appendChild(d);
+}
+
+/* ═══════════════════════════════════════════════
+   CAMERA ANIMATION — integrated into main loop
+   ═══════════════════════════════════════════════ */
+let camAnim = null; // { curve, endPos, startTime, duration }
+
+function go(idx) {
+  if (moving || idx === current) return;
+  moving = true;
+  const from = current;
+  current = idx;
+
+  // Update slide visibility
+  slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+  document.querySelectorAll('.nav-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+  document.getElementById('slideNumber').textContent =
+    `${String(idx+1).padStart(2,'0')} / ${String(TOTAL).padStart(2,'0')}`;
+
+  // Update 3D objects
+  slideObjs.forEach(g => g.visible = false);
+  slideObjs.forEach(g => { if (g.userData.slide === idx) g.visible = true; });
+
+  // Burst on transition
+  triggerBurst(0, 0, -6, 300, 1.5, -1);
+
+  // Build cinematic path from actual camera position
+  const endP = SLIDE_CAM[idx];
+  const curve = makeCurve(
+    { x: camera.position.x, y: camera.position.y, z: camera.position.z },
+    endP, idx);
+
+  // Store animation state — main loop drives it
+  camAnim = {
+    curve,
+    endPos: new THREE.Vector3(endP.x, endP.y, endP.z),
+    startTime: performance.now(),
+    duration: 900,
+  };
+}
+
+/* ═══════════════════════════════════════════════
+   EVENT HANDLERS
+   ═══════════════════════════════════════════════ */
+document.getElementById('prevBtn').addEventListener('click', () => { if (current > 0) go(current - 1); });
+document.getElementById('nextBtn').addEventListener('click', () => { if (current < TOTAL - 1) go(current + 1); });
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+    e.preventDefault(); if (current < TOTAL - 1) go(current + 1);
+  }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    e.preventDefault(); if (current > 0) go(current - 1);
+  }
+  if (e.key === 'Home') { e.preventDefault(); go(0); }
+  if (e.key === 'End') { e.preventDefault(); go(TOTAL - 1); }
+});
+
+// Click navigation
+document.addEventListener('click', e => {
+  if (e.target.closest('.nav-bar')) return;
+  const x = e.clientX / window.innerWidth;
+  if (x > 0.65 && current < TOTAL - 1) go(current + 1);
+  else if (x < 0.15 && current > 0) go(current - 1);
+});
+
+// Touch
+let tx = 0;
+document.addEventListener('touchstart', e => { tx = e.changedTouches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tx;
+  if (Math.abs(dx) > 50) {
+    if (dx < 0 && current < TOTAL - 1) go(current + 1);
+    if (dx > 0 && current > 0) go(current - 1);
+  }
+});
+
+// Wheel (only if slide not scrollable)
+let wt = null;
+document.addEventListener('wheel', e => {
+  const active = document.querySelector('.slide.active');
+  if (active && active.scrollHeight > active.clientHeight) return;
+  e.preventDefault();
+  if (wt) return;
+  wt = setTimeout(() => { wt = null; }, 500);
+  if (e.deltaY > 0 && current < TOTAL - 1) go(current + 1);
+  else if (e.deltaY < 0 && current > 0) go(current - 1);
+}, { passive: false });
+
+/* ═══════════════════════════════════════════════
+   MOUSE PARALLAX
+   ═══════════════════════════════════════════════ */
+let mx = 0, my = 0, tx_m = 0, ty_m = 0;
+document.addEventListener('mousemove', e => {
+  mx = (e.clientX / window.innerWidth) * 2 - 1;
+  my = -(e.clientY / window.innerHeight) * 2 + 1;
+});
+
+/* ═══════════════════════════════════════════════
+   RESIZE
+   ═══════════════════════════════════════════════ */
+window.addEventListener('resize', () => {
+  const w = window.innerWidth, h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+  composer.setSize(w, h);
+});
+
+/* ═══════════════════════════════════════════════
+   RENDER LOOP
+   ═══════════════════════════════════════════════ */
+let starTime = 0;
+let lastFrameTime = performance.now();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min((performance.now() - lastFrameTime) / 1000, 0.05);
+  lastFrameTime = performance.now();
+  starTime += dt;
+
+  // Smooth mouse
+  tx_m += (mx - tx_m) * 0.04;
+  ty_m += (my - ty_m) * 0.04;
+
+  // Starfield rotation — each layer at different speed for parallax
+  farStars.rotation.y = starTime * 0.005;
+  farStars.rotation.x = Math.sin(starTime * 0.003) * 0.01;
+  midStars.rotation.y = starTime * 0.012;
+  midStars.rotation.x = Math.sin(starTime * 0.005) * 0.015;
+  nearStars.rotation.y = starTime * 0.025;
+  nearStars.rotation.x = Math.sin(starTime * 0.008) * 0.02;
+
+  // Star twinkle: modulate opacity per layer (breathing effect)
+  [farStars, midStars, nearStars].forEach(s => {
+    const d = s.userData;
+    s.material.opacity = d.baseOpacity * (0.55 + 0.45 * 0.5 * (1 + Math.sin(starTime * d.speed + d.phase)));
+  });
+
+  // Particle streams — continuous spiral flow
+  updateStream(dt, starTime);
+
+  // Explosive bursts
+  if (starTime > nextBurst) {
+    const bAng = Math.random() * Math.PI * 2;
+    const bR = 1 + Math.random() * 5;
+    const bZ = -2 - Math.random() * 9;
+    const bCount = 250 + Math.floor(Math.random() * 250);
+    const bType = Math.floor(Math.random() * 4);
+    triggerBurst(Math.cos(bAng)*bR, (Math.random()-0.5)*3, bZ, bCount, 1.5+Math.random()*2, bType);
+    nextBurst = starTime + 1.5 + Math.random() * 3;
+  }
+  updateBurst(dt);
+
+  // Camera: animation or idle parallax
+  if (camAnim) {
+    const elapsed = performance.now() - camAnim.startTime;
+    const t = Math.min(elapsed / camAnim.duration, 1);
+    const eased = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
+    const pt = camAnim.curve.getPoint(eased);
+    camera.position.copy(pt);
+    camera.lookAt(0, Math.sin(eased*Math.PI)*0.3, 0);
+    if (t >= 1) {
+      camera.position.copy(camAnim.endPos);
+      camera.lookAt(0, 0, 0);
+      camAnim = null;
+      moving = false;
+    }
+  } else {
+    // Subtle parallax follow when idle
+    camera.position.x = SLIDE_CAM[current].x + tx_m * 0.15;
+    camera.position.y = SLIDE_CAM[current].y + ty_m * 0.1;
+    camera.lookAt(0, 0, 0);
+  }
+
+  // Animate 3D objects
+  if (pyramid && pyramid.parent?.visible) {
+    pyramid.rotation.y += 0.006;
+    pyramid.position.y = -0.5 + Math.sin(starTime * 0.25) * 0.1;
+  }
+  if (colorRing && colorRing.parent?.visible) {
+    colorRing.rotation.x += 0.008;
+    colorRing.rotation.y += 0.015;
+    colorRing.parent.position.y = 0.5 + Math.sin(starTime * 0.4) * 0.15;
+  }
+  if (bars.length && bars[0].mesh.parent?.visible) {
+    bars.forEach((b, i) => {
+      const h = b.baseH + Math.sin(starTime * 0.6 + i * 1.2) * 0.08;
+      b.mesh.scale.y = h / b.baseH;
+    });
+  }
+  if (waveMesh && waveMesh.parent?.visible) {
+    waveMesh.parent.rotation.x = Math.sin(starTime * 0.25) * 0.04;
+    waveMesh.parent.position.z = -3.5 + Math.sin(starTime * 0.3) * 0.1;
+  }
+  if (spiralMesh && spiralMesh.parent?.visible) {
+    spiralMesh.parent.rotation.y += 0.003;
+    spiralMesh.parent.rotation.x = Math.sin(starTime * 0.1) * 0.02;
+  }
+
+  // Ambient ring
+  ring.rotation.x = Math.PI / 3 + Math.sin(starTime * 0.08) * 0.04;
+  ring.rotation.z += 0.002;
+
+  // Floating cubes
+  floatCubes.forEach(c => {
+    c.position.y = c.userData.baseY + Math.sin(starTime * c.userData.floatS + c.userData.floatP) * 0.3;
+    c.rotation.x += c.userData.rotS * 0.008;
+    c.rotation.y += c.userData.rotS * 0.006;
+  });
+
+  composer.render();
+}
+
+function updateSlide(idx) {
+  slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+  document.querySelectorAll('.nav-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+  document.getElementById('slideNumber').textContent =
+    `${String(idx+1).padStart(2,'0')} / ${String(TOTAL).padStart(2,'0')}`;
+  slideObjs.forEach(g => { g.visible = (g.userData.slide === idx); });
+}
+
+/* ═══════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════ */
+updateSlide(0);
+camera.position.set(SLIDE_CAM[0].x, SLIDE_CAM[0].y, SLIDE_CAM[0].z);
+camera.lookAt(0, 0, 0);
+
+// Start render loop AFTER all state is initialized
+animate();
+
+console.log('🚀 Presentation Mastery loaded — 20 slides, 3-layer starfield, Cinematic camera');
+</script>
+</body>
+</html>

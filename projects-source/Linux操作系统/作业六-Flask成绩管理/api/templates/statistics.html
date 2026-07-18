@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>统计报表 <small>★★ 加分模块</small></h1>
+<div class="report-tabs">
+    <a href="?report=1{% if class_id %}&class_id={{ class_id }}{% endif %}" class="tab {% if report == '1' %}active{% endif %}">成绩分布</a>
+    <a href="?report=2{% if class_id %}&class_id={{ class_id }}{% endif %}" class="tab {% if report == '2' %}active{% endif %}">平均/最高/最低</a>
+    <a href="?report=3{% if class_id %}&class_id={{ class_id }}{% endif %}" class="tab {% if report == '3' %}active{% endif %}">班级统计</a>
+    <a href="?report=4{% if class_id %}&class_id={{ class_id }}{% endif %}" class="tab {% if report == '4' %}active{% endif %}">学院/系汇总</a>
+    <a href="?report=5{% if class_id %}&class_id={{ class_id }}{% endif %}" class="tab {% if report == '5' %}active{% endif %}">GPA排名</a>
+    <a href="?report=6{% if class_id %}&class_id={{ class_id }}{% endif %}" class="tab {% if report == '6' %}active{% endif %}">挂科名单</a>
+</div>
+<div class="filter-bar">
+    <form method="GET" style="display:flex;gap:8px;align-items:end;margin:0;">
+        <input type="hidden" name="report" value="{{ report }}">
+        <div class="form-group">
+            <label>班级筛选</label>
+            <select name="class_id" onchange="this.form.submit()">
+                <option value="">全部</option>
+                {% for c in classes %}<option value="{{ c.id }}" {% if class_id == c.id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+            </select>
+        </div>
+        {% if class_id %}<a href="?report={{ report }}" class="btn-sm">清除</a>{% endif %}
+    </form>
+</div>
+<div class="stat-section">
+    <h2>{{ report_title }}</h2>
+{% if report == '1' %}
+<div class="table-container"><table class="table"><thead><tr><th>科目</th><th>优秀</th><th>良好</th><th>中等</th><th>及格</th><th>不及格</th></tr></thead>
+<tbody>{% if result %}{% for r in result %}<tr><td>{{ r.name }}</td><td class="score-excellent">{{ r.excellent }}</td><td>{{ r.good }}</td><td>{{ r.medium }}</td><td>{{ r.pass }}</td><td class="score-fail">{{ r.fail }}</td></tr>{% endfor %}{% else %}<tr><td colspan="6" class="empty">暂无数据</td></tr>{% endif %}</tbody></table></div>
+{% elif report == '2' %}
+<div class="table-container"><table class="table"><thead><tr><th>科目</th><th>平均分</th><th>最高</th><th>最低</th><th>人数</th></tr></thead>
+<tbody>{% if result %}{% for r in result %}<tr><td>{{ r.name }}</td><td><strong>{{ r.avg_score }}</strong></td><td class="score-excellent">{{ r.max_score }}</td><td>{{ r.min_score }}</td><td>{{ r.count }}</td></tr>{% endfor %}{% else %}<tr><td colspan="5" class="empty">暂无数据</td></tr>{% endif %}</tbody></table></div>
+{% elif report == '3' %}
+<div class="table-container"><table class="table"><thead><tr><th>班级</th><th>学院</th><th>系</th><th>人数</th><th>平均分</th><th>及格率</th></tr></thead>
+<tbody>{% if result %}{% for r in result %}<tr><td><strong>{{ r.name }}</strong></td><td>{{ r.college }}</td><td>{{ r.department }}</td><td>{{ r.student_count }}</td><td>{{ r.avg_score }}</td><td>{{ r.pass_rate }}%</td></tr>{% endfor %}{% else %}<tr><td colspan="6" class="empty">暂无数据</td></tr>{% endif %}</tbody></table></div>
+{% elif report == '4' %}
+<h3>按学院</h3>
+<div class="table-container"><table class="table"><thead><tr><th>学院</th><th>班级数</th><th>学生数</th><th>平均分</th></tr></thead>
+<tbody>{% if result and result.college %}{% for r in result.college %}<tr><td>{{ r.college }}</td><td>{{ r.class_count }}</td><td>{{ r.student_count }}</td><td>{{ r.avg_score }}</td></tr>{% endfor %}{% else %}<tr><td colspan="4" class="empty">暂无数据</td></tr>{% endif %}</tbody></table></div>
+<h3>按系</h3>
+<div class="table-container"><table class="table"><thead><tr><th>系</th><th>学生数</th><th>平均分</th></tr></thead>
+<tbody>{% if result and result.dept %}{% for r in result.dept %}<tr><td>{{ r.department }}</td><td>{{ r.student_count }}</td><td>{{ r.avg_score }}</td></tr>{% endfor %}{% else %}<tr><td colspan="3" class="empty">暂无数据</td></tr>{% endif %}</tbody></table></div>
+{% elif report == '5' %}
+<p>GPA = (课程成绩 × 学分) / 总学分</p>
+<div class="table-container"><table class="table"><thead><tr><th>排名</th><th>姓名</th><th>班级</th><th>GPA</th><th>学分</th></tr></thead>
+<tbody>{% if result %}{% for r in result %}<tr><td>{{ loop.index }}</td><td><a href="{{ url_for('student_detail', student_id=r.id) }}">{{ r.name }}</a></td><td>{{ r.class_name }}</td><td><strong>{{ r.gpa }}</strong></td><td>{{ r.total_credit }}</td></tr>{% endfor %}{% else %}<tr><td colspan="5" class="empty">暂无数据</td></tr>{% endif %}</tbody></table></div>
+{% elif report == '6' %}
+<p>共 {{ result|length if result else 0 }} 科次不及格</p>
+<div class="table-container"><table class="table"><thead><tr><th>学号</th><th>姓名</th><th>班级</th><th>科目</th><th>成绩</th></tr></thead>
+<tbody>{% if result %}{% for r in result %}<tr><td>{{ r.id }}</td><td>{{ r.name }}</td><td>{{ r.class_name }}</td><td>{{ r.subject_name }}</td><td class="score-fail">{{ r.raw_score }} ({{ '%.0f'|format(r.numeric_score) }})</td></tr>{% endfor %}{% else %}<tr><td colspan="5" class="empty">无挂科记录</td></tr>{% endif %}</tbody></table></div>
+{% endif %}
+</div>
+{% endblock %}

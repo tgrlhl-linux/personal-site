@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>系统概览</h1>
+<div class="stats-grid">
+    <div class="stat-card"><span class="stat-num">{{ total_students }}</span><span class="stat-label">学生总数</span></div>
+    <div class="stat-card"><span class="stat-num">{{ total_subjects }}</span><span class="stat-label">科目总数</span></div>
+    <div class="stat-card"><span class="stat-num">{{ total_classes }}</span><span class="stat-label">班级数量</span></div>
+    <div class="stat-card"><span class="stat-num">{{ total_scores }}</span><span class="stat-label">成绩记录</span></div>
+</div>
+<div class="dash-grid">
+    <div class="dash-card">
+        <h2>班级人数分布</h2>
+        <div class="table-container">
+        <table class="table">
+            <thead><tr><th>班级</th><th>人数</th></tr></thead>
+            <tbody>{% for row in class_stats %}<tr><td>{{ row.name }}</td><td>{{ row.cnt }}</td></tr>{% endfor %}</tbody>
+        </table>
+        </div>
+    </div>
+    <div class="dash-card">
+        <h2>快速操作</h2>
+        <div class="quick-actions">
+            <a href="{{ url_for('student_list') }}" class="btn">学生列表</a>
+            <a href="{{ url_for('add_student') }}" class="btn btn-primary">添加学生</a>
+            <a href="{{ url_for('query_page') }}" class="btn">成绩查询</a>
+            <a href="{{ url_for('sort_page') }}" class="btn">排序查看</a>
+            <a href="{{ url_for('statistics') }}" class="btn btn-bonus">统计报表</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

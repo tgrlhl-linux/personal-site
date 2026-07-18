@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+    <h1>学生列表 <small>共 {{ total }} 人</small></h1>
+    <div class="header-actions">
+        {% if session.role in ('admin','teacher') %}
+        <a href="{{ url_for('add_student') }}" class="btn btn-primary">添加学生</a>
+        {% endif %}
+    </div>
+</div>
+<form method="GET" class="search-bar">
+    <input type="text" name="search" placeholder="搜索学号或姓名..." value="{{ search }}">
+    <select name="class_id">
+        <option value="">全部班级</option>
+        {% for c in classes %}
+        <option value="{{ c.id }}" {% if class_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn">搜索</button>
+</form>
+<div class="table-container">
+<table class="table">
+    <thead><tr><th>学号</th><th>姓名</th><th>班级</th><th>操作</th></tr></thead>
+    <tbody>
+        {% for s in students %}
+        <tr>
+            <td>{{ s.id }}</td>
+            <td><a href="{{ url_for('student_detail', student_id=s.id) }}">{{ s.name }}</a></td>
+            <td>{{ s.class_name or '-' }}</td>
+            <td class="action-cell">
+                <a href="{{ url_for('student_detail', student_id=s.id) }}" class="btn-sm">查看</a>
+                {% if session.role in ('admin','teacher') %}
+                <a href="{{ url_for('edit_student', student_id=s.id) }}" class="btn-sm">编辑</a>
+                <form method="POST" action="{{ url_for('delete_student', student_id=s.id) }}" style="display:inline" onsubmit="return confirm('确认删除 {{ s.name }}？');">
+                    <button type="submit" class="btn-sm btn-danger">删除</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="empty">暂无数据</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% if total_pages > 1 %}
+<div class="pagination">
+    {% for p in range(1, total_pages + 1) %}
+    <a href="?page={{ p }}&search={{ search }}&class_id={{ class_id or '' }}" class="page-link {% if p == page %}active{% endif %}">{{ p }}</a>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

@@ -868,7 +868,7 @@ def stats():
     ],
     hasDemo: true,
     demoType: 'external',
-    demoUrl: 'https://flask-score-system.vercel.app',
+    demoUrl: 'https://flask.shengxia.dev',
   },
 
   // ─── Linux Shell 成绩管理系统 ────────────────────────────────────
