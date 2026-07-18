@@ -305,7 +305,7 @@ public class Tokenizer {
   },
 
   // ─── HDFS 客户端 ─────────────────────────────────────────────────
-  hdfsClient: {
+  'hdfs-client': {
     tech: ['Java', 'Hadoop 3.3.4', 'Maven'],
     features: [
       '11 个 HDFS 操作完整覆盖',
@@ -429,7 +429,7 @@ public class Tokenizer {
   },
 
   // ─── 文件系统仿真 ────────────────────────────────────────────────
-  filesystemSim: {
+  'filesystem-sim': {
     tech: ['Rust', 'egui', 'bit-vec'],
     features: [
       '位图磁盘块分配与回收',
@@ -648,7 +648,7 @@ impl eframe::App for FileSystemApp {
   },
 
   // ─── Flask 成绩管理系统 ──────────────────────────────────────────
-  flaskScoreSystem: {
+  'flask-score-system': {
     tech: ['Python', 'Flask', 'SQLite', 'Jinja2'],
     features: [
       '教师/学生双角色登录与 Session 管理',
@@ -764,7 +764,7 @@ def stats():
   },
 
   // ─── Linux Shell 成绩管理系统 ────────────────────────────────────
-  linuxShell: {
+  'linux-hw5-shell': {
     tech: ['Shell', 'Bash', 'awk', 'sed'],
     features: [
       '多用户登录（教师/学生）',
@@ -923,7 +923,7 @@ login && main_menu`,
   },
 
   // ─── 数据库大作业 ────────────────────────────────────────────────
-  databaseProject: {
+  'database-project': {
     tech: ['SQL', 'MySQL', 'E-R 图'],
     features: [
       '需求分析 → 概念模型 → 逻辑设计 → 物理实现 完整流程',
@@ -1074,7 +1074,7 @@ DELIMITER ;`,
   },
 
   // ─── Cosmic 3D ──────────────────────────────────────────────────
-  cosmic3d: {
+  'cosmic-3d': {
     tech: ['Three.js', 'JavaScript', 'WebGL', 'Canvas'],
     features: [
       '粒子系统：数千颗星星动态渲染',
@@ -1206,7 +1206,7 @@ window.addEventListener('resize', () => {
   },
 
   // ─── PPT 设计作品集 ──────────────────────────────────────────────
-  pptDesignWorks: {
+  'ppt-design-works': {
     tech: ['HTML', 'CSS', 'JavaScript', 'Python', 'pptxgenjs'],
     features: [
       'HTML 前端幻灯片（Anime 主题 / Ghost Stories）',
@@ -1296,7 +1296,7 @@ window.addEventListener('resize', () => {
   },
 
   // ─── NarrativeAnalysis — 大数据电影叙事分析 ──────────────────────
-  narrativeAnalysis: {
+  'narrative-analysis': {
     tech: ['Python', 'Flask', 'Hadoop', 'HBase', 'Docker'],
     features: [
       '情感词典驱动的剧本情感分析（17 部电影，80720 行清洗数据）',
