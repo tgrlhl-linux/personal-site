@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL 查询沙盒 — 数据库大作业演示</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,'Noto Sans SC',sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh}
+.container{max-width:1000px;margin:0 auto;padding:16px}
+h1{text-align:center;font-size:1.3rem;color:#3fb950;margin-bottom:4px}
+.sub{text-align:center;color:#8b949e;font-size:0.78rem;margin-bottom:12px}
+.sql-editor{background:#0a0e14;border:1px solid rgba(255,255,255,0.06);border-radius:8px;overflow:hidden}
+.editor-hd{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:#161b22;border-bottom:1px solid rgba(255,255,255,0.06)}
+.editor-hd span{font-size:0.68rem;color:#6e7681}
+.editor-hd .actions{display:flex;gap:4px}
+.btn{padding:4px 14px;background:#3fb950;border:none;border-radius:4px;color:#fff;font-size:0.72rem;cursor:pointer;font-family:inherit}
+.btn:hover{background:#4cda6a}
+.btn.secondary{background:#21262d;border:1px solid rgba(255,255,255,0.1)}
+.btn.secondary:hover{background:#30363d}
+textarea.sql{width:100%;min-height:120px;background:#0a0e14;border:none;color:#e6edf3;font-family:'Consolas',monospace;font-size:0.78rem;padding:12px;resize:vertical;outline:none;line-height:1.6;tab-size:2}
+textarea.sql:focus{background:rgba(63,185,80,0.02)}
+.sql-hint{color:#6e7681;font-size:0.68rem;padding:4px 12px 8px;display:flex;gap:6px;flex-wrap:wrap}
+.sql-hint button{background:none;border:1px solid rgba(255,255,255,0.06);border-radius:4px;color:#6e7681;font-size:0.65rem;padding:2px 8px;cursor:pointer;font-family:monospace}
+.sql-hint button:hover{color:#e6edf3;border-color:rgba(255,255,255,0.2)}
+.result-wrap{background:#0a0e14;border:1px solid rgba(255,255,255,0.06);border-radius:8px;margin-top:8px;overflow:hidden}
+.result-hd{padding:6px 12px;background:#161b22;border-bottom:1px solid rgba(255,255,255,0.06);font-size:0.72rem;color:#6e7681;display:flex;justify-content:space-between}
+.result-body{overflow-x:auto;padding:8px}
+table{width:100%;border-collapse:collapse;font-size:0.75rem}
+th{background:#21262d;padding:6px 10px;text-align:left;font-weight:500;color:#8b949e;border-bottom:1px solid rgba(255,255,255,0.06)}
+td{padding:5px 10px;border-bottom:1px solid rgba(255,255,255,0.03);color:#e6edf3}
+tr:hover td{background:rgba(255,255,255,0.02)}
+.err-msg{color:#f85149;font-size:0.78rem;padding:12px;font-family:monospace}
+.info-msg{color:#8b949e;font-size:0.75rem;padding:8px}
+.schema-panel{background:#161b22;border-radius:8px;padding:10px;margin-bottom:8px;font-size:0.72rem}
+.schema-panel h3{color:#3fb950;font-size:0.78rem;margin-bottom:6px}
+.schema-table{margin-bottom:4px;padding:4px 8px;background:#0d1117;border-radius:4px;cursor:pointer}
+.schema-table:hover{background:rgba(63,185,80,0.05)}
+.schema-table .tname{color:#79c0ff;font-weight:500}
+.schema-table .cols{color:#6e7681;font-size:0.65rem;margin-top:2px}
+@media(max-width:600px){textarea.sql{min-height:80px;font-size:0.7rem}}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🗄️ SQL 查询沙盒</h1>
+  <p class="sub">《数据库原理》大作业 · 课程选课管理系统 · 在线体验 SQL</p>
+
+  <div class="schema-panel">
+    <h3>📋 数据库 Schema</h3>
+    <div class="schema-table">
+      <div class="tname">Student (学生表)</div>
+      <div class="cols">Sno CHAR(9) PK · Sname VARCHAR(20) · Ssex CHAR(2) · Sage SMALLINT · Sdept VARCHAR(30)</div>
+    </div>
+    <div class="schema-table">
+      <div class="tname">Teacher (教师表)</div>
+      <div class="cols">Tno CHAR(6) PK · Tname VARCHAR(20) · Tsex CHAR(2) · Ttitle VARCHAR(20) · Tdept VARCHAR(30)</div>
+    </div>
+    <div class="schema-table">
+      <div class="tname">Course (课程表)</div>
+      <div class="cols">Cno CHAR(6) PK · Cname VARCHAR(50) · Ccredit SMALLINT · Cpno CHAR(6) · Tno CHAR(6) FK</div>
+    </div>
+    <div class="schema-table">
+      <div class="tname">SC (选课表)</div>
+      <div class="cols">Sno CHAR(9) FK · Cno CHAR(6) FK · Grade DECIMAL(5,2) · Semester CHAR(11)</div>
+    </div>
+  </div>
+
+  <div class="sql-editor">
+    <div class="editor-hd">
+      <span>SQL 编辑器</span>
+      <div class="actions">
+        <button class="btn secondary" onclick="clearSQL()">清空</button>
+        <button class="btn" onclick="runSQL()">▶ 执行</button>
+      </div>
+    </div>
+    <textarea class="sql" id="sqlInput" spellcheck="false">SELECT s.Sno, s.Sname, c.Cname, sc.Grade
+FROM Student s
+JOIN SC sc ON s.Sno = sc.Sno
+JOIN Course c ON sc.Cno = c.Cno
+WHERE sc.Grade >= 90
+ORDER BY sc.Grade DESC;</textarea>
+    <div class="sql-hint">
+      <span>示例:</span>
+      <button onclick="setSQL(0)">查询高分学生</button>
+      <button onclick="setSQL(1)">统计各系平均分</button>
+      <button onclick="setSQL(2)">查询课程信息</button>
+      <button onclick="setSQL(3)">查选课人数</button>
+      <button onclick="setSQL(4)">存储过程</button>
+    </div>
+  </div>
+
+  <div class="result-wrap">
+    <div class="result-hd">
+      <span id="resultStatus">就绪</span>
+      <span id="resultTime"></span>
+    </div>
+    <div class="result-body" id="resultBody">
+      <div class="info-msg">点击"执行"运行 SQL 查询，或选择一个示例语句</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DB = {
+  Student: [
+    {Sno:'2400770001',Sname:'张三',Ssex:'男',Sage:20,Sdept:'计算机学院'},
+    {Sno:'2400770002',Sname:'李四',Ssex:'女',Sage:19,Sdept:'计算机学院'},
+    {Sno:'2400770003',Sname:'王五',Ssex:'男',Sage:21,Sdept:'软件学院'},
+    {Sno:'2400770004',Sname:'赵六',Ssex:'女',Sage:20,Sdept:'软件学院'},
+    {Sno:'2400770005',Sname:'孙七',Ssex:'男',Sage:19,Sdept:'数据科学学院'},
+    {Sno:'2400770006',Sname:'周八',Ssex:'女',Sage:22,Sdept:'数据科学学院'},
+    {Sno:'2400770007',Sname:'吴九',Ssex:'男',Sage:20,Sdept:'计算机学院'},
+  ],
+  Teacher: [
+    {Tno:'T00001',Tname:'陈教授',Tsex:'男',Ttitle:'教授',Tdept:'计算机学院'},
+    {Tno:'T00002',Tname:'刘教授',Tsex:'女',Ttitle:'副教授',Tdept:'软件学院'},
+    {Tno:'T00003',Tname:'黄教授',Tsex:'男',Ttitle:'讲师',Tdept:'数据科学学院'},
+  ],
+  Course: [
+    {Cno:'CS101',Cname:'操作系统',Ccredit:4,Cpno:null,Tno:'T00001'},
+    {Cno:'CS102',Cname:'数据结构',Ccredit:4,Cpno:'CS101',Tno:'T00001'},
+    {Cno:'CS103',Cname:'数据库原理',Ccredit:3,Cpno:'CS102',Tno:'T00002'},
+    {Cno:'SE201',Cname:'软件工程',Ccredit:3,Cpno:null,Tno:'T00002'},
+    {Cno:'DS301',Cname:'数据挖掘',Ccredit:3,Cpno:'CS103',Tno:'T00003'},
+  ],
+  SC: [
+    {Sno:'2400770001',Cno:'CS101',Grade:85,Semester:'2025-2026-1'},
+    {Sno:'2400770001',Cno:'CS102',Grade:92,Semester:'2025-2026-1'},
+    {Sno:'2400770001',Cno:'CS103',Grade:78,Semester:'2025-2026-2'},
+    {Sno:'2400770002',Cno:'CS101',Grade:90,Semester:'2025-2026-1'},
+    {Sno:'2400770002',Cno:'CS103',Grade:95,Semester:'2025-2026-2'},
+    {Sno:'2400770003',Cno:'CS101',Grade:65,Semester:'2025-2026-1'},
+    {Sno:'2400770003',Cno:'SE201',Grade:72,Semester:'2025-2026-2'},
+    {Sno:'2400770004',Cno:'CS102',Grade:88,Semester:'2025-2026-1'},
+    {Sno:'2400770004',Cno:'SE201',Grade:91,Semester:'2025-2026-2'},
+    {Sno:'2400770005',Cno:'CS103',Grade:82,Semester:'2025-2026-2'},
+    {Sno:'2400770005',Cno:'DS301',Grade:70,Semester:'2025-2026-2'},
+    {Sno:'2400770006',Cno:'DS301',Grade:85,Semester:'2025-2026-2'},
+    {Sno:'2400770007',Cno:'CS102',Grade:76,Semester:'2025-2026-1'},
+  ]
+};
+
+const SAMPLES = [
+  `SELECT s.Sno, s.Sname, c.Cname, sc.Grade
+FROM Student s
+JOIN SC sc ON s.Sno = sc.Sno
+JOIN Course c ON sc.Cno = c.Cno
+WHERE sc.Grade >= 90
+ORDER BY sc.Grade DESC;`,
+  `SELECT s.Sdept,
+       COUNT(DISTINCT s.Sno) as 学生数,
+       ROUND(AVG(sc.Grade),1) as 平均分,
+       MAX(sc.Grade) as 最高分,
+       MIN(sc.Grade) as 最低分
+FROM Student s
+JOIN SC sc ON s.Sno = sc.Sno
+GROUP BY s.Sdept
+ORDER BY 平均分 DESC;`,
+  `SELECT c.Cno, c.Cname, c.Ccredit,
+       t.Tname as 授课教师,
+       t.Ttitle as 职称
+FROM Course c
+LEFT JOIN Teacher t ON c.Tno = t.Tno;`,
+  `SELECT c.Cno, c.Cname,
+       COUNT(sc.Sno) as 选课人数,
+       ROUND(AVG(sc.Grade),1) as 平均分
+FROM Course c
+LEFT JOIN SC sc ON c.Cno = sc.Cno
+GROUP BY c.Cno, c.Cname
+ORDER BY 选课人数 DESC;`,
+  `-- 存储过程：计算学生平均绩点
+-- DELIMITER //
+-- CREATE PROCEDURE sp_CalcGPA(IN p_Sno CHAR(9), OUT gpa DECIMAL(4,2))
+-- BEGIN
+--     SELECT ROUND(SUM(
+--         CASE
+--             WHEN sc.Grade >= 90 THEN 4.0
+--             WHEN sc.Grade >= 80 THEN 3.3
+--             WHEN sc.Grade >= 70 THEN 2.7
+--             WHEN sc.Grade >= 60 THEN 2.0
+--             ELSE 1.0
+--         END * c.Ccredit
+--     ) / SUM(c.Ccredit), 2) INTO gpa
+--     FROM SC sc
+--     JOIN Course c ON sc.Cno = c.Cno
+--     WHERE sc.Sno = p_Sno;
+-- END//
+
+-- 查询示例：计算学生 GPA
+SELECT s.Sno, s.Sname,
+       SUM(CASE
+           WHEN sc.Grade >= 90 THEN 4.0
+           WHEN sc.Grade >= 80 THEN 3.3
+           WHEN sc.Grade >= 70 THEN 2.7
+           WHEN sc.Grade >= 60 THEN 2.0
+           ELSE 1.0
+       END * c.Ccredit) / SUM(c.Ccredit) as GPA
+FROM Student s
+JOIN SC sc ON s.Sno = sc.Sno
+JOIN Course c ON sc.Cno = c.Cno
+GROUP BY s.Sno, s.Sname
+ORDER BY GPA DESC;`
+];
+
+function setSQL(idx){
+  document.getElementById('sqlInput').value = SAMPLES[idx] || '';
+}
+
+function clearSQL(){
+  document.getElementById('sqlInput').value = '';
+}
+
+function runSQL(){
+  const sql = document.getElementById('sqlInput').value.trim();
+  if(!sql){
+    document.getElementById('resultBody').innerHTML = '<div class="err-msg">请输入 SQL 语句</div>';
+    return;
+  }
+
+  const startTime = performance.now();
+  try {
+    const result = executeSQL(sql);
+    const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
+    document.getElementById('resultStatus').textContent = `✅ 成功 · ${result.length} 行`;
+    document.getElementById('resultTime').textContent = `${elapsed}s`;
+    renderTable(result);
+  } catch(e) {
+    document.getElementById('resultStatus').textContent = '❌ 错误';
+    document.getElementById('resultBody').innerHTML = `<div class="err-msg">${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function executeSQL(sql){
+  const upper = sql.toUpperCase().trim();
+
+  if(upper.startsWith('--') || upper.startsWith('/*')){
+    return [{message: '注释语句已忽略'}];
+  }
+
+  if(upper.startsWith('SELECT')){
+    return executeSelect(sql);
+  }
+  throw new Error('仅支持 SELECT 查询语句。\n不支持 DDL/DML 修改操作。');
+}
+
+function executeSelect(sql){
+  // Very simple SQL parser - handles basic SELECT queries
+  const upper = sql.toUpperCase();
+
+  // Parse SELECT clause
+  const selectMatch = upper.match(/SELECT\s+(.*?)\s+FROM\s+/i);
+  if(!selectMatch) throw new Error('语法错误: 需要 SELECT ... FROM 结构');
+  const selectPart = selectMatch[1].trim();
+
+  // Parse FROM clause (very simplified)
+  const fromEnd = upper.indexOf('WHERE') > -1 ? upper.indexOf('WHERE') :
+                  upper.indexOf('GROUP BY') > -1 ? upper.indexOf('GROUP BY') :
+                  upper.indexOf('ORDER BY') > -1 ? upper.indexOf('ORDER BY') :
+                  upper.indexOf('HAVING') > -1 ? upper.indexOf('HAVING') :
+                  upper.indexOf('LIMIT') > -1 ? upper.indexOf('LIMIT') : sql.length;
+  const fromPart = sql.substring(selectMatch.index + selectMatch[0].length, fromEnd).trim();
+
+  // Parse table names and joins
+  const tables = fromPart.split(/\s+(JOIN|LEFT JOIN|RIGHT JOIN|CROSS JOIN)\s+/i);
+  const mainTable = tables[0].trim().split(/\s+/)[0].replace(/[;]/g,'');
+
+  // Get data from main table
+  let data = [...(DB[mainTable] || [])];
+  if(!DB[mainTable]) throw new Error(`表 '${mainTable}' 不存在`);
+
+  // Handle JOINs (very simplified)
+  for(let i=1; i<tables.length; i+=2){
+    const joinType = tables[i];
+    const joinRest = tables[i+1]?.trim();
+    if(!joinRest) continue;
+    const joinMatch = joinRest.match(/(\w+)\s+(?:AS\s+)?(\w+)?\s*(?:ON\s+(.*))?/i);
+    if(!joinMatch) continue;
+    const joinTable = joinMatch[1];
+    const joinAlias = joinMatch[2] || joinTable;
+    const onClause = joinMatch[3] || '';
+
+    const rightData = DB[joinTable];
+    if(!rightData) throw new Error(`表 '${joinTable}' 不存在`);
+
+    // Cross join + filter simplified
+    const joined = [];
+    for(const leftRow of data){
+      for(const rightRow of rightData){
+        if(!onClause){
+          joined.push({...leftRow, ...rightRow});
+          continue;
+        }
+        // Parse simple ON condition: left.field = right.field
+        const onMatch = onClause.match(/(\w+)\.(\w+)\s*=\s*(\w+)\.(\w+)/);
+        if(onMatch){
+          const [_, lt, lf, rt, rf] = onMatch;
+          const leftTableRef = lt.toLowerCase();
+          const leftVal = leftRow[lf];
+          const rightVal = rightRow[rf];
+          if(leftVal === rightVal){
+            // Prefix join columns
+            const prefixed = {};
+            for(const k of Object.keys(leftRow)) prefixed[k] = leftRow[k];
+            for(const k of Object.keys(rightData[0])) prefixed[k] = rightRow[k];
+            joined.push(prefixed);
+          }
+        }
+      }
+    }
+    data = joined;
+  }
+
+  // WHERE clause
+  const whereMatch = sql.match(/WHERE\s+(.*?)(?:GROUP BY|ORDER BY|HAVING|LIMIT|$)/i);
+  if(whereMatch){
+    const whereCond = whereMatch[1].trim();
+    data = data.filter(row => evaluateWhere(row, whereCond));
+  }
+
+  // GROUP BY
+  const groupMatch = sql.match(/GROUP BY\s+(.*?)(?:ORDER BY|HAVING|LIMIT|$)/i);
+  const groupByCols = groupMatch ? groupMatch[1].trim().split(/\s*,\s*/).map(c=>c.trim().replace(/[;]/g,'')) : null;
+
+  if(groupByCols){
+    const groups = {};
+    for(const row of data){
+      const key = groupByCols.map(c => {
+        const parts = c.split('.');
+        const colName = parts[parts.length-1];
+        return row[colName];
+      }).join('|');
+      if(!groups[key]) groups[key] = [];
+      groups[key].push(row);
+    }
+    data = Object.entries(groups).map(([key, rows]) => {
+      const result = {};
+      groupByCols.forEach((c, i) => {
+        const parts = c.split('.');
+        result[parts[parts.length-1]] = key.split('|')[i];
+      });
+      // Aggregations
+      if(selectPart.includes('COUNT') || selectPart.includes('AVG') || selectPart.includes('SUM') || selectPart.includes('MAX') || selectPart.includes('MIN')){
+        const aggMatch = selectPart.matchAll(/(\w+)\(((?:\w+\.)?(\w+))\)\s*(?:AS\s+(\w+))?/gi);
+        for(const m of aggMatch){
+          const [_, func, fullCol, col, alias] = m;
+          const vals = rows.map(r => Number(r[col])).filter(v => !isNaN(v));
+          const name = alias || `${func}(${col})`;
+          switch(func.toUpperCase()){
+            case 'COUNT': result[name] = func.includes('DISTINCT') ? new Set(vals).size : vals.length; break;
+            case 'AVG': result[name] = (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1); break;
+            case 'SUM': result[name] = vals.reduce((a,b)=>a+b,0); break;
+            case 'MAX': result[name] = Math.max(...vals); break;
+            case 'MIN': result[name] = Math.min(...vals); break;
+          }
+        }
+      }
+      return result;
+    });
+  }
+
+  // SELECT projection
+  let columns = [];
+  if(selectPart === '*'){
+    columns = Object.keys(data[0] || {});
+  } else {
+    const colMatches = selectPart.matchAll(/(?:\w+\.)?(\w+)(?:\s+AS\s+(\w+))?/gi);
+    for(const m of colMatches){
+      const col = m[2] || m[1];
+      columns.push(col.replace(/[;]/g,''));
+    }
+  }
+
+  // Project
+  data = data.map(row => {
+    const projected = {};
+    for(const col of columns){
+      let val = row[col];
+      projected[col] = val !== undefined ? val : null;
+    }
+    return projected;
+  });
+
+  // ORDER BY
+  const orderMatch = sql.match(/ORDER BY\s+(.*?)(?:LIMIT|$)/i);
+  if(orderMatch){
+    const orders = orderMatch[1].trim().split(/\s*,\s*/);
+    for(const order of orders.reverse()){
+      const parts = order.trim().split(/\s+/);
+      const colParts = parts[0].split('.');
+      const colName = colParts[colParts.length-1];
+      const dir = parts[1]?.toUpperCase() === 'DESC' ? -1 : 1;
+      data.sort((a, b) => {
+        const va = a[colName], vb = b[colName];
+        if(va === null) return 1; if(vb === null) return -1;
+        if(typeof va === 'number') return (va - vb) * dir;
+        return String(va).localeCompare(String(vb)) * dir;
+      });
+    }
+  }
+
+  return data;
+}
+
+function evaluateWhere(row, cond){
+  // Very simplified - handles basic conditions
+  const andParts = cond.split(/\s+AND\s+/i);
+  return andParts.every(part => {
+    const orParts = part.split(/\s+OR\s+/i);
+    return orParts.some(orPart => {
+      const match = orPart.match(/(?:\w+\.)?(\w+)\s*(=|>=|<=|>|<|!=|<>|LIKE|IS\s+NOT|IS)\s*(.*)/i);
+      if(!match) return true; // skip complex conditions
+      const [_, col, op, val] = match;
+      const cellVal = row[col];
+
+      if(op.toUpperCase() === 'IS' && val.toUpperCase() === 'NULL') return cellVal === null || cellVal === undefined;
+      if(op.toUpperCase() === 'IS NOT' || (op.toUpperCase() === 'IS' && val.toUpperCase() === 'NOT NULL')) return cellVal !== null && cellVal !== undefined;
+
+      const cleanVal = val.trim().replace(/['"]/g, '').replace(/[;]/g,'');
+      const numVal = parseFloat(cleanVal);
+      const compareVal = isNaN(numVal) ? cleanVal : numVal;
+      const compareCell = typeof compareVal === 'number' ? Number(cellVal) : String(cellVal);
+
+      switch(op.toUpperCase().trim()){
+        case '=': return compareCell == compareVal;
+        case '>=': return compareCell >= compareVal;
+        case '<=': return compareCell <= compareVal;
+        case '>': return compareCell > compareVal;
+        case '<': return compareCell < compareVal;
+        case '!=':
+        case '<>': return compareCell != compareVal;
+        case 'LIKE': return String(compareCell).toLowerCase().includes(String(compareVal).replace(/%/g,'').toLowerCase());
+        default: return true;
+      }
+    });
+  });
+}
+
+function renderTable(data){
+  if(!data || data.length === 0){
+    document.getElementById('resultBody').innerHTML = '<div class="info-msg">查询结果为空</div>';
+    return;
+  }
+
+  // If result is just a message
+  if(data.length === 1 && data[0].message){
+    document.getElementById('resultBody').innerHTML = '<div class="info-msg">语句已执行</div>';
+    return;
+  }
+
+  const columns = Object.keys(data[0]);
+  let html = '<table><thead><tr>';
+  for(const col of columns) html += `<th>${escapeHtml(col)}</th>`;
+  html += '</tr></thead><tbody>';
+  for(const row of data){
+    html += '<tr>';
+    for(const col of columns){
+      const val = row[col] !== null ? row[col] : 'NULL';
+      html += `<td>${escapeHtml(String(val))}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  document.getElementById('resultBody').innerHTML = html;
+}
+
+function escapeHtml(str){
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Initialize with first sample
+window.onload = () => setSQL(0);
+</script>
+</body>
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>磁盘调度算法可视化</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,'Noto Sans SC',sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh}
+.container{max-width:1000px;margin:0 auto;padding:20px}
+h1{text-align:center;background:linear-gradient(135deg,#d29922,#f0883e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:1.6rem;margin-bottom:4px}
+.sub{text-align:center;color:#8b949e;font-size:0.82rem;margin-bottom:16px}
+.card{background:#161b22;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-bottom:12px}
+.card h2{font-size:0.9rem;color:#d29922;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.input-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:center}
+.input-row label{font-size:0.8rem;color:#8b949e;display:flex;align-items:center;gap:4px}
+.input-row input{padding:6px 10px;background:#0d1117;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#e6edf3;font-size:0.8rem}
+.input-row input:focus{outline:none;border-color:#d29922}
+.btn{padding:6px 16px;background:#d29922;border:none;border-radius:6px;color:#fff;font-size:0.8rem;cursor:pointer;transition:background 0.2s}
+.btn:hover{background:#f0883e}
+.btn.secondary{background:#21262d;border:1px solid rgba(255,255,255,0.1)}
+.btn.secondary:hover{background:#30363d}
+.presets{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.presets span{font-size:0.7rem;color:#8b949e}
+.presets button{font-size:0.65rem;padding:3px 8px;background:#21262d;border:1px solid rgba(255,255,255,0.06);border-radius:4px;color:#8b949e;cursor:pointer}
+.presets button:hover{background:#30363d;color:#e6edf3}
+.canvas-wrap{background:#0d1117;border-radius:8px;padding:10px;margin-top:8px;overflow-x:auto}
+canvas{width:100%;height:auto;min-height:300px}
+.algo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:8px}
+.algo-card{background:#0d1117;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:10px}
+.algo-card h3{font-size:0.75rem;text-align:center;margin-bottom:6px}
+.algo-card .fcfs h3{color:#58a6ff}
+.algo-card .sstf h3{color:#3fb950}
+.algo-card .scan h3{color:#d29922}
+.algo-card .cscan h3{color:#f0883e}
+.algo-stats{display:flex;gap:12px;justify-content:center;margin-top:6px;font-size:0.7rem}
+.algo-stats span{color:#8b949e}
+.algo-stats .val{font-weight:700;color:#e6edf3}
+.controls-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.stepper{display:flex;gap:4px;align-items:center}
+.stepper button{width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);background:#21262d;color:#e6edf3;cursor:pointer;font-size:0.8rem}
+.stepper button:hover{background:#30363d}
+.stepper button:disabled{opacity:0.3}
+.stepper span{font-size:0.75rem;color:#8b949e;min-width:100px;text-align:center}
+.seek-bar{height:4px;background:#21262d;border-radius:2px;margin-top:6px;position:relative}
+.seek-fill{height:100%;border-radius:2px;transition:width 0.3s}
+@media(max-width:700px){.algo-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>💽 磁盘调度算法可视化</h1>
+  <p class="sub">操作系统中磁盘 I/O 调度策略 · 对比不同算法的寻道效率</p>
+
+  <div class="card">
+    <h2>⚙️ 参数设置</h2>
+    <div class="input-row">
+      <label>磁道请求序列 <input id="seqInput" value="98,183,37,122,14,124,65,67" style="width:250px"></label>
+      <label>起始位置 <input id="startInput" type="number" value="53" style="width:60px"></label>
+      <label>最大磁道 <input id="maxInput" type="number" value="200" style="width:60px"></label>
+      <button class="btn" onclick="runAll()">▶ 运行</button>
+      <button class="btn secondary" onclick="resetStep()">↺ 重置</button>
+    </div>
+    <div class="presets">
+      <span>预设: </span>
+      <button onclick="setPreset(1)">教材示例</button>
+      <button onclick="setPreset(2)">随机分散</button>
+      <button onclick="setPreset(3)">局部聚集</button>
+    </div>
+    <div class="controls-row">
+      <div class="stepper">
+        <button id="prevBtn" onclick="prevStep()">‹</button>
+        <span id="stepInfo">就绪</span>
+        <button id="nextBtn" onclick="nextStep()">›</button>
+        <button class="btn secondary" style="margin-left:8px;font-size:0.7rem;padding:4px 12px" onclick="autoPlay()">▶ 自动播放</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="diskCanvas"></canvas>
+  </div>
+
+  <div class="algo-grid">
+    <div class="algo-card" style="border-left:3px solid #58a6ff"><h3 style="color:#58a6ff">🔵 FCFS — 先来先服务</h3><div class="algo-stats" id="fcfsStats"></div></div>
+    <div class="algo-card" style="border-left:3px solid #3fb950"><h3 style="color:#3fb950">🟢 SSTF — 最短寻道优先</h3><div class="algo-stats" id="sstfStats"></div></div>
+    <div class="algo-card" style="border-left:3px solid #d29922"><h3 style="color:#d29922">🟡 SCAN — 电梯算法</h3><div class="algo-stats" id="scanStats"></div></div>
+    <div class="algo-card" style="border-left:3px solid #f0883e"><h3 style="color:#f0883e">🟠 C-SCAN — 循环扫描</h3><div class="algo-stats" id="cscanStats"></div></div>
+  </div>
+
+  <div class="card">
+    <h2>📊 对比总览</h2>
+    <div id="comparisonTable"></div>
+  </div>
+</div>
+
+<script>
+let seq=[], start=53, maxTrack=200, results={}, currentStep=0, maxSteps=0, autoTimer=null;
+
+function setPreset(n){
+  const p={
+    1:{s:"98,183,37,122,14,124,65,67",st:53,m:200},
+    2:{s:"45,160,32,198,77,12,155,91,180,55",st:70,m:200},
+    3:{s:"82,85,78,90,81,87,79,83,86,84",st:50,m:200}
+  };
+  document.getElementById('seqInput').value=p[n].s;
+  document.getElementById('startInput').value=p[n].st;
+  document.getElementById('maxInput').value=p[n].m;
+  runAll();
+}
+
+function parseInput(){
+  seq=document.getElementById('seqInput').value.split(',').map(Number).filter(n=>!isNaN(n));
+  start=parseInt(document.getElementById('startInput').value)||0;
+  maxTrack=parseInt(document.getElementById('maxInput').value)||200;
+}
+
+function simFCFS(){
+  const order=[], pos=start, moves=[];
+  let cur=pos, total=0;
+  for(const r of seq){
+    const d=Math.abs(r-cur);
+    moves.push(d);total+=d;
+    order.push({from:cur,to:r,dist:d});
+    cur=r;
+  }
+  const avg=total/seq.length;
+  return {order,total,avg,seq:[start,...seq]};
+}
+
+function simSSTF(){
+  const order=[], pending=[...seq], cur=start, moves=[];
+  let pos=cur, total=0, accessOrder=[start];
+  while(pending.length>0){
+    let minIdx=0, minDist=Infinity;
+    for(let i=0;i<pending.length;i++){
+      const d=Math.abs(pending[i]-pos);
+      if(d<minDist){minDist=d;minIdx=i;}
+    }
+    const target=pending.splice(minIdx,1)[0];
+    moves.push(minDist);total+=minDist;
+    order.push({from:pos,to:target,dist:minDist});
+    pos=target;accessOrder.push(target);
+  }
+  return {order,total,avg:total/seq.length,seq:accessOrder};
+}
+
+function simSCAN(){
+  const order=[], up=[], down=[], cur=start;
+  let total=0, pos=cur, moves=[], accessOrder=[start];
+  for(const r of seq){if(r>=cur)up.push(r);else down.push(r);}
+  up.sort((a,b)=>a-b);down.sort((a,b)=>b-a);
+  const dir=document.getElementById('dirSelect')?.value||'up';
+  const orderList=dir==='up'?[...up,...down]:[...down,...up];
+  for(const t of orderList){
+    const d=Math.abs(t-pos);
+    moves.push(d);total+=d;
+    order.push({from:pos,to:t,dist:d});
+    pos=t;accessOrder.push(t);
+  }
+  return {order,total,avg:total/order.length,seq:accessOrder,dir};
+}
+
+function simCSCAN(){
+  const order=[], up=[], down=[], cur=start;
+  let total=0, pos=cur, moves=[], accessOrder=[start];
+  for(const r of seq){if(r>=cur)up.push(r);else down.push(r);}
+  up.sort((a,b)=>a-b);down.sort((a,b)=>a-b);
+  // C-SCAN: go up to max, jump to 0, then continue up
+  const orderList=[...up, ...down];
+  for(const t of orderList){
+    const d=Math.abs(t-pos);
+    moves.push(d);total+=d;
+    order.push({from:pos,to:t,dist:d});
+    pos=t;accessOrder.push(t);
+  }
+  return {order,total,avg:total/order.length,seq:accessOrder};
+}
+
+function simulateAll(){
+  return {
+    fcfs:simFCFS(),
+    sstf:simSSTF(),
+    scan:simSCAN(),
+    cscan:simCSCAN()
+  };
+}
+
+function runAll(){
+  if(autoTimer){clearInterval(autoTimer);autoTimer=null;}
+  parseInput();
+  results=simulateAll();
+  currentStep=0;
+  maxSteps=seq.length;
+  updateStep(0);
+}
+
+function updateStep(step){
+  currentStep=Math.max(0,Math.min(step,maxSteps));
+  document.getElementById('stepInfo').textContent=`第 ${currentStep} / ${maxSteps} 步`;
+  document.getElementById('prevBtn').disabled=currentStep<=0;
+  document.getElementById('nextBtn').disabled=currentStep>=maxSteps;
+
+  drawChart(currentStep);
+  ['fcfs','sstf','scan','cscan'].forEach(a=>updateStats(a));
+  updateComparison();
+}
+
+function drawChart(step){
+  const canvas=document.getElementById('diskCanvas');
+  const rect=canvas.parentElement.getBoundingClientRect();
+  canvas.width=canvas.parentElement.clientWidth*2;
+  canvas.height=340*2;
+  const W=canvas.width, H=canvas.height;
+  const ctx=canvas.getContext('2d');
+  ctx.scale(2,2);
+  const w=W/2, h=H/2;
+  ctx.clearRect(0,0,w,h);
+
+  const margin={t:30,b:40,l:60,r:30};
+  const cw=w-margin.l-margin.r, ch=h-margin.t-margin.b;
+
+  // Background
+  ctx.fillStyle='#0d1117';
+  ctx.fillRect(0,0,w,h);
+
+  // Track lines
+  const trackStep=Math.ceil(maxTrack/10);
+  ctx.strokeStyle='rgba(255,255,255,0.04)';
+  ctx.lineWidth=1;
+  for(let t=0;t<=maxTrack;t+=trackStep){
+    const y=margin.t+ch-(t/maxTrack)*ch;
+    ctx.beginPath();ctx.moveTo(margin.l,y);ctx.lineTo(w-margin.r,y);ctx.stroke();
+    ctx.fillStyle='#6e7681';ctx.font='10px monospace';ctx.textAlign='right';
+    ctx.fillText(t,margin.l-5,y+3);
+  }
+  ctx.fillStyle='#6e7681';ctx.font='9px monospace';ctx.textAlign='center';
+  ctx.fillText('磁道号',margin.l-35,margin.t-12);
+
+  const colors={fcfs:'#58a6ff',sstf:'#3fb950',scan:'#d29922',cscan:'#f0883e'};
+  const names={fcfs:'FCFS',sstf:'SSTF',scan:'SCAN',cscan:'C-SCAN'};
+  const algos=['fcfs','sstf','scan','cscan'];
+
+  // Draw access sequence for each algorithm
+  algos.forEach((algo,i)=>{
+    const data=results[algo];
+    if(!data||!data.order)return;
+    const xOff=margin.l+i*(cw/4);
+    const w2=cw/4-4;
+    ctx.strokeStyle=colors[algo];
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    let hasPoint=false;
+    for(let j=0;j<=Math.min(currentStep,data.order.length);j++){
+      const pos=j===0?start:data.order[j-1].to;
+      const x=j===0?xOff+w2/2:xOff+w2/2;
+      // Map y in reverse so 0 is at bottom
+      const y=margin.t+ch-(pos/maxTrack)*ch;
+      if(!hasPoint){ctx.moveTo(x,y);hasPoint=true;}
+      else ctx.lineTo(x+((j===0?0:j-1)*w2/Math.max(data.order.length,1)),y);
+    }
+    ctx.stroke();
+
+    // Draw points
+    for(let j=0;j<=Math.min(currentStep,data.order.length);j++){
+      const pos=j===0?start:data.order[j-1].to;
+      const px=xOff+w2/2+(j===0?0:(j-1)*w2/Math.max(data.order.length,1));
+      const py=margin.t+ch-(pos/maxTrack)*ch;
+      ctx.beginPath();
+      const isCurrent=j===currentStep;
+      ctx.arc(px,py,isCurrent?5:3,0,Math.PI*2);
+      ctx.fillStyle=j===0?'rgba(255,255,255,0.3)':colors[algo];
+      ctx.fill();
+      if(isCurrent&&j>0){
+        ctx.strokeStyle='rgba(255,255,255,0.3)';
+        ctx.lineWidth=1;ctx.setLineDash([2,2]);
+        ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px,margin.t+ch);ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle='#fff';ctx.font='10px monospace';ctx.textAlign='center';
+        ctx.fillText(pos,px,margin.t+ch+14);
+      }
+    }
+
+    // Label
+    ctx.fillStyle=colors[algo];ctx.font='bold 11px sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText(names[algo]+'('+(currentStep>0?data.total+')':')'),xOff+w2/2,margin.t-8);
+  });
+
+  // Legend
+  let lx=margin.l;
+  algos.forEach((algo,i)=>{
+    ctx.fillStyle=colors[algo];ctx.fillRect(lx,h-30,10,10);
+    ctx.fillStyle='#8b949e';ctx.font='9px sans-serif';ctx.textAlign='left';
+    ctx.fillText(names[algo],lx+14,h-22);
+    lx+=60;
+  });
+
+  // X label
+  ctx.fillStyle='#6e7681';ctx.font='9px sans-serif';ctx.textAlign='center';
+  ctx.fillText('← 访问顺序 →',margin.l+cw/2,h-6);
+}
+
+function updateStats(algo){
+  const data=results[algo];
+  if(!data)return;
+  const el=document.getElementById(algo+'Stats');
+  const done=data.order.slice(0,Math.max(0,currentStep));
+  const totalDone=done.reduce((s,o)=>s+o.dist,0);
+  el.innerHTML=`
+    <span>寻道总数: <span class="val">${data.total}</span></span>
+    <span>平均寻道: <span class="val">${data.avg.toFixed(1)}</span></span>
+    <span>已完成: <span class="val">${currentStep}</span></span>
+  `;
+}
+
+function updateComparison(){
+  const el=document.getElementById('comparisonTable');
+  const algos=['fcfs','sstf','scan','cscan'];
+  const names=['FCFS','SSTF','SCAN','C-SCAN'];
+  const colors=['#58a6ff','#3fb950','#d29922','#f0883e'];
+  const best=Math.min(...algos.map(a=>results[a]?.total||Infinity));
+  let html='<table style="width:100%;border-collapse:collapse;font-size:0.78rem">';
+  html+='<tr style="background:#21262d"><th style="padding:6px 10px;text-align:left">算法</th><th style="padding:6px;text-align:right">寻道总数</th><th style="padding:6px;text-align:right">平均寻道</th><th style="padding:6px;text-align:center">效率</th></tr>';
+  algos.forEach((a,i)=>{
+    const d=results[a];
+    if(!d)return;
+    const isBest=d.total===best;
+    const barPct=best/d.total*100;
+    html+=`<tr style="border-top:1px solid rgba(255,255,255,0.04)">
+      <td style="padding:6px 10px;color:${colors[i]};font-weight:600">${names[i]}</td>
+      <td style="padding:6px;text-align:right;font-family:monospace">${d.total}</td>
+      <td style="padding:6px;text-align:right;font-family:monospace">${d.avg.toFixed(1)}</td>
+      <td style="padding:6px;text-align:center">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;height:6px;background:#21262d;border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${barPct}%;background:${colors[i]};border-radius:3px;transition:width 0.5s"></div>
+          </div>
+          ${isBest?'<span style="font-size:0.65rem">🏆</span>':''}
+        </div>
+      </td>
+    </tr>`;
+  });
+  html+='</table>';
+  el.innerHTML=html;
+}
+
+function nextStep(){if(currentStep<maxSteps)updateStep(currentStep+1);}
+function prevStep(){if(currentStep>0)updateStep(currentStep-1);}
+function resetStep(){currentStep=0;updateStep(0);}
+function autoPlay(){
+  if(autoTimer){clearInterval(autoTimer);autoTimer=null;return;}
+  autoTimer=setInterval(()=>{
+    if(currentStep>=maxSteps){clearInterval(autoTimer);autoTimer=null;return;}
+    nextStep();
+  },800);
+}
+
+window.onload=runAll;
+</script>
+</body>
+</html>

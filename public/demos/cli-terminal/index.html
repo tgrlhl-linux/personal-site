@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLI 项目演示终端</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Consolas','JetBrains Mono',monospace;background:#0d1117;color:#e6edf3;min-height:100vh;padding:0}
+.terminal{max-width:900px;margin:0 auto;padding:16px;min-height:100vh;display:flex;flex-direction:column}
+.hd{text-align:center;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:12px}
+.hd h1{font-size:1rem;color:#79c0ff}
+.hd p{font-size:0.7rem;color:#6e7681;margin-top:2px}
+.proj-tabs{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap}
+.proj-tab{padding:6px 14px;font-size:0.72rem;background:#21262d;border:1px solid rgba(255,255,255,0.06);border-radius:6px;cursor:pointer;color:#8b949e;font-family:inherit;transition:all 0.15s}
+.proj-tab:hover{background:#30363d;color:#e6edf3}
+.proj-tab.active{background:rgba(88,166,255,0.15);border-color:#58a6ff;color:#79c0ff}
+.output-wrap{flex:1;background:#0a0e14;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:12px;overflow-y:auto;min-height:400px;font-size:0.78rem;line-height:1.6}
+.output-line{white-space:pre-wrap;word-break:break-all}
+.output-line .prompt{color:#58a6ff}
+.output-line .cmd{color:#e6edf3}
+.output-line .out{color:#8b949e}
+.output-line .err{color:#f85149}
+.output-line .success{color:#3fb950}
+.output-line .highlight{color:#d29922}
+.output-line .dim{color:#6e7681}
+.output-line .separator{color:rgba(255,255,255,0.04)}
+.input-line{display:flex;align-items:center;gap:4px;margin-top:8px;padding:6px 10px;background:#0a0e14;border:1px solid rgba(255,255,255,0.06);border-radius:6px}
+.input-line .prompt{color:#58a6ff;font-size:0.78rem;white-space:nowrap}
+.input-line input{flex:1;background:transparent;border:none;color:#e6edf3;font-family:inherit;font-size:0.78rem;outline:none}
+.input-line input::placeholder{color:#6e7681}
+.controls{display:flex;gap:6px;margin-top:8px}
+.controls button{padding:4px 12px;background:#21262d;border:1px solid rgba(255,255,255,0.06);border-radius:4px;color:#8b949e;font-size:0.68rem;cursor:pointer;font-family:inherit}
+.controls button:hover{background:#30363d;color:#e6edf3}
+.cursor-blink{animation:blink 1s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+</style>
+</head>
+<body>
+<div class="terminal">
+  <div class="hd">
+    <h1>🖥️ CLI 项目演示</h1>
+    <p>模拟终端 · 展示命令行项目的交互流程</p>
+  </div>
+
+  <div class="proj-tabs" id="tabs">
+    <button class="proj-tab active" data-proj="hdfs">HDFS 客户端</button>
+    <button class="proj-tab" data-proj="shell">Shell 成绩管理</button>
+  </div>
+
+  <div class="output-wrap" id="output"></div>
+
+  <div class="input-line">
+    <span class="prompt" id="inputPrompt">$</span>
+    <input id="cmdInput" placeholder="输入命令或按 Enter 自动演示..." spellcheck="false">
+  </div>
+
+  <div class="controls">
+    <button onclick="startAutoDemo()">▶ 自动演示</button>
+    <button onclick="stopAutoDemo()">⏹ 停止</button>
+    <button onclick="clearOutput()">⌧ 清屏</button>
+    <button id="demoBtn" onclick="nextDemoStep()">⏭ 下一步</button>
+  </div>
+</div>
+
+<script>
+const DEMOS = {
+  hdfs: {
+    prompt: 'hdfs@cluster:~$',
+    name: 'HDFS 客户端操作',
+    steps: [
+      {cmd: '# HDFS 客户端操作演示', out: '', delay: 600},
+      {cmd: '# 环境：Hadoop 3.3.4 完全分布式集群', out: '', delay: 300},
+      {cmd: 'hdfs dfs -ls /', delay: 400},
+      {cmd: 'hdfs dfs -mkdir -p /user/student/projects', out: '', delay: 500, res: ''},
+      {cmd: 'hdfs dfs -put report.csv /user/student/', delay: 600, res: ''},
+      {cmd: 'hdfs dfs -ls /user/student/', delay: 500, res: 'Found 2 items\ndrwxr-xr-x   - root supergroup          0 2026-04-20 10:30 /user/student/projects\n-rw-r--r--   2 root supergroup     24576 2026-04-20 10:31 /user/student/report.csv'},
+      {cmd: 'hdfs dfs -cat /user/student/report.csv | head -3', delay: 600, res: 'ID,Name,Score,Grade\n001,Alice,92,A\n002,Bob,78,C'},
+      {cmd: '# 获取文件块信息', delay: 400},
+      {cmd: 'hdfs fsck /user/student/report.csv -files -blocks -locations', delay: 800, res: 'Connecting to master:9000\n/user/student/report.csv 24576 bytes, 1 block(s):\n  Block 0: offset=0, len=24576\n    DatanodeInfo: slave1:50010, slave2:50010'},
+      {cmd: '# IO 流操作：写入', out: '', delay: 500},
+      {cmd: 'hdfs dfs -appendToFile ./new_data.txt /user/student/report.csv', delay: 500, res: ''},
+      {cmd: '# 下载文件', out: '', delay: 400},
+      {cmd: 'hdfs dfs -get /user/student/report.csv ./backup/', delay: 600, res: ''},
+      {cmd: '# 🎉 所有操作完成', out: '', delay: 200},
+    ]
+  },
+  shell: {
+    prompt: 'student@linux:~$',
+    name: 'Shell 成绩管理系统',
+    steps: [
+      {cmd: '# Linux 课程作业五 — 成绩管理系统', out: '', delay: 500},
+      {cmd: '# Bash 实现 · 多用户 · CSV 批量导入', out: '', delay: 300},
+      {cmd: './score_system.sh', out: '', delay: 800, res: '===== 成绩管理系统 =====\n正在初始化...\n请输入用户名:'},
+      {cmd: 'admin', out: '', delay: 400, res: '密码:'},
+      {cmd: 'admin123', out: '', delay: 600, res: '✅ 登录成功！[teacher] admin\n\n===== 成绩管理系统 =====\n1) 添加成绩   2) 查看成绩\n3) 搜索成绩   4) 删除成绩\n5) 批量导入   6) 统计\n7) 退出\n选择:'},
+      {cmd: '2', out: '', delay: 500, res: '学号      姓名           课程       成绩\n────       ────           ────       ────\n2400770041 张三            操作系统   85\n2400770042 李四            数据结构   92\n2400770043 王五            数据库原理 78\n\n总记录数: 3'},
+      {cmd: '1', out: '', delay: 400, res: '学号: '},
+      {cmd: '2400770044', out: '', delay: 300, res: '姓名: '},
+      {cmd: '赵六', out: '', delay: 300, res: '课程: '},
+      {cmd: '计算机网络', out: '', delay: 300, res: '成绩: '},
+      {cmd: '88', out: '', delay: 500, res: '✅ 成绩已添加'},
+      {cmd: '6', out: '', delay: 500, res: '===== 成绩统计 =====\n总人数:    4\n平均分:    85.8\n最高分:    92\n最低分:    78\n及格率:    100.0%'},
+      {cmd: '# 🎉 演示结束', out: '', delay: 200},
+    ]
+  }
+};
+
+let currentProj = 'hdfs';
+let outputEl = document.getElementById('output');
+let cmdInput = document.getElementById('cmdInput');
+let demoSteps = [];
+let stepIndex = 0;
+let autoTimer = null;
+let isAutoPlaying = false;
+
+function initTabs(){
+  document.querySelectorAll('.proj-tab').forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      document.querySelectorAll('.proj-tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      currentProj = tab.dataset.proj;
+      clearOutput();
+      stopAutoDemo();
+      updatePrompt();
+    });
+  });
+}
+
+function updatePrompt(){
+  document.getElementById('inputPrompt').textContent = DEMOS[currentProj].prompt;
+}
+
+function typeLine(text, className=''){
+  const line = document.createElement('div');
+  line.className = 'output-line';
+  // Check for special markers
+  if(text.startsWith('# ')){
+    line.innerHTML = `<span class="dim">${text}</span>`;
+  } else {
+    line.innerHTML = text;
+  }
+  outputEl.appendChild(line);
+  outputEl.scrollTop = outputEl.scrollHeight;
+  return line;
+}
+
+function executeCommand(cmd, res, callback){
+  // Show the command with prompt
+  const line = document.createElement('div');
+  line.className = 'output-line';
+  line.innerHTML = `<span class="prompt">${DEMOS[currentProj].prompt} </span><span class="cmd">${cmd}</span>`;
+  outputEl.appendChild(line);
+
+  if(res){
+    const resLines = document.createElement('div');
+    resLines.className = 'output-line';
+    resLines.innerHTML = res.split('\n').map(l => {
+      if(l.startsWith('✅')) return `<span class="success">${l}</span>`;
+      if(l.startsWith('❌')) return `<span class="err">${l}</span>`;
+      if(l.match(/=====/)) return `<span class="highlight">${l}</span>`;
+      return `<span class="out">${l}</span>`;
+    }).join('\n');
+    outputEl.appendChild(resLines);
+  } else {
+    // empty response
+    const blank = document.createElement('div');
+    blank.className = 'output-line';
+    blank.innerHTML = '<span class="out"></span>';
+    outputEl.appendChild(blank);
+  }
+
+  outputEl.scrollTop = outputEl.scrollHeight;
+  if(callback) setTimeout(callback, 100);
+}
+
+function runDemoStep(index){
+  if(index >= DEMOS[currentProj].steps.length){
+    typeLine('', '');
+    typeLine('🎉 演示完成！', 'success');
+    isAutoPlaying = false;
+    return;
+  }
+
+  const step = DEMOS[currentProj].steps[index];
+  if(step.cmd.startsWith('# ') || step.cmd.startsWith('#')){
+    typeLine(step.cmd, 'dim');
+    if(isAutoPlaying){
+      autoTimer = setTimeout(() => runDemoStep(index + 1), step.delay || 300);
+    }
+    return;
+  }
+
+  if(step.out){
+    typeLine(step.out, '');
+    if(isAutoPlaying){
+      autoTimer = setTimeout(() => runDemoStep(index + 1), step.delay || 300);
+    }
+    return;
+  }
+
+  executeCommand(step.cmd, step.res || '');
+  if(isAutoPlaying){
+    autoTimer = setTimeout(() => runDemoStep(index + 1), step.delay || 500);
+  }
+}
+
+function startAutoDemo(){
+  if(isAutoPlaying) return;
+  isAutoPlaying = true;
+  document.getElementById('demoBtn').textContent = '▶...';
+  clearOutput();
+  stepIndex = 0;
+  runDemoStep(0);
+}
+
+function stopAutoDemo(){
+  isAutoPlaying = false;
+  if(autoTimer) clearTimeout(autoTimer);
+  autoTimer = null;
+  document.getElementById('demoBtn').textContent = '⏭ 下一步';
+}
+
+function nextDemoStep(){
+  if(isAutoPlaying) stopAutoDemo();
+  if(stepIndex < DEMOS[currentProj].steps.length){
+    const step = DEMOS[currentProj].steps[stepIndex];
+    if(step.cmd.startsWith('#') || step.cmd.startsWith('#')){
+      typeLine(step.cmd, 'dim');
+    } else if(step.out){
+      typeLine(step.out, '');
+    } else {
+      executeCommand(step.cmd, step.res || '');
+    }
+    stepIndex++;
+  }
+  document.getElementById('demoBtn').textContent = '⏭ 下一步';
+}
+
+function clearOutput(){
+  outputEl.innerHTML = `<div class="output-line"><span class="dim"># 终端已清空 | ${DEMOS[currentProj].name}</span></div>`;
+  stepIndex = 0;
+}
+
+// Input handling
+cmdInput.addEventListener('keydown', (e) => {
+  if(e.key === 'Enter'){
+    const cmd = cmdInput.value.trim();
+    if(cmd){
+      executeCommand(cmd, `command not found: ${cmd.split(' ')[0]}`);
+      cmdInput.value = '';
+    }
+  }
+});
+
+initTabs();
+clearOutput();
+updatePrompt();
+</script>
+</body>
+</html>

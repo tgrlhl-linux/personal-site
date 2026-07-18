@@ -424,8 +424,9 @@ public class Tokenizer {
     fullFiles: [
       { path: 'src/HDFSClient.java', desc: 'HDFS 客户端操作完整实现', lines: 180 },
     ],
-    hasDemo: false,
-    demoType: 'none',
+    hasDemo: true,
+    demoType: 'inline',
+demoUrl: '/demos/cli-terminal',
   },
 
   // ─── 文件系统仿真 ────────────────────────────────────────────────
@@ -643,8 +644,9 @@ impl eframe::App for FileSystemApp {
       { path: 'src/main.rs', desc: '程序入口', lines: 40 },
       { path: 'tests/integration_test.rs', desc: '集成测试', lines: 95 },
     ],
-    hasDemo: false,
-    demoType: 'none',
+    hasDemo: true,
+    demoType: 'inline',
+demoUrl: '/demos/disk-scheduling',
   },
 
   // ─── Flask 成绩管理系统 ──────────────────────────────────────────
@@ -918,8 +920,9 @@ login && main_menu`,
     fullFiles: [
       { path: 'grade_manager.sh', desc: 'Shell 成绩管理系统完整脚本', lines: 180 },
     ],
-    hasDemo: false,
-    demoType: 'none',
+    hasDemo: true,
+    demoType: 'inline',
+demoUrl: '/demos/cli-terminal',
   },
 
   // ─── 数据库大作业 ────────────────────────────────────────────────
@@ -1069,8 +1072,9 @@ DELIMITER ;`,
     fullFiles: [
       { path: '大作业二.sql', desc: '完整数据库设计 SQL（建表/索引/视图/存储过程/触发器）', lines: 150 },
     ],
-    hasDemo: false,
-    demoType: 'none',
+    hasDemo: true,
+    demoType: 'inline',
+demoUrl: '/demos/sql-playground',
   },
 
   // ─── Cosmic 3D ──────────────────────────────────────────────────

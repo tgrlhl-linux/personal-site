@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>虚拟内存 — 页面置换算法可视化</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,'Noto Sans SC',sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh}
+.container{max-width:1000px;margin:0 auto;padding:20px}
+h1{text-align:center;background:linear-gradient(135deg,#58a6ff,#79c0ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:1.6rem;margin-bottom:4px}
+.sub{text-align:center;color:#8b949e;font-size:0.82rem;margin-bottom:16px}
+.card{background:#161b22;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-bottom:12px}
+.card h2{font-size:0.9rem;color:#79c0ff;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.input-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.input-row label{font-size:0.8rem;color:#8b949e;display:flex;align-items:center;gap:4px}
+.input-row input,.input-row select{padding:6px 10px;background:#0d1117;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#e6edf3;font-size:0.8rem;width:100px}
+.input-row input:focus,.input-row select:focus{outline:none;border-color:#58a6ff}
+.btn{padding:6px 16px;background:#58a6ff;border:none;border-radius:6px;color:#fff;font-size:0.8rem;cursor:pointer;transition:background 0.2s}
+.btn:hover{background:#79c0ff}
+.btn.secondary{background:#21262d;border:1px solid rgba(255,255,255,0.1)}
+.btn.secondary:hover{background:#30363d}
+.presets{display:flex;gap:4px;align-items:center}
+.presets span{font-size:0.7rem;color:#8b949e}
+.presets button{font-size:0.65rem;padding:3px 8px;background:#21262d;border:1px solid rgba(255,255,255,0.06);border-radius:4px;color:#8b949e;cursor:pointer}
+.presets button:hover{background:#30363d;color:#e6edf3}
+.algo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}
+.algo-card{background:#0d1117;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:10px}
+.algo-card h3{font-size:0.75rem;color:#58a6ff;margin-bottom:6px;text-align:center}
+.algosteps{display:flex;gap:2px;flex-wrap:wrap}
+.step-cell{width:28px;height:28px;border:1px solid rgba(255,255,255,0.08);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-family:monospace;position:relative}
+.step-cell.active{background:rgba(88,166,255,0.2);border-color:#58a6ff}
+.step-cell.fault{background:rgba(248,81,73,0.2);border-color:#f85149}
+.step-label{font-size:0.55rem;color:#6e7681;text-align:center;margin-top:2px;height:14px}
+.metrics{display:flex;gap:16px;margin-top:8px;justify-content:center}
+.metric{text-align:center}
+.metric .val{font-size:1rem;font-weight:700;color:#58a6ff}
+.metric .lbl{font-size:0.6rem;color:#6e7681}
+.frame-row{display:flex;gap:2px;margin-bottom:2px;justify-content:center}
+.frame-cell{width:28px;height:28px;border:1px solid rgba(255,255,255,0.08);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-family:monospace}
+.frame-cell.filled{background:rgba(88,166,255,0.1);border-color:rgba(88,166,255,0.3)}
+.controls-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.stepper{display:flex;gap:4px;align-items:center}
+.stepper button{width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);background:#21262d;color:#e6edf3;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center}
+.stepper button:hover{background:#30363d}
+.stepper button:disabled{opacity:0.3;cursor:default}
+.stepper span{font-size:0.75rem;color:#8b949e;min-width:80px;text-align:center}
+/* Timeline view */
+.timeline{overflow-x:auto;padding-bottom:8px}
+.timeline-table{width:100%;border-collapse:collapse;font-size:0.7rem}
+.timeline-table th,.timeline-table td{padding:4px 8px;border:1px solid rgba(255,255,255,0.06);text-align:center;white-space:nowrap}
+.timeline-table th{background:#21262d;color:#8b949e;font-weight:400}
+.timeline-table .f-hit{background:rgba(63,185,80,0.1)}
+.timeline-table .f-miss{background:rgba(248,81,73,0.15)}
+.timeline-table .f-filled{background:rgba(88,166,255,0.1)}
+@keyframes fadeIn{from{opacity:0;transform:scale(0.8)}to{opacity:1;transform:scale(1)}}
+.step-cell.fault{animation:fadeIn 0.2s}
+@media(max-width:700px){.algo-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>💾 页面置换算法可视化</h1>
+  <p class="sub">操作系统中虚拟内存管理的核心算法 · 步进演示各算法在缺页时的不同决策</p>
+
+  <div class="card">
+    <h2>⚙️ 参数设置</h2>
+    <div class="input-row">
+      <label>页面序列 <input id="seqInput" value="7,0,1,2,0,3,0,4,2,3,0,3,2,1,2,0,1,7,0,1" style="width:280px"></label>
+      <label>物理块数 <input id="frameInput" type="number" value="3" min="2" max="8" style="width:60px"></label>
+      <button class="btn" onclick="runAll()">▶ 运行</button>
+      <button class="btn secondary" onclick="resetStep()">↺ 重置</button>
+    </div>
+    <div class="presets">
+      <span>预设: </span>
+      <button onclick="setPreset(1)">经典教材序列</button>
+      <button onclick="setPreset(2)">高局部性</button>
+      <button onclick="setPreset(3)">抖动模式</button>
+    </div>
+    <div class="controls-row">
+      <div class="stepper">
+        <button id="prevBtn" onclick="prevStep()">‹</button>
+        <span id="stepInfo">第 0 / 0 步</span>
+        <button id="nextBtn" onclick="nextStep()">›</button>
+        <button class="btn secondary" style="margin-left:8px;font-size:0.7rem;padding:4px 12px" onclick="autoPlay()">▶ 自动播放</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="algo-grid" id="algoGrid">
+    <div class="algo-card" id="algoFIFO"><h3>🔵 FIFO（先进先出）</h3><div class="algosteps" id="fifoSteps"></div><div class="metrics" id="fifoMetrics"></div></div>
+    <div class="algo-card" id="algoLRU"><h3>🟢 LRU（最近最久未用）</h3><div class="algosteps" id="lruSteps"></div><div class="metrics" id="lruMetrics"></div></div>
+    <div class="algo-card" id="algoOPT"><h3>🟡 OPT（最优置换）</h3><div class="algosteps" id="optSteps"></div><div class="metrics" id="optMetrics"></div></div>
+  </div>
+
+  <div class="card">
+    <h2>📊 详细执行过程</h2>
+    <div class="timeline" id="timeline"></div>
+  </div>
+</div>
+
+<script>
+let seq=[], frames=3, history={fifo:[],lru:[],opt:[]}, currentStep=0, maxSteps=0, autoTimer=null;
+
+function setPreset(n){
+  const presets={
+    1:{seq:"7,0,1,2,0,3,0,4,2,3,0,3,2,1,2,0,1,7,0,1",f:3},
+    2:{seq:"1,2,3,4,1,2,5,1,2,3,4,5",f:3},
+    3:{seq:"1,2,3,4,5,1,2,3,4,5,1,2,3,4,5",f:3}
+  };
+  document.getElementById('seqInput').value=presets[n].seq;
+  document.getElementById('frameInput').value=presets[n].f;
+  runAll();
+}
+
+function parseInput(){
+  seq=document.getElementById('seqInput').value.split(',').map(Number).filter(n=>!isNaN(n));
+  frames=parseInt(document.getElementById('frameInput').value)||3;
+}
+
+function simulateFIFO(){
+  const queue=[], result=[];
+  let faults=0;
+  for(const p of seq){
+    if(queue.includes(p)){result.push({page:p,hit:true,fault:false});continue;}
+    faults++;
+    if(queue.length>=frames)queue.shift();
+    queue.push(p);
+    result.push({page:p,hit:false,fault:true,state:[...queue]});
+  }
+  return {result,faults,steps:result.length};
+}
+
+function simulateLRU(){
+  const queue=[], result=[];
+  let faults=0;
+  for(const p of seq){
+    const idx=queue.indexOf(p);
+    if(idx!==-1){queue.splice(idx,1);queue.push(p);result.push({page:p,hit:true,fault:false});continue;}
+    faults++;
+    if(queue.length>=frames)queue.shift();
+    queue.push(p);
+    result.push({page:p,hit:false,fault:true,state:[...queue]});
+  }
+  return {result,faults,steps:result.length};
+}
+
+function simulateOPT(){
+  const queue=[], result=[];
+  let faults=0;
+  for(let i=0;i<seq.length;i++){
+    const p=seq[i];
+    if(queue.includes(p)){result.push({page:p,hit:true,fault:false});continue;}
+    faults++;
+    if(queue.length<frames){queue.push(p);result.push({page:p,hit:false,fault:true,state:[...queue]});continue;}
+    let farthest=-1, replaceIdx=0;
+    for(let j=0;j<queue.length;j++){
+      const nextUse=seq.indexOf(queue[j],i+1);
+      if(nextUse===-1){replaceIdx=j;break;}
+      if(nextUse>farthest){farthest=nextUse;replaceIdx=j;}
+    }
+    queue[replaceIdx]=p;
+    result.push({page:p,hit:false,fault:true,state:[...queue]});
+  }
+  return {result,faults,steps:result.length};
+}
+
+function runAll(){
+  if(autoTimer){clearInterval(autoTimer);autoTimer=null;}
+  parseInput();
+  history={fifo:simulateFIFO(),lru:simulateLRU(),opt:simulateOPT()};
+  maxSteps=seq.length;
+  currentStep=0;
+  renderStep(0);
+}
+
+function renderStep(step){
+  currentStep=Math.max(0,Math.min(step,maxSteps));
+  document.getElementById('stepInfo').textContent=`第 ${currentStep} / ${maxSteps} 步`;
+  document.getElementById('prevBtn').disabled=currentStep<=0;
+  document.getElementById('nextBtn').disabled=currentStep>=maxSteps;
+
+  ['fifo','lru','opt'].forEach(algo=>renderAlgoStep(algo,currentStep));
+  renderTimeline(currentStep);
+}
+
+function renderAlgoStep(algo,step){
+  const data=history[algo];
+  const container=document.getElementById(algo+'Steps');
+  const metrics=document.getElementById(algo+'Metrics');
+  let html='';
+  // Show frames at this step if it's a fault
+  const resultItems=data.result;
+  const showState=resultItems[step-1]?.state||[];
+
+  // Frame state
+  if(showState.length>0){
+    html+='<div class="frame-row">';
+    for(let i=0;i<frames;i++){
+      const val=showState[i]!==undefined?showState[i]:'';
+      html+=`<div class="frame-cell ${val!==''?'filled':''}">${val}</div>`;
+    }
+    html+='</div>';
+  }
+
+  // Steps
+  html+='<div class="frame-row">';
+  for(let i=0;i<Math.min(resultItems.length,step);i++){
+    const r=resultItems[i];
+    const cls='step-cell'+(r.fault?' fault':r.hit?' active':'');
+    html+=`<div class="${cls}" title="页${r.page}${r.fault?' ✗缺页':r.hit?' ✓命中':''}">${r.page}</div>`;
+  }
+  html+='</div>';
+  html+=`<div class="step-label">缺页: ${data.faults} · 命中率: ${((step-data.faults)/Math.max(step,1)*100).toFixed(0)}%</div>`;
+  container.innerHTML=html;
+
+  metrics.innerHTML=`
+    <div class="metric"><div class="val">${data.faults}</div><div class="lbl">总缺页</div></div>
+    <div class="metric"><div class="val">${((1-data.faults/seq.length)*100).toFixed(1)}%</div><div class="lbl">命中率</div></div>
+  `;
+}
+
+function renderTimeline(step){
+  const el=document.getElementById('timeline');
+  let html='<table class="timeline-table"><thead><tr><th>步骤</th>';
+  for(let i=0;i<seq.length;i++)html+=`<th>${i+1}</th>`;
+  html+='</tr><tr><th>页面</th>';
+  for(let i=0;i<seq.length;i++)html+=`<th>${seq[i]}</th>`;
+  html+='</tr></thead><tbody>';
+
+  ['fifo','lru','opt'].forEach(algo=>{
+    const data=history[algo];
+    html+=`<tr><td style="font-weight:600;color:#58a6ff">${algo.toUpperCase()}</td>`;
+    for(let i=0;i<data.result.length;i++){
+      const r=data.result[i];
+      const cls=i<step?(r.fault?'f-miss':'f-hit'):'';
+      const icon=r.fault?'✗':'✓';
+      html+=`<td class="${cls}" style="${i===step-1?'border-color:#58a6ff;':''}">${icon}</td>`;
+    }
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  el.innerHTML=html;
+}
+
+function nextStep(){if(currentStep<maxSteps)renderStep(currentStep+1);}
+function prevStep(){if(currentStep>0)renderStep(currentStep-1);}
+function resetStep(){currentStep=0;renderStep(0);}
+function autoPlay(){
+  if(autoTimer){clearInterval(autoTimer);autoTimer=null;return;}
+  autoTimer=setInterval(()=>{
+    if(currentStep>=maxSteps){clearInterval(autoTimer);autoTimer=null;return;}
+    nextStep();
+  },600);
+}
+
+window.onload=runAll;
+</script>
+</body>
+</html>
