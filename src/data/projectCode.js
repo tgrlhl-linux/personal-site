@@ -18,7 +18,7 @@ const projects = {
       'WAL 日志 + 基础事务支持',
       '内嵌 HTTP Server Web UI',
     ],
-    githubUrl: 'https://github.com/tgrlhl-linux/personal-site',
+    githubUrl: 'https://github.com/tgrlhl-linux/personal-site/tree/main/projects-source/数据库原理/MiniSQL',
     highlights: '一个从零实现的轻量级关系型数据库引擎——词法分析→语法分析→查询执行→存储管理全链路手工实现，零外部依赖。',
     snippets: [
       {
@@ -314,7 +314,7 @@ public class Tokenizer {
       '块信息读取与位置追踪',
       '参数优先级：代码配置 > 资源文件 > 集群默认',
     ],
-    githubUrl: 'https://github.com/tgrlhl-linux/personal-site',
+    githubUrl: 'https://github.com/tgrlhl-linux/personal-site/tree/main/projects-source/大数据与数据思维/大作业部分一',
     highlights: '基于 Hadoop 3.3.4 完全分布式集群的 HDFS Java API 实践，覆盖全部常用文件系统操作。',
     snippets: [
       {
@@ -438,7 +438,7 @@ public class Tokenizer {
       'egui 实时可视化磁盘状态',
       '交互式 Shell 命令行界面',
     ],
-    githubUrl: 'https://github.com/tgrlhl-linux/personal-site',
+    githubUrl: 'https://github.com/tgrlhl-linux/personal-site/tree/main/projects-source/操作系统/实验4-文件系统',
     highlights: '用 Rust 模拟类 FAT 文件系统，结合 egui 构建跨平台 GUI，位图可视化一目了然。',
     snippets: [
       {
@@ -657,7 +657,7 @@ impl eframe::App for FileSystemApp {
       '统计看板：分布图、趋势图',
       '响应式 UI，适配移动端',
     ],
-    githubUrl: 'https://github.com/tgrlhl-linux/personal-site',
+    githubUrl: 'https://github.com/tgrlhl-linux/personal-site/tree/main/projects-source/Linux操作系统/作业六-Flask成绩管理',
     highlights: '从 Shell 脚本到 Web 应用的全栈迁移，前后端分离设计，SQLite 替代文本文件存储。',
     snippets: [
       {
@@ -773,7 +773,7 @@ def stats():
       '统计计算（平均分/最高低分/及格率）',
       '文本文件持久化 + 数据导出',
     ],
-    githubUrl: 'https://github.com/tgrlhl-linux/personal-site',
+    githubUrl: 'https://github.com/tgrlhl-linux/personal-site/tree/main/projects-source/Linux操作系统/作业五-Shell成绩管理',
     highlights: '纯 Shell 脚本实现的成绩管理系统，多用户数据隔离、灵活查询、完善注释。',
     snippets: [
       {
@@ -932,7 +932,7 @@ login && main_menu`,
       'SQL 建表、索引、视图',
       '存储过程 + 触发器 + 安全性控制',
     ],
-    githubUrl: 'https://github.com/tgrlhl-linux/personal-site',
+    githubUrl: 'https://github.com/tgrlhl-linux/personal-site/tree/main/projects-source/数据库原理/大作业二-数据库设计与实施',
     highlights: '从需求分析到物理实现的完整数据库设计流程，覆盖 E-R 图、3NF 规范化、存储过程与触发器。',
     snippets: [
       {
@@ -1305,7 +1305,7 @@ window.addEventListener('resize', () => {
       'RESTful API 后端服务（Flask）',
       'HBase 三表存储（movie_emotion / character_network / narrative_pattern）',
     ],
-    githubUrl: 'https://github.com/tgrlhl-linux/personal-site',
+    githubUrl: 'https://github.com/tgrlhl-linux/personal-site/tree/main/projects-source/大数据与数据思维/NarrativeAnalysis',
     highlights: '基于 Hadoop 生态的大数据电影叙事分析——从剧本清洗、情感计算到 HBase 存储、API 查询的全链路实现。',
     snippets: [
       {
