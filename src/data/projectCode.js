@@ -644,9 +644,8 @@ impl eframe::App for FileSystemApp {
       { path: 'src/main.rs', desc: '程序入口', lines: 40 },
       { path: 'tests/integration_test.rs', desc: '集成测试', lines: 95 },
     ],
-    hasDemo: true,
-    demoType: 'inline',
-demoUrl: '/demos/disk-scheduling',
+    hasDemo: false,
+    demoType: 'none',
   },
 
   // ─── Flask 成绩管理系统 ──────────────────────────────────────────

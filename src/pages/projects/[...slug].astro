@@ -1,14 +1,14 @@
 ---
 export const prerender = false;
 
+import fs from 'node:fs';
+import path from 'node:path';
 import Base from '../../layouts/Base.astro';
 import { query } from '../../db/mysql';
 import projectCode from '../../data/projectCode';
 
 const slug = Astro.params.slug;
-
-let error = null;
-let project = null;
+let error = null, project = null;
 
 if (!slug) {
   error = '无效的项目';
@@ -35,154 +35,244 @@ const hasCode = codeData?.snippets?.length > 0;
 const hasFiles = codeData?.fullFiles?.length > 0;
 const hasDemo = codeData?.hasDemo;
 
+// ── 加载技术分析报告 ──
+const analysisPathMap = {
+  'minisql': '数据库原理/MiniSQL/ANALYSIS.md',
+  'hdfs-client': '大数据与数据思维/大作业部分一/ANALYSIS.md',
+  'filesystem-sim': '操作系统/实验4-文件系统/ANALYSIS.md',
+  'flask-score-system': 'Linux操作系统/作业六-Flask成绩管理/ANALYSIS.md',
+  'linux-hw5-shell': 'Linux操作系统/作业五-Shell成绩管理/ANALYSIS.md',
+  'database-project': '数据库原理/大作业二-数据库设计与实施/ANALYSIS.md',
+  'narrative-analysis': '大数据与数据思维/NarrativeAnalysis/ANALYSIS.md',
+};
+let analysisContent = '';
+if (slug && analysisPathMap[slug]) {
+  try {
+    const analysisFile = path.resolve('projects-source', analysisPathMap[slug]);
+    analysisContent = fs.readFileSync(analysisFile, 'utf-8');
+  } catch {}
+}
+
 function esc(str) {
   if (!str) return '';
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
-function codeLines(code) {
-  return (code || '').split('\n').length;
-}
+function codeLines(code) { return (code||'').split('\n').length; }
+const projectDir = codeData?.githubUrl?.replace('https://github.com/tgrlhl-linux/personal-site/tree/master/', '') || '';
 ---
 
 {error ? (
   <Base title="项目不存在">
-    <div class="page-header">
-      <h1>项目不存在</h1>
-      <p><a href="/projects">← 返回项目列表</a></p>
+    <div class="pp-error">
+      <div class="pp-error-card">
+        <div class="pp-error-icon">🔍</div>
+        <h1>项目不存在</h1>
+        <p><a href="/projects">← 返回项目列表</a></p>
+      </div>
     </div>
   </Base>
 ) : (
-  <Base title={project.title}>
-    <article class="post">
-      <header class="post-header">
-        <div class="post-meta">
-          <span class="tag">{catLabel[project.course] || project.course}</span>
-          {meta.projectStatus && meta.projectStatus !== 'completed' && <span class="tag status-tag">{statusLabel[meta.projectStatus]}</span>}
-          {meta.date && <time class="meta">{new Date(meta.date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}</time>}
+  <Base title={project.title} wide={true}>
+    <article class="pd-root">
+
+      <!-- ═══ HEADER ═══ -->
+      <header class="pd-header">
+        <div class="pd-hd-top">
+          <a href="/projects" class="pd-back">← 项目列表</a>
+          <div class="pd-hd-meta">
+            <span class="pd-badge" style={`background:${project.course === 'course' ? '#f0883e' : project.course === 'personal' ? '#79c0ff' : '#3fb950'}`}>
+              {catLabel[project.course] || project.course}
+            </span>
+            {meta.projectStatus && (
+              <span class={`pd-status status-${meta.projectStatus}`}>{statusLabel[meta.projectStatus]}</span>
+            )}
+            {meta.date && <span class="pd-date">{new Date(meta.date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long' })}</span>}
+          </div>
         </div>
-        <h1>{project.title}</h1>
-        {codeData?.highlights && <p class="post-highlight">{codeData.highlights}</p>}
-        <div class="post-tags">
-          {tagList.map(t => <span class="tag">{t}</span>)}
-          {codeData?.tech?.map(t => <span class="tag tech-tag">{t}</span>)}
+        <h1 class="pd-title">{project.title}</h1>
+        {codeData?.highlights && <p class="pd-highlight">{codeData.highlights}</p>}
+        <div class="pd-tags">
+          {tagList.map(t => <span class="pd-tag">{t}</span>)}
+          {codeData?.tech?.map(t => <span class="pd-tag tech">{t}</span>)}
         </div>
       </header>
 
-      <!-- ═══ 项目说明 ═══ -->
-      <section>
-        <div class="section-heading">📖 项目说明</div>
-        <div class="post-content" id="content">{project.content || ''}</div>
-      </section>
+      <!-- ═══ TWO-COLUMN CONTENT ═══ -->
+      <div class="pd-grid">
 
-      <!-- ═══ 代码展示 ═══ -->
-      {hasCode && (
-        <section>
-          <div class="section-heading">💻 核心代码</div>
-          {codeData.tech && <p class="section-sub">{codeData.tech.join(' · ')}</p>}
-          <div class="code-gallery">
-            {codeData.snippets.map((s, i) => (
-              <div class="code-card">
-                <div class="code-card-hd">
-                  <div class="code-card-title">
-                    <span class="code-lang-badge">{s.language}</span>
-                    <strong>{s.title}</strong>
+        <!-- ─── Left Column ─── -->
+        <div class="pd-left">
+
+          <!-- 项目概览卡片 -->
+          <div class="pd-card">
+            <div class="pd-card-hd">📋 项目概览</div>
+            <div class="pd-card-body">
+              {codeData?.tech?.length > 0 && (
+                <div class="pd-info-row">
+                  <span class="pd-info-label">技术栈</span>
+                  <div class="pd-tech-list">{codeData.tech.map(t => <span class="pd-tech-tag">{t}</span>)}</div>
+                </div>
+              )}
+              {projectDir && (
+                <div class="pd-info-row">
+                  <span class="pd-info-label">源码路径</span>
+                  <a href={codeData.githubUrl} target="_blank" class="pd-repo-link">
+                    <span class="pd-repo-icon">📂</span>
+                    <code>{projectDir}</code>
+                  </a>
+                </div>
+              )}
+              {codeData?.features?.length > 0 && (
+                <>
+                  <div class="pd-info-row" style="margin-top:0.6rem">
+                    <span class="pd-info-label">功能特性</span>
                   </div>
-                  <div class="code-card-meta">{s.file} · {codeLines(s.code)} 行</div>
-                </div>
-                {s.description && <p class="code-card-desc">{s.description}</p>}
-                <div class="code-wrapper">
-                  <button class="code-copy" data-code-idx={i} title="复制代码">📋</button>
-                  <pre class="code-block"><code class="lang-{s.language}">{esc(s.code)}</code></pre>
-                </div>
-              </div>
-            ))}
+                  <ul class="pd-feat-list">
+                    {codeData.features.slice(0, 6).map(f => <li>{f}</li>)}
+                  </ul>
+                  {codeData.features.length > 6 && (
+                    <details class="pd-feat-more">
+                      <summary>还有 {codeData.features.length - 6} 项</summary>
+                      <ul class="pd-feat-list">{codeData.features.slice(6).map(f => <li>{f}</li>)}</ul>
+                    </details>
+                  )}
+                </>
+              )}
+            </div>
           </div>
-        </section>
-      )}
 
-      <!-- ═══ 文件结构 ═══ -->
-      {hasFiles && (
-        <section>
-          <div class="section-heading">📁 源文件清单</div>
-          <p class="section-sub">完整代码见 <a href={codeData.githubUrl} target="_blank">GitHub 仓库 ↗</a></p>
-          <table class="file-table">
-            <thead>
-              <tr><th>路径</th><th>说明</th><th>行数</th></tr>
-            </thead>
-            <tbody>
-              {codeData.fullFiles.map(f => (
-                <tr>
-                  <td class="file-path"><code>{f.path}</code></td>
-                  <td>{f.desc}</td>
-                  <td class="file-lines">{f.lines}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {codeData.features?.length > 0 && (
-            <div class="feat-section">
-              <div class="section-heading" style="margin-top:1.5rem">✨ 功能特性</div>
-              <ul class="feat-list">
-                {codeData.features.map(f => <li>{f}</li>)}
-              </ul>
+          <!-- 技术分析报告 -->
+          {analysisContent && (
+            <div class="pd-card">
+              <div class="pd-card-hd">
+                <span>📖 技术分析报告</span>
+                <a href={codeData?.githubUrl?.replace('/tree/master/', '/blob/master/') + '/ANALYSIS.md'} target="_blank" class="pd-analysis-link">在 GitHub 查看 ↗</a>
+              </div>
+              <div class="pd-card-body pd-analysis" id="analysisContent">{analysisContent}</div>
             </div>
           )}
-        </section>
-      )}
 
-      <!-- ═══ 在线体验 ═══ -->
-      {hasDemo && (
-        <section>
-          <div class="section-heading">🚀 在线体验</div>
-          {codeData.demoType === 'inline' ? (
-            <div class="demo-inline">
-              {codeData.note && <p class="demo-note">{codeData.note}</p>}
-              <div class="demo-frame-wrap">
-                <iframe src={codeData.demoUrl} class="demo-frame" title="在线演示"></iframe>
-              </div>
-              <div class="demo-open-bar">
-                <a href={codeData.demoUrl} target="_blank" class="btn btn-outline">在新窗口打开 ↗</a>
+          <!-- 在线体验（左侧，仅非内联类型） -->
+          {hasDemo && codeData.demoType !== 'inline' && (
+            <div class="pd-card">
+              <div class="pd-card-hd">🚀 在线体验</div>
+              <div class="pd-card-body">
+                {codeData.demoType === 'external' ? (
+                  <div class="pd-demo-ext">
+                    <div class="pd-demo-ext-icon">🔗</div>
+                    <p>已部署到独立平台，点击按钮在新窗口打开。</p>
+                    <a href={codeData.demoUrl} target="_blank" class="pd-btn">打开在线版 →</a>
+                  </div>
+                ) : (
+                  <div class="pd-demo-na">
+                    <p>该项目为 CLI/GUI 应用，无法在网页端直接运行。</p>
+                    <p>查看源码：<a href={codeData.githubUrl} target="_blank">GitHub 仓库 ↗</a></p>
+                  </div>
+                )}
               </div>
             </div>
-          ) : codeData.demoType === 'external' ? (
-            <div class="demo-external">
-              <div class="demo-card">
-                <div class="demo-card-icon">🔗</div>
-                <div class="demo-card-body">
-                  <p>该项目的在线版本已部署到独立平台。</p>
-                  <a href={codeData.demoUrl} target="_blank" class="btn">{codeData.demoUrl} ↗</a>
+          )}
+
+        </div>
+
+        <!-- ─── Right Column ─── -->
+        <div class="pd-right">
+
+          <!-- 在线 Demo（内联类型，占主要位置） -->
+          {hasDemo && codeData.demoType === 'inline' && (
+            <div class="pd-card pd-card-demo">
+              <div class="pd-card-hd">
+                <span>🚀 在线演示</span>
+                <a href={codeData.demoUrl} target="_blank" class="pd-open-btn">新窗口打开 ↗</a>
+              </div>
+              <div class="pd-card-body pd-demo-inline">
+                {codeData.note && <p class="pd-demo-note">{codeData.note}</p>}
+                <div class="pd-demo-frame-wrap">
+                  <iframe src={codeData.demoUrl} class="pd-demo-frame" title="在线演示"></iframe>
                 </div>
               </div>
             </div>
-          ) : (
-            <div class="demo-na">
-              <p>该项目为 CLI/GUI 应用，无法在网页端直接运行。</p>
-              <p>如需查看运行效果，请前往 <a href={codeData.githubUrl} target="_blank">GitHub 仓库 ↗</a> 查看截图和说明。</p>
+          )}
+
+          <!-- 核心代码 -->
+          {hasCode && (
+            <div class="pd-card">
+              <div class="pd-card-hd">
+                <span>💻 核心代码</span>
+                {codeData.tech && <span class="pd-card-sub">{codeData.tech.join(' · ')}</span>}
+              </div>
+              <div class="pd-card-body pd-code-list">
+                {codeData.snippets.map((s, i) => (
+                  <details class="pd-code-item" open={i < 2}>
+                    <summary class="pd-code-summary">
+                      <span class="pd-code-lang">{s.language}</span>
+                      <strong>{s.title}</strong>
+                      <span class="pd-code-meta">{s.file} · {codeLines(s.code)} 行</span>
+                    </summary>
+                    {s.description && <p class="pd-code-desc">{s.description}</p>}
+                    <div class="pd-code-wrap">
+                      <button class="pd-code-copy" data-code={i} title="复制代码">📋</button>
+                      <pre class="pd-code-block"><code class="lang-{s.language}">{esc(s.code)}</code></pre>
+                    </div>
+                  </details>
+                ))}
+              </div>
             </div>
           )}
-        </section>
-      )}
 
-      <nav class="post-nav">
-        <a href="/projects" class="btn">← 返回项目列表</a>
+          <!-- 源文件清单 -->
+          {hasFiles && (
+            <div class="pd-card">
+              <div class="pd-card-hd">
+                <span>📁 源文件清单</span>
+                <a href={codeData.githubUrl} target="_blank" class="pd-analysis-link">GitHub 仓库 ↗</a>
+              </div>
+              <div class="pd-card-body">
+                <table class="pd-file-table">
+                  <thead><tr><th>路径</th><th>说明</th><th>行数</th></tr></thead>
+                  <tbody>
+                    {codeData.fullFiles.map(f => (
+                      <tr>
+                        <td class="pd-file-path"><code>{f.path}</code></td>
+                        <td>{f.desc}</td>
+                        <td class="pd-file-lines">{f.lines}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
+
+      <nav class="pd-footer-nav">
+        <a href="/projects" class="pd-btn pd-btn-back">← 返回项目列表</a>
       </nav>
+
     </article>
 
     <script>
-      // ── Markdown rendering ──
       import { marked } from 'marked';
       marked.setOptions({ breaks: true, gfm: true });
-      const contentEl = document.getElementById('content');
+
+      // Render analysis report markdown
+      const analysisEl = document.getElementById('analysisContent');
+      if (analysisEl) analysisEl.innerHTML = marked.parse(analysisEl.textContent);
+
+      // Render project content
+      const contentEl = document.getElementById('projectContent');
       if (contentEl) contentEl.innerHTML = marked.parse(contentEl.textContent);
 
-      // ── Copy code ──
-      document.querySelectorAll('.code-copy').forEach(btn => {
+      // Copy code
+      document.querySelectorAll('.pd-code-copy').forEach(btn => {
         btn.addEventListener('click', () => {
-          const pre = btn.parentElement.querySelector('code');
-          if (!pre) return;
-          const text = pre.textContent || pre.innerText;
-          navigator.clipboard.writeText(text).then(() => {
+          const details = btn.closest('.pd-code-item');
+          const code = details?.querySelector('code');
+          if (!code) return;
+          navigator.clipboard.writeText(code.textContent || code.innerText).then(() => {
             btn.textContent = '✅';
             setTimeout(() => { btn.textContent = '📋'; }, 1500);
           }).catch(() => {});
@@ -192,23 +282,22 @@ function codeLines(code) {
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script is:inline>
-    (function() {
-      var s = document.createElement('script');
-      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js';
-      s.onload = function() {
-        // Load languages
-        var langs = ['java','python','rust','bash','sql','javascript','xml'];
-        var loaded = 0;
-        langs.forEach(function(lang) {
-          var ls = document.createElement('script');
-          ls.src = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/' + lang + '.min.js';
-          ls.onload = ls.onerror = function() { loaded++; if (loaded >= langs.length) highlight(); };
+    (function(){
+      var s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js';
+      s.onload=function(){
+        var langs=['java','python','rust','bash','sql','javascript','xml'];
+        var loaded=0;
+        langs.forEach(function(l){
+          var ls=document.createElement('script');
+          ls.src='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/'+l+'.min.js';
+          ls.onload=ls.onerror=function(){loaded++;if(loaded>=langs.length)highlight();};
           document.head.appendChild(ls);
         });
-        setTimeout(highlight, 3000);
-        function highlight() {
-          document.querySelectorAll('.code-block code').forEach(function(el) {
-            if (typeof hljs !== 'undefined') hljs.highlightElement(el);
+        setTimeout(highlight,3000);
+        function highlight(){
+          document.querySelectorAll('.pd-code-block code').forEach(function(el){
+            if(typeof hljs!=='undefined')hljs.highlightElement(el);
           });
         }
       };
@@ -217,111 +306,124 @@ function codeLines(code) {
     </script>
   </Base>
 )}
+</article>
 
 <style>
-  /* ── Header ── */
-  .post-header { margin-bottom: 1.5rem; padding-bottom: 1.2rem; border-bottom: 1px solid var(--border); }
-  .post-meta { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem; flex-wrap: wrap; }
-  .post-meta .meta { margin: 0; color: var(--text-muted); }
-  .post-header h1 { font-size: 1.6rem; margin-bottom: 0.4rem; }
-  .post-highlight { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 0.6rem; }
-  .post-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; }
-  .status-tag { background: rgba(210,153,34,0.15); color: #d29922; }
-  .tech-tag { background: rgba(88,166,255,0.12); color: #58a6ff; border-color: rgba(88,166,255,0.2); }
+/* ── Error ── */
+.pp-error{display:flex;justify-content:center;align-items:center;min-height:50vh}
+.pp-error-card{text-align:center;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:3rem 2rem;max-width:400px}
+.pp-error-icon{font-size:3rem;margin-bottom:0.5rem}
+.pp-error h1{margin-bottom:0.5rem}
+.pp-error a{color:var(--accent)}
 
-  /* ── Section headings ── */
-  section { margin-top: 2rem; }
-  .section-heading {
-    font-size: 1.05rem; font-weight: 600; color: var(--text);
-    padding-bottom: 0.4rem; margin-bottom: 0.8rem;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 0.4rem;
-  }
-  .section-sub { font-size: 0.82rem; color: var(--text-muted); margin: -0.3rem 0 0.8rem; }
+/* ── Root layout ── */
+.pd-root{max-width:var(--max-width-wide);margin:0 auto;padding:1rem 0}
 
-  /* ── Markdown content ── */
-  .post-content { font-size: 0.95rem; line-height: 1.8; }
-  .post-content :global(h2) { font-size: 1.2rem; margin-top: 1.5rem; }
-  .post-content :global(h3) { font-size: 1.05rem; margin-top: 1.2rem; }
-  .post-content :global(p) { margin-bottom: 0.8rem; }
-  .post-content :global(ul) { margin-left: 1.5rem; margin-bottom: 0.8rem; }
-  .post-content :global(li) { margin-bottom: 0.3rem; }
-  .post-content :global(code) { font-family: var(--font-mono); font-size: 0.85em; background: var(--bg-hover); padding: 0.15em 0.4em; border-radius: 3px; }
-  .post-content :global(pre) { background: #151b22; padding: 1rem; border-radius: 8px; overflow-x: auto; margin: 1rem 0; border: 1px solid var(--border); }
-  .post-content :global(pre code) { background: none; padding: 0; }
-  .post-content :global(blockquote) { border-left: 3px solid var(--c-os); padding: 0.5rem 1rem; margin: 1rem 0; color: var(--text-secondary); background: var(--bg-hover); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
-  .post-content :global(table) { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.88rem; }
-  .post-content :global(th), .post-content :global(td) { border: 1px solid var(--border); padding: 0.4rem 0.6rem; text-align: left; }
-  .post-content :global(th) { background: var(--bg-hover); font-weight: 600; }
-  .post-content :global(img) { max-width: 100%; height: auto; border-radius: 8px; margin: 1rem 0; }
+/* ── Header ── */
+.pd-header{margin-bottom:1.5rem}
+.pd-hd-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem;flex-wrap:wrap;gap:0.4rem}
+.pd-back{font-size:0.78rem;color:var(--text-muted);text-decoration:none}
+.pd-back:hover{color:var(--accent)}
+.pd-hd-meta{display:flex;align-items:center;gap:0.4rem}
+.pd-badge{padding:0.15em 0.6em;border-radius:4px;color:#fff;font-size:0.65rem;font-weight:500}
+.pd-status{font-size:0.65rem;padding:0.1em 0.5em;border-radius:4px}
+.status-completed{background:rgba(63,185,80,0.15);color:#3fb950}
+.status-in-progress{background:rgba(210,153,34,0.15);color:#d29922}
+.pd-date{font-size:0.72rem;color:var(--text-muted)}
+.pd-title{font-size:1.5rem;margin-bottom:0.4rem}
+.pd-highlight{font-size:0.88rem;color:var(--text-secondary);line-height:1.6;margin-bottom:0.5rem}
+.pd-tags{display:flex;flex-wrap:wrap;gap:0.25rem}
+.pd-tag{font-size:0.68rem;padding:0.12em 0.5em;background:var(--bg-hover);border-radius:4px;color:var(--text-secondary)}
+.pd-tag.tech{background:rgba(88,166,255,0.1);color:#58a6ff}
 
-  /* ── Code cards ── */
-  .code-gallery { display: flex; flex-direction: column; gap: 1rem; }
-  .code-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px; overflow: hidden;
-  }
-  .code-card-hd {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 0.5rem 1rem; border-bottom: 1px solid var(--border);
-    flex-wrap: wrap; gap: 0.3rem;
-  }
-  .code-card-title { display: flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; }
-  .code-card-title strong { color: var(--text); }
-  .code-lang-badge {
-    font-size: 0.62rem; padding: 0.1em 0.5em;
-    background: rgba(88,166,255,0.15); color: #58a6ff;
-    border-radius: 4px; font-family: var(--font-mono); text-transform: uppercase;
-  }
-  .code-card-meta { font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); }
-  .code-card-desc { padding: 0.5rem 1rem 0; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6; }
-  .code-wrapper { position: relative; }
-  .code-copy {
-    position: absolute; top: 0.4rem; right: 0.5rem;
-    background: rgba(255,255,255,0.06); border: 1px solid var(--border);
-    color: var(--text-muted); cursor: pointer;
-    padding: 0.2rem 0.4rem; border-radius: 4px;
-    font-size: 0.82rem; z-index: 2;
-    transition: all 0.15s;
-  }
-  .code-copy:hover { background: var(--bg-hover); color: var(--text); }
-  .code-block { margin: 0 !important; border: none !important; border-radius: 0 !important; background: #0d1117 !important; }
-  .code-block code { font-size: 0.78rem !important; line-height: 1.55 !important; }
+/* ── Two-column grid ── */
+.pd-grid{display:grid;grid-template-columns:340px 1fr;gap:1rem;align-items:start}
+@media(max-width:860px){.pd-grid{grid-template-columns:1fr}}
 
-  /* ── File table ── */
-  .file-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-  .file-table th, .file-table td { padding: 0.35rem 0.6rem; text-align: left; border-bottom: 1px solid var(--border); }
-  .file-table th { color: var(--text-muted); font-weight: 500; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
-  .file-table tr:hover td { background: var(--bg-hover); }
-  .file-path code { font-size: 0.78rem; color: #58a6ff; }
-  .file-lines { text-align: center; color: var(--text-muted); font-family: var(--font-mono); width: 3rem; }
-  .feat-list { list-style: none; padding: 0; }
-  .feat-list li {
-    padding: 0.3rem 0 0.3rem 1.2rem;
-    position: relative; font-size: 0.85rem;
-    color: var(--text-secondary);
-    border-bottom: 1px solid var(--border);
-  }
-  .feat-list li:last-child { border-bottom: none; }
-  .feat-list li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); font-weight: bold; }
+/* ── Cards ── */
+.pd-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1rem}
+.pd-card-hd{display:flex;justify-content:space-between;align-items:center;padding:0.55rem 0.9rem;border-bottom:1px solid var(--border);font-size:0.82rem;font-weight:600;color:var(--text);flex-wrap:wrap;gap:0.3rem}
+.pd-card-sub{font-weight:400;font-size:0.7rem;color:var(--text-muted)}
+.pd-card-body{padding:0.7rem 0.9rem}
+.pd-card-demo .pd-card-body{padding:0}
 
-  /* ── Demo ── */
-  .demo-frame-wrap { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--bg-card); }
-  .demo-frame { width: 100%; height: 65vh; border: none; display: block; }
-  .demo-open-bar { display: flex; justify-content: center; padding: 0.6rem; }
-  .demo-note { font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0.8rem; padding: 0.5rem 0.8rem; background: rgba(255,255,255,0.03); border-radius: 6px; border-left: 2px solid var(--accent); }
-  .demo-external { padding: 0.5rem 0; }
-  .demo-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; display: flex; gap: 1rem; align-items: center; }
-  .demo-card-icon { font-size: 2rem; }
-  .demo-card-body p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem; }
-  .demo-na { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; text-align: center; }
-  .demo-na p { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.3rem; }
-  .post-nav { margin-top: 2.5rem; }
+/* ── Info rows (left panel) ── */
+.pd-info-row{margin-bottom:0.3rem}
+.pd-info-label{font-size:0.68rem;color:var(--text-muted);display:block;margin-bottom:0.2rem;text-transform:uppercase;letter-spacing:0.04em}
+.pd-tech-list{display:flex;flex-wrap:wrap;gap:0.25rem}
+.pd-tech-tag{font-size:0.68rem;padding:0.12em 0.5em;background:rgba(88,166,255,0.1);color:#58a6ff;border:1px solid rgba(88,166,255,0.15);border-radius:4px}
+.pd-repo-link{display:inline-flex;align-items:center;gap:0.3rem;font-size:0.75rem;color:var(--accent);text-decoration:none;word-break:break-all}
+.pd-repo-link:hover{text-decoration:underline}
+.pd-repo-icon{font-size:0.85rem}
+.pd-feat-list{list-style:none;padding:0}
+.pd-feat-list li{padding:0.25rem 0 0.25rem 1rem;position:relative;font-size:0.78rem;color:var(--text-secondary);line-height:1.4}
+.pd-feat-list li::before{content:'▸';position:absolute;left:0;color:var(--accent)}
+.pd-feat-more summary{font-size:0.72rem;color:var(--accent);cursor:pointer;padding:0.2rem 0}
+.pd-feat-more summary:hover{opacity:0.8}
+.pd-analysis-link{font-size:0.68rem;color:var(--accent);text-decoration:none;font-weight:400}
+.pd-analysis-link:hover{text-decoration:underline}
 
-  @media (max-width: 640px) {
-    .post-header h1 { font-size: 1.3rem; }
-    .code-card-hd { flex-direction: column; align-items: flex-start; }
-    .demo-frame { height: 45vh; }
-  }
+/* ── Analysis report ── */
+.pd-analysis{font-size:0.82rem;line-height:1.7;max-height:60vh;overflow-y:auto;padding-right:0.5rem}
+.pd-analysis :global(h1){font-size:1rem;margin:0.6rem 0 0.3rem}
+.pd-analysis :global(h2){font-size:0.9rem;margin:0.5rem 0 0.25rem;color:#79c0ff}
+.pd-analysis :global(h3){font-size:0.82rem;margin:0.4rem 0 0.2rem}
+.pd-analysis :global(p){margin-bottom:0.4rem;color:var(--text-secondary)}
+.pd-analysis :global(ul){margin-left:1rem;margin-bottom:0.4rem}
+.pd-analysis :global(li){margin-bottom:0.15rem}
+.pd-analysis :global(code){font-family:var(--font-mono);font-size:0.78em;background:var(--bg-hover);padding:0.1em 0.3em;border-radius:3px}
+.pd-analysis :global(pre){background:#0d1117;padding:0.6rem;border-radius:6px;overflow-x:auto;margin:0.4rem 0;border:1px solid var(--border)}
+.pd-analysis :global(pre code){background:none;padding:0;font-size:0.72rem}
+.pd-analysis :global(strong){color:var(--text)}
+.pd-analysis :global(table){width:100%;border-collapse:collapse;font-size:0.75rem;margin:0.4rem 0}
+.pd-analysis :global(th),.pd-analysis :global(td){border:1px solid var(--border);padding:0.25rem 0.4rem;text-align:left}
+.pd-analysis :global(th){background:var(--bg-hover)}
+
+/* ── Demo (inline) ── */
+.pd-demo-frame-wrap{width:100%;background:#0d1117}
+.pd-demo-frame{width:100%;height:55vh;border:none;display:block}
+.pd-demo-note{padding:0.5rem 0.9rem;font-size:0.78rem;color:var(--text-secondary);background:rgba(255,255,255,0.02);border-bottom:1px solid var(--border)}
+.pd-open-btn{font-size:0.68rem;color:var(--accent);text-decoration:none;font-weight:400;border:1px solid var(--accent);border-radius:4px;padding:0.1em 0.5em}
+.pd-open-btn:hover{background:rgba(88,166,255,0.1)}
+/* Demo external */
+.pd-demo-ext{text-align:center;padding:0.5rem}
+.pd-demo-ext-icon{font-size:2rem;margin-bottom:0.3rem}
+.pd-demo-ext p{font-size:0.82rem;color:var(--text-secondary);margin-bottom:0.6rem}
+.pd-demo-na{padding:0.5rem;text-align:center}
+.pd-demo-na p{font-size:0.8rem;color:var(--text-secondary);margin-bottom:0.3rem}
+
+/* ── Code listing ── */
+.pd-code-list{padding:0}
+.pd-code-item{border-bottom:1px solid var(--border);font-size:0.82rem}
+.pd-code-item:last-child{border-bottom:none}
+.pd-code-summary{display:flex;align-items:center;gap:0.4rem;padding:0.5rem 0.9rem;cursor:pointer;transition:background 0.1s;list-style:none}
+.pd-code-summary::-webkit-details-marker{display:none}
+.pd-code-summary:hover{background:var(--bg-hover)}
+.pd-code-lang{font-size:0.6rem;padding:0.1em 0.5em;background:rgba(88,166,255,0.15);color:#58a6ff;border-radius:3px;font-family:var(--font-mono);text-transform:uppercase}
+.pd-code-summary strong{flex:1;font-size:0.82rem}
+.pd-code-meta{font-size:0.65rem;color:var(--text-muted);font-family:var(--font-mono)}
+.pd-code-desc{padding:0 0.9rem 0.3rem;font-size:0.75rem;color:var(--text-secondary);line-height:1.5}
+.pd-code-wrap{position:relative;border-top:1px solid var(--border)}
+.pd-code-copy{position:absolute;top:0.3rem;right:0.4rem;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-muted);cursor:pointer;padding:0.15rem 0.35rem;border-radius:3px;font-size:0.75rem;z-index:2;transition:all 0.15s}
+.pd-code-copy:hover{background:var(--bg-hover);color:var(--text)}
+.pd-code-block{margin:0!important;border:none!important;border-radius:0!important;background:#0d1117!important;max-height:400px;overflow:auto}
+.pd-code-block code{font-size:0.75rem!important;line-height:1.5!important}
+
+/* ── File table ── */
+.pd-file-table{width:100%;border-collapse:collapse;font-size:0.78rem}
+.pd-file-table th,.pd-file-table td{padding:0.3rem 0.5rem;text-align:left;border-bottom:1px solid var(--border)}
+.pd-file-table th{color:var(--text-muted);font-weight:500;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.04em}
+.pd-file-table tr:hover td{background:var(--bg-hover)}
+.pd-file-path code{font-size:0.72rem;color:#58a6ff}
+.pd-file-lines{text-align:center;color:var(--text-muted);font-family:var(--font-mono);width:2.5rem}
+
+/* ── Footer ── */
+.pd-footer-nav{margin-top:1.5rem;display:flex;justify-content:center}
+.pd-btn{display:inline-block;padding:0.4rem 1.2rem;border-radius:6px;font-size:0.82rem;text-decoration:none;cursor:pointer;transition:all 0.15s}
+.pd-btn-back{background:var(--bg-card);border:1px solid var(--border);color:var(--text)}
+.pd-btn-back:hover{background:var(--bg-hover);border-color:var(--accent);color:var(--accent)}
+
+@media(max-width:860px){
+  .pd-demo-frame{height:40vh}
+}
 </style>
