@@ -23,6 +23,13 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
 <Base title="首页" description="童国睿的个人网站" wide={true}>
   <div class="home">
 
+    <!-- Signature Quote — floating art text -->
+    <div class="sig-wrapper">
+      <div class="sig-line sig-line-1">倦随尘絮争朝暮</div>
+      <div class="sig-line sig-line-2">独逐星鸿赴大荒</div>
+      <div class="sig-sub">—— 行路 · 自题</div>
+    </div>
+
     <!-- Hero -->
     <div class="hero-bento">
       <div class="hero-text">
@@ -123,7 +130,47 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
 </Base>
 
 <style>
-  .home { display: flex; flex-direction: column; gap: 2rem; }
+  .home { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  /* ── Signature Quote ── */
+  .sig-wrapper {
+    text-align: center;
+    padding: 2.5rem 1rem 1.5rem;
+    position: relative;
+    animation: sigFadeIn 1.2s ease-out;
+  }
+  @keyframes sigFadeIn {
+    0% { opacity: 0; transform: translateY(12px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .sig-line {
+    font-size: 2.2rem;
+    font-weight: 300;
+    letter-spacing: 6px;
+    line-height: 1.6;
+    background: linear-gradient(135deg, #e6edf3 0%, #58a6ff 40%, #bc8cff 70%, #e6edf3 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none;
+    filter: drop-shadow(0 0 30px rgba(88,166,255,0.15));
+  }
+  .sig-line-1 {
+    animation: sigDrift 6s ease-in-out infinite;
+  }
+  .sig-line-2 {
+    animation: sigDrift 6s ease-in-out infinite 0.3s;
+  }
+  @keyframes sigDrift {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+  .sig-sub {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.6rem;
+    letter-spacing: 3px;
+    font-weight: 300;
+  }
 
   /* ── Hero ── */
   .hero-bento {
@@ -145,18 +192,14 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
     font-size: 2.4rem;
     font-weight: 700;
     margin-bottom: 0.3rem;
-    background: linear-gradient(135deg, #e1e4e8, #8b949e);
+    background: linear-gradient(135deg, #e6edf3, #8b949e);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
   .hero-sub { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.8rem; }
   .hero-desc { font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1.2rem; }
   .hero-links { display: flex; gap: 0.6rem; }
-  .hero-stats {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
+  .hero-stats { display: flex; flex-direction: column; gap: 0.5rem; }
   .hs-item {
     flex: 1;
     background: var(--bg-card);
@@ -170,7 +213,7 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
     transition: box-shadow 0.2s;
   }
   .hs-item:hover { box-shadow: 0 0 16px var(--g); }
-  .hs-num { font-size: 1.6rem; font-weight: 700; color: var(--c); line-height: 1.1; }
+  .hs-num { font-size: 1.5rem; font-weight: 700; color: var(--c); line-height: 1.1; }
   .hs-label { font-size: 0.75rem; color: var(--text-muted); }
 
   /* ── Featured ── */
@@ -189,34 +232,31 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
   .fc-label { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.5rem; }
   .fc-badge { font-size: 0.68rem; padding: 0.15em 0.6em; background: rgba(240,136,62,0.15); color: #f0883e; border-radius: 4px; }
   .fc-date { font-size: 0.75rem; color: var(--text-muted); }
-  .fc-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 0.4rem; }
-  .fc-desc { font-size: 0.88rem; color: var(--text-secondary); }
+  .fc-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 0.4rem; }
+  .fc-desc { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; }
   .fc-tags { display: flex; gap: 0.3rem; margin-top: 0.6rem; flex-wrap: wrap; }
   .fc-tag { font-size: 0.7rem; padding: 0.15em 0.5em; background: var(--bg-hover); border-radius: 4px; color: var(--text-secondary); }
 
-  /* Sections */
   .section-header {
     display: flex; justify-content: space-between; align-items: baseline;
     border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;
   }
-  .section-header h2 { font-size: 1rem; font-weight: 600; margin: 0; }
-  .section-more { font-size: 0.8rem; color: var(--text-muted); text-decoration: none; }
+  .section-header h2 { font-size: 0.95rem; font-weight: 600; margin: 0; }
+  .section-more { font-size: 0.78rem; color: var(--text-muted); text-decoration: none; }
   .section-more:hover { color: var(--accent); }
 
-  /* Notes row */
-  .notes-row { display: flex; flex-direction: column; gap: 0.3rem; }
+  .notes-row { display: flex; flex-direction: column; gap: 0.2rem; }
   .nr-mini {
     display: flex; align-items: center; gap: 0.6rem;
-    padding: 0.5rem 0.8rem; border-radius: 8px;
+    padding: 0.45rem 0.8rem; border-radius: 6px;
     text-decoration: none; color: var(--text);
     transition: background 0.1s;
   }
   .nr-mini:hover { background: var(--bg-hover); }
   .nrm-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--c); flex-shrink: 0; }
-  .nrm-title { font-size: 0.9rem; flex: 1; }
+  .nrm-title { font-size: 0.88rem; flex: 1; }
   .nrm-course { font-size: 0.7rem; color: var(--text-muted); }
 
-  /* Projects mini grid */
   .proj-mini-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -224,7 +264,7 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
   }
   .pm-card {
     display: flex; align-items: center; gap: 0.6rem;
-    padding: 0.7rem 1rem;
+    padding: 0.65rem 1rem;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
@@ -236,11 +276,10 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
   .pm-title { font-size: 0.85rem; flex: 1; }
   .pm-date { font-size: 0.72rem; color: var(--text-muted); }
 
-  /* Hobbies */
   .hobby-row { display: flex; gap: 0.8rem; }
   .hb-mini {
     display: flex; align-items: center; gap: 0.5rem;
-    padding: 0.6rem 1rem;
+    padding: 0.55rem 1rem;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
@@ -249,11 +288,12 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
   }
   .hb-mini:hover { box-shadow: var(--shadow-hover); }
   .hbm-icon { font-size: 1.2rem; }
-  .hbm-title { font-size: 0.88rem; }
+  .hbm-title { font-size: 0.85rem; }
 
   @media (max-width: 640px) {
     .hero-bento { grid-template-columns: 1fr; }
     .proj-mini-grid { grid-template-columns: 1fr; }
     .hobby-row { flex-direction: column; }
+    .sig-line { font-size: 1.4rem; letter-spacing: 4px; }
   }
 </style>
