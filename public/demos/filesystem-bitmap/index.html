@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文件系统仿真 — 位图磁盘可视化</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,'Noto Sans SC',sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh;padding:16px}
+.container{max-width:1100px;margin:0 auto}
+h1{text-align:center;font-size:1.3rem;color:#58a6ff;margin-bottom:2px}
+.sub{text-align:center;color:#8b949e;font-size:0.78rem;margin-bottom:12px}
+.layout{display:grid;grid-template-columns:1fr 280px;gap:12px}
+@media(max-width:800px){.layout{grid-template-columns:1fr}}
+.card{background:#161b22;border:1px solid rgba(255,255,255,0.06);border-radius:12px;overflow:hidden}
+.card-hd{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);font-size:0.78rem;font-weight:600;color:#58a6ff}
+.card-body{padding:10px}
+/* Bitmap grid */
+.bitmap-wrap{overflow-x:auto}
+.bitmap-grid{display:grid;grid-template-columns:repeat(32,14px);gap:1.5px;justify-content:center;padding:4px}
+.bitmap-block{width:14px;height:14px;border-radius:2px;cursor:pointer;transition:all 0.1s;position:relative}
+.bitmap-block:hover{transform:scale(1.4);z-index:2}
+.block-free{background:rgba(255,255,255,0.06)}
+.block-free:hover{background:rgba(255,255,255,0.15)}
+.block-used{background:rgba(88,166,255,0.5)}
+.block-used:hover{background:rgba(88,166,255,0.8)}
+.block-super{background:rgba(248,81,73,0.6)}
+.block-super:hover{background:rgba(248,81,73,0.9)}
+.block-dir{background:rgba(210,153,34,0.5)}
+.block-dir:hover{background:rgba(210,153,34,0.8)}
+.block-mfd{background:rgba(163,113,247,0.5)}
+.block-mfd:hover{background:rgba(163,113,247,0.8)}
+/* Legend */
+.legend{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:6px;font-size:0.65rem;color:#8b949e}
+.legend-item{display:flex;align-items:center;gap:4px}
+.legend-dot{width:10px;height:10px;border-radius:2px}
+/* Sidebar */
+.ctrl-group{margin-bottom:10px}
+.ctrl-group label{font-size:0.68rem;color:#8b949e;display:block;margin-bottom:3px}
+.ctrl-group input,.ctrl-group select{padding:5px 8px;background:#0d1117;border:1px solid rgba(255,255,255,0.1);border-radius:5px;color:#e6edf3;font-size:0.75rem;width:100%}
+.ctrl-group input:focus{border-color:#58a6ff;outline:none}
+.btn{display:inline-block;padding:5px 14px;border-radius:5px;border:none;cursor:pointer;font-size:0.72rem;transition:all 0.15s}
+.btn-primary{background:#58a6ff;color:#fff}
+.btn-primary:hover{background:#79c0ff}
+.btn-secondary{background:#21262d;border:1px solid rgba(255,255,255,0.1);color:#e6edf3}
+.btn-secondary:hover{background:#30363d}
+.btn-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.btn-sm{padding:3px 8px;font-size:0.65rem;background:#21262d;border:1px solid rgba(255,255,255,0.06);border-radius:4px;color:#8b949e;cursor:pointer}
+.btn-sm:hover{color:#e6edf3;background:#30363d}
+.btn-sm.active{background:rgba(88,166,255,0.2);border-color:#58a6ff;color:#58a6ff}
+/* File tree */
+.file-tree{font-size:0.72rem;line-height:1.7;max-height:180px;overflow-y:auto}
+.file-tree .dir{color:#d29922}
+.file-tree .file{color:#8b949e;margin-left:12px}
+.file-tree .selected{color:#58a6ff;font-weight:500}
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px}
+.stat-box{text-align:center;background:#0d1117;border-radius:6px;padding:6px}
+.stat-num{font-size:1rem;font-weight:700;color:#58a6ff}
+.stat-label{font-size:0.6rem;color:#6e7681}
+/* Terminal output */
+.term-out{background:#0a0e14;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:8px;font-family:'Consolas',monospace;font-size:0.68rem;min-height:60px;max-height:100px;overflow-y:auto;color:#8b949e;line-height:1.5;margin-top:6px}
+.term-out .ok{color:#3fb950}
+.term-out .err{color:#f85149}
+.term-out .info{color:#58a6ff}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.bitmap-block.just-updated{animation:blink 0.3s 2}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>💾 文件系统仿真 — 位图磁盘可视化</h1>
+  <p class="sub">Rust + egui 桌面应用的 Web 模拟 · 512 块 × 1024 字节 · 点击位图分配/释放块</p>
+
+  <div class="layout">
+    <!-- 左：位图 -->
+    <div class="card">
+      <div class="card-hd">
+        <span>🗺️ 磁盘位图 (0–511)</span>
+        <span id="blockInfo" style="font-weight:400;font-size:0.65rem;color:#6e7681">悬停查看块号</span>
+      </div>
+      <div class="card-body">
+        <div class="bitmap-wrap">
+          <div class="bitmap-grid" id="bitmapGrid"></div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot block-free"></div>空闲</div>
+          <div class="legend-item"><div class="legend-dot block-used"></div>已分配</div>
+          <div class="legend-item"><div class="legend-dot block-super"></div>引导/超级块</div>
+          <div class="legend-item"><div class="legend-dot block-dir"></div>目录项</div>
+          <div class="legend-item"><div class="legend-dot block-mfd"></div>MFD</div>
+        </div>
+        <div class="stats">
+          <div class="stat-box"><div class="stat-num" id="usedCount">0</div><div class="stat-label">已用块</div></div>
+          <div class="stat-box"><div class="stat-num" id="freeCount">512</div><div class="stat-label">空闲块</div></div>
+          <div class="stat-box"><div class="stat-num" id="usagePct">0%</div><div class="stat-label">使用率</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右：控制面板 -->
+    <div>
+      <div class="card" style="margin-bottom:8px">
+        <div class="card-hd">🎮 操作</div>
+        <div class="card-body">
+          <div class="ctrl-group">
+            <label>文件名</label>
+            <input id="fileName" value="hello.txt">
+          </div>
+          <div class="ctrl-group">
+            <label>文件大小（块数）</label>
+            <input id="fileSize" type="number" value="2" min="1" max="100">
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="createFile()">📄 创建文件</button>
+            <button class="btn btn-secondary" onclick="createDir()">📁 创建目录</button>
+          </div>
+          <div class="btn-row" style="margin-top:4px">
+            <button class="btn-sm" onclick="deleteSelected()">🗑️ 删除选中</button>
+            <button class="btn-sm" onclick="formatDisk()">💣 格式化</button>
+            <button class="btn-sm" onclick="randomFill()">🎲 随机填充</button>
+          </div>
+          <div class="term-out" id="termOutput">[系统就绪] 点击位图查看块信息，或使用上方操作。</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:8px">
+        <div class="card-hd">📂 文件目录</div>
+        <div class="card-body file-tree" id="fileTree">
+          <div class="dir">📁 / (根目录)</div>
+          <div class="dir" style="margin-left:12px">📁 系统</div>
+          <div class="file" style="margin-left:24px">📄 boot.bin</div>
+          <div class="file" style="margin-left:24px">📄 super.block</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const NUM_BLOCKS = 512;
+const BLOCK_SIZE = 1024;
+const BOOT_BLOCK = 0;
+const SUPER_BLOCK = 1;
+const MFD_START = 2;
+const MFD_END = 3;
+const DATA_START = 35;
+
+// Block types
+const T_FREE = 0;
+const T_BOOT = 1;
+const T_SUPER = 2;
+const T_MFD = 3;
+const T_DIR = 4;
+const T_DATA = 5;
+
+let blocks = [];
+let files = [];
+let selectedBlock = -1;
+
+function initDisk() {
+  blocks = new Array(NUM_BLOCKS).fill(T_FREE);
+  blocks[BOOT_BLOCK] = T_BOOT;
+  blocks[SUPER_BLOCK] = T_SUPER;
+  blocks[MFD_START] = T_MFD;
+  blocks[MFD_END] = T_MFD;
+  // Reserve some directory blocks
+  for (let i = 3; i < 6; i++) blocks[i] = T_DIR;
+  // Pre-allocate some files
+  blocks[6] = T_DATA;
+  blocks[7] = T_DATA;
+  blocks[10] = T_DATA;
+  blocks[11] = T_DATA;
+  blocks[12] = T_DATA;
+  // Simulate system files
+  files = [
+    { name: 'boot.bin', type: 'file', start: 6, size: 2, blocks: [6, 7] },
+    { name: 'super.block', type: 'file', start: 10, size: 3, blocks: [10, 11, 12] },
+  ];
+  // Simulate a directory
+  blocks[20] = T_DIR; blocks[21] = T_DIR;
+  files.push({ name: '系统', type: 'dir', start: 20, size: 2, blocks: [20, 21] });
+  renderAll();
+}
+
+function getBlockClass(type) {
+  switch(type) {
+    case T_FREE: return 'block-free';
+    case T_BOOT: return 'block-super';
+    case T_SUPER: return 'block-super';
+    case T_MFD: return 'block-mfd';
+    case T_DIR: return 'block-dir';
+    case T_DATA: return 'block-used';
+    default: return 'block-free';
+  }
+}
+
+function renderBitmap() {
+  const grid = document.getElementById('bitmapGrid');
+  grid.innerHTML = '';
+  for (let i = 0; i < NUM_BLOCKS; i++) {
+    const div = document.createElement('div');
+    div.className = 'bitmap-block ' + getBlockClass(blocks[i]);
+    div.dataset.idx = i;
+    div.addEventListener('click', () => toggleBlock(i));
+    div.addEventListener('mouseenter', () => {
+      const typeNames = ['空闲', '引导块', '超级块', 'MFD', '目录', '数据'];
+      document.getElementById('blockInfo').textContent =
+        `块 ${i} · ${typeNames[blocks[i]]} · ${BLOCK_SIZE} 字节`;
+    });
+    div.title = `块 ${i}`;
+    grid.appendChild(div);
+  }
+  updateStats();
+}
+
+function updateStats() {
+  const used = blocks.filter(b => b !== T_FREE).length;
+  document.getElementById('usedCount').textContent = used;
+  document.getElementById('freeCount').textContent = NUM_BLOCKS - used;
+  document.getElementById('usagePct').textContent = (used / NUM_BLOCKS * 100).toFixed(1) + '%';
+}
+
+function renderFileTree() {
+  const el = document.getElementById('fileTree');
+  let html = '<div class="dir">📁 / (根目录)</div>';
+  // Group by dirs first
+  const dirs = files.filter(f => f.type === 'dir');
+  const fils = files.filter(f => f.type === 'file');
+  for (const d of dirs) {
+    html += `<div class="dir" style="margin-left:12px">📁 ${d.name}</div>`;
+  }
+  for (const f of fils) {
+    html += `<div class="file" style="margin-left:12px">📄 ${f.name} <span style="color:#6e7681;font-size:0.6rem">(${f.size}块)</span></div>`;
+  }
+  el.innerHTML = html;
+}
+
+function renderAll() {
+  renderBitmap();
+  renderFileTree();
+}
+
+function log(msg, type='') {
+  const el = document.getElementById('termOutput');
+  el.innerHTML += `<div class="${type}">${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+function toggleBlock(idx) {
+  if (idx < DATA_START) {
+    log(`⛔ 块 ${idx} 是系统保留区，不可修改`, 'err');
+    return;
+  }
+  if (blocks[idx] === T_FREE) {
+    blocks[idx] = T_DATA;
+    // Visual feedback
+    const cells = document.querySelectorAll('.bitmap-block');
+    cells[idx].classList.add('just-updated');
+    log(`✅ 分配块 ${idx}`, 'ok');
+  } else if (blocks[idx] === T_DATA) {
+    blocks[idx] = T_FREE;
+    log(`↩️ 释放块 ${idx}`, 'info');
+  } else {
+    log(`⛔ 块 ${idx} 是系统/目录块，不可直接释放`, 'err');
+  }
+  renderAll();
+}
+
+function allocateBlocks(count) {
+  const freeBlocks = [];
+  for (let i = DATA_START; i < NUM_BLOCKS; i++) {
+    if (blocks[i] === T_FREE) freeBlocks.push(i);
+    if (freeBlocks.length >= count) break;
+  }
+  if (freeBlocks.length < count) {
+    log(`❌ 磁盘空间不足！需要 ${count} 块，仅剩 ${freeBlocks.length} 块`, 'err');
+    return null;
+  }
+  for (const b of freeBlocks) blocks[b] = T_DATA;
+  renderAll();
+  return freeBlocks;
+}
+
+function createFile() {
+  const name = document.getElementById('fileName').value.trim() || 'untitled';
+  const size = parseInt(document.getElementById('fileSize').value) || 1;
+  if (files.find(f => f.name === name)) {
+    log(`❌ 文件 "${name}" 已存在`, 'err');
+    return;
+  }
+  const blks = allocateBlocks(size);
+  if (!blks) return;
+  files.push({ name, type: 'file', start: blks[0], size, blocks: blks });
+  log(`✅ 创建文件 "${name}" (${size} 块, 起始块 ${blks[0]})`, 'ok');
+  renderAll();
+}
+
+function createDir() {
+  const name = document.getElementById('fileName').value.trim() || 'newdir';
+  if (files.find(f => f.name === name)) {
+    log(`❌ 目录 "${name}" 已存在`, 'err');
+    return;
+  }
+  const blks = allocateBlocks(1);
+  if (!blks) return;
+  blocks[blks[0]] = T_DIR;
+  files.push({ name, type: 'dir', start: blks[0], size: 1, blocks: blks });
+  log(`✅ 创建目录 "${name}"`, 'ok');
+  renderAll();
+}
+
+function deleteSelected() {
+  const fileToDelete = files[files.length - 1];
+  if (!fileToDelete) {
+    log('ℹ️ 没有可删除的文件', 'info');
+    return;
+  }
+  for (const b of fileToDelete.blocks) {
+    if (b >= DATA_START) blocks[b] = T_FREE;
+  }
+  files.pop();
+  log(`🗑️ 删除 "${fileToDelete.name}"`, 'info');
+  renderAll();
+}
+
+function formatDisk() {
+  if (!confirm('确定格式化磁盘？所有数据将被清除。')) return;
+  for (let i = 0; i < NUM_BLOCKS; i++) blocks[i] = T_FREE;
+  blocks[BOOT_BLOCK] = T_BOOT;
+  blocks[SUPER_BLOCK] = T_SUPER;
+  blocks[MFD_START] = T_MFD;
+  blocks[MFD_END] = T_MFD;
+  files = [];
+  log('💣 磁盘已格式化', 'err');
+  renderAll();
+}
+
+function randomFill() {
+  const count = Math.floor(Math.random() * 60) + 10;
+  let allocated = 0;
+  for (let i = DATA_START; i < NUM_BLOCKS && allocated < count; i++) {
+    if (blocks[i] === T_FREE && Math.random() > 0.3) {
+      blocks[i] = T_DATA;
+      allocated++;
+    }
+  }
+  log(`🎲 随机分配了 ${allocated} 个数据块`, 'info');
+  renderAll();
+}
+
+window.onload = initDisk;
+</script>
+</body>
+</html>
