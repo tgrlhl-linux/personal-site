@@ -1,0 +1,495 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2025-06-05T10:00:00.000Z" agent="drawio-gen" etag="main" version="21.6.5" type="device">
+  <diagram id="8719139405c7404b" name="图1：游客游玩业务流程图">
+    <mxGraphModel dx="800" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="t" parent="1" value="图1 游客游玩业务流程图" style="text;html=1;align=center;verticalAlign=middle;fontStyle=1;fontSize=16;" vertex="1">
+          <mxGeometry x="800" y="5" width="500" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="sw1" parent="1" value="游客（C端）" style="swimlane;whiteSpace=wrap;html=1;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;startSize=40;fillColor=#E8F4FD;strokeColor=#5B9BD5;" vertex="1">
+          <mxGeometry x="30" y="50" width="2000" height="280" as="geometry"/>
+        </mxCell>
+        <mxCell id="sw2" parent="1" value="系统" style="swimlane;whiteSpace=wrap;html=1;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;startSize=40;fillColor=#E8F4FD;strokeColor=#5B9BD5;" vertex="1">
+          <mxGeometry x="30" y="360" width="2000" height="280" as="geometry"/>
+        </mxCell>
+        <mxCell id="sw3" parent="1" value="NPC/DM" style="swimlane;whiteSpace=wrap;html=1;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;startSize=40;fillColor=#E8F4FD;strokeColor=#5B9BD5;" vertex="1">
+          <mxGeometry x="30" y="670" width="2000" height="200" as="geometry"/>
+        </mxCell>
+        <!-- 游客 row 1 -->
+        <mxCell id="s1" parent="1" value="浏览剧本列表" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="80" y="110" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2" parent="1" value="选择剧本与场次" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="330" y="110" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3" parent="1" value="选择角色" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="580" y="110" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4" parent="1" value="在线支付" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="830" y="110" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="s5" parent="1" value="扫码入场" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="1080" y="110" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="s6" parent="1" value="AR探索打卡点" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="1330" y="110" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <!-- 游客 row 2 -->
+        <mxCell id="s7" parent="1" value="提交线索答案" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="80" y="220" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="s8" parent="1" value="与NPC互动" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="480" y="220" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="s9" parent="1" value="达成结局条件" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="900" y="220" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="s10" parent="1" value="评价与分享" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="1220" y="220" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <!-- 系统 row 1 -->
+        <mxCell id="ss1" parent="1" value="返回剧本信息" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="80" y="415" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="ss2" parent="1" value="检测余量" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="330" y="415" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="ss3" parent="1" value="锁定角色" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="580" y="415" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="ss4" parent="1" value="生成订单(已支付)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="830" y="415" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="ss5" parent="1" value="核验订单,激活进度" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="1080" y="415" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="ss6" parent="1" value="条件满足→发放线索" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="1330" y="415" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <!-- 系统 row 2 -->
+        <mxCell id="ss7" parent="1" value="答案正确→更新进度" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="80" y="525" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="ss8" parent="1" value="解锁结局,生成报告" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="900" y="525" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="ss9" parent="1" value="保存评价数据" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="1220" y="525" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <!-- NPC -->
+        <mxCell id="n1" parent="1" value="通知本场次游客" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="1080" y="720" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="n2" parent="1" value="NPC核验游客&#xa;标记互动完成" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="480" y="720" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="n3" parent="1" value="获得关键道具" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="700" y="720" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <!-- 分隔线 -->
+        <mxCell id="div" parent="1" value="▼ 到达景区现场 ▼" style="text;html=1;align=center;verticalAlign=middle;fillColor=#FFF3CD;strokeColor=#FFC107;fontStyle=1;fontSize=11;rounded=1;" vertex="1">
+          <mxGeometry x="1040" y="335" width="180" height="25" as="geometry"/>
+        </mxCell>
+        <!-- 纵向连接线：游客→系统 -->
+        <mxCell id="es1ss1" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s1" target="ss1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="es2ss2" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s2" target="ss2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="es3ss3" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s3" target="ss3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="es4ss4" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s4" target="ss4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="es5ss5" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s5" target="ss5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="es6ss6" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s6" target="ss6">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="es7ss7" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s7" target="ss7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="es9ss8" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s9" target="ss8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="es10ss9" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s10" target="ss9">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- 横向连接线：游客 row 1 -->
+        <mxCell id="hts1s2" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="s1" target="s2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hts2s3" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="s2" target="s3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hts3s4" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="s3" target="s4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hts4s5" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="s4" target="s5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hts5s6" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="s5" target="s6">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- 横向连接线：游客 row 2 -->
+        <mxCell id="hts6s7" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s6" target="s7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hts7s8" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="s7" target="s8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hts8s9" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="s8" target="s9">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hts9s10" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="s9" target="s10">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- 横向连接线：系统 row 1 -->
+        <mxCell id="hssss1ss2" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="ss1" target="ss2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hssss2ss3" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="ss2" target="ss3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hssss3ss4" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="ss3" target="ss4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hssss4ss5" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="ss4" target="ss5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hssss5ss6" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="ss5" target="ss6">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- 横向连接线：系统 row 2 -->
+        <mxCell id="hssss6ss7" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="ss6" target="ss7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hssss7ss8" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="ss7" target="ss8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hssss8ss9" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="ss8" target="ss9">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- 跨泳道连接线 -->
+        <mxCell id="e_ss5_n1" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="ss5" target="n1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_s8_n2" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s8" target="n2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_n2_n3" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="n2" target="n3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_n2_ss7" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#5B9BD5;strokeWidth=1.5;curved=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" source="n2" target="ss7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="036e3fc531964b88" name="图2：运营管理业务流程图">
+    <mxGraphModel dx="800" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="t" parent="1" value="图2 运营管理业务流程图" style="text;html=1;align=center;verticalAlign=middle;fontStyle=1;fontSize=16;" vertex="1">
+          <mxGeometry x="800" y="5" width="500" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="sw1" parent="1" value="运营人员" style="swimlane;whiteSpace=wrap;html=1;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;startSize=40;fillColor=#E8F5E9;strokeColor=#4CAF50;" vertex="1">
+          <mxGeometry x="30" y="50" width="2000" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="sw2" parent="1" value="系统" style="swimlane;whiteSpace=wrap;html=1;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;startSize=40;fillColor=#E8F5E9;strokeColor=#4CAF50;" vertex="1">
+          <mxGeometry x="30" y="300" width="2000" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="sw3" parent="1" value="NPC/DM" style="swimlane;whiteSpace=wrap;html=1;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;startSize=40;fillColor=#E8F5E9;strokeColor=#4CAF50;" vertex="1">
+          <mxGeometry x="30" y="550" width="2000" height="150" as="geometry"/>
+        </mxCell>
+        <!-- 运营人员 row 1：配置上架 -->
+        <mxCell id="o1" parent="1" value="配置剧本信息" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4CAF50;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="80" y="110" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="o2" parent="1" value="配置角色与线索链" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4CAF50;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="300" y="110" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="o3" parent="1" value="配置AR打卡点位" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4CAF50;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="520" y="110" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="o4" parent="1" value="创建场次与排期" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4CAF50;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="740" y="110" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="o5" parent="1" value="NPC排班" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4CAF50;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="960" y="110" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="o6" parent="1" value="上架剧本与场次" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4CAF50;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="1180" y="110" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <!-- 运营人员 row 2：运营监控 -->
+        <mxCell id="o7" parent="1" value="查看运行监控" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F8E9;strokeColor=#66BB6A;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="80" y="195" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="o8" parent="1" value="查看运营报表" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F8E9;strokeColor=#66BB6A;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="440" y="195" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="o9" parent="1" value="数据分析优化" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F8E9;strokeColor=#66BB6A;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="800" y="195" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="o10" parent="1" value="调整剧本与排期" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F8E9;strokeColor=#66BB6A;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="1120" y="195" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <!-- 系统 row 1 -->
+        <mxCell id="so1" parent="1" value="保存剧本基础信息" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4CAF50;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="80" y="355" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="so2" parent="1" value="保存角色、线索数据" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4CAF50;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="300" y="355" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="so3" parent="1" value="绑定点位与AR内容" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4CAF50;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="520" y="355" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="so4" parent="1" value="生成场次记录" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4CAF50;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="740" y="355" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="so5" parent="1" value="发送排班通知" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4CAF50;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="960" y="355" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="so6" parent="1" value="更新状态为上架" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4CAF50;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="1180" y="355" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <!-- 系统 row 2：监控报表 -->
+        <mxCell id="so7" parent="1" value="实时展示各场次状态" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F8E9;strokeColor=#66BB6A;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="80" y="440" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="so8" parent="1" value="汇总订单、游玩数据" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F8E9;strokeColor=#66BB6A;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="440" y="440" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="so9" parent="1" value="生成热度排行、卡关分析" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F8E9;strokeColor=#66BB6A;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="800" y="440" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="so10" parent="1" value="更新配置信息" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F8E9;strokeColor=#66BB6A;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="1120" y="440" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <!-- NPC -->
+        <mxCell id="n1" parent="1" value="接收排班通知" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4CAF50;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="960" y="610" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <!-- 分隔线 -->
+        <mxCell id="div" parent="1" value="▼ 运营中 ▼" style="text;html=1;align=center;verticalAlign=middle;fillColor=#FFF3CD;strokeColor=#FFC107;fontStyle=1;fontSize=11;rounded=1;" vertex="1">
+          <mxGeometry x="930" y="275" width="160" height="25" as="geometry"/>
+        </mxCell>
+        <!-- 纵向连接：上架流程 -->
+        <mxCell id="fo1" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="o1" target="so1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="fo2" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="o2" target="so2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="fo3" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="o3" target="so3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="fo4" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="o4" target="so4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="fo5" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="o5" target="so5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="fo6" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="o6" target="so6">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- 纵向连接：监控流程 -->
+        <mxCell id="f2o7" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="o7" target="so7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2o8" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="o8" target="so8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2o9" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="o9" target="so9">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2o10" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="o10" target="so10">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- 横向连接：上架流程 row 1 -->
+        <mxCell id="hoo1" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="o1" target="o2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hoo2" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="o2" target="o3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hoo3" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="o3" target="o4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hoo4" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="o4" target="o5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hoo5" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="o5" target="o6">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- 横向连接：监控流程 row 1 -->
+        <mxCell id="ho2o7" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="o7" target="o8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ho2o8" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="o8" target="o9">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ho2o9" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="o9" target="o10">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- 横向连接：系统上架 row 1 -->
+        <mxCell id="hsoso1" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="so1" target="so2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hsoso2" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="so2" target="so3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hsoso3" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="so3" target="so4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hsoso4" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="so4" target="so5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hsoso5" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="so5" target="so6">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- 横向连接：系统监控 row 2 -->
+        <mxCell id="hso2so7" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="so7" target="so8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hso2so8" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="so8" target="so9">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="hso2so9" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="so9" target="so10">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- 跨泳道连接 -->
+        <mxCell id="e_npc" parent="1" value="" style="endArrow=blockThin;endFill=1;strokeColor=#4CAF50;strokeWidth=1.5;curved=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="so5" target="n1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="4adbca820b5e4642" name="图3：系统功能结构树图">
+    <mxGraphModel dx="800" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2800" pageHeight="600" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="t" parent="1" value="图3 系统功能结构树图" style="text;html=1;align=center;verticalAlign=middle;fontStyle=1;fontSize=16;" vertex="1">
+          <mxGeometry x="1150" y="5" width="500" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="root" parent="1" value="景区沉浸式剧本杀&#xa;AR导览运营管理系统" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1A237E;fontColor=#FFFFFF;strokeColor=#1A237E;fontSize=14;fontStyle=1;align=center;verticalAlign=middle;spacing=4;" vertex="1">
+          <mxGeometry x="1195" y="55" width="280" height="55" as="geometry"/>
+        </mxCell>
+        <!-- 三大模块 -->
+        <mxCell id="m1" parent="1" value="游客端小程序" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="330" y="175" width="200" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="m2" parent="1" value="运营管理后台" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="1200" y="175" width="200" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="m3" parent="1" value="现场服务端NPC端" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="2070" y="175" width="200" height="48" as="geometry"/>
+        </mxCell>
+        <!-- 根→三大模块 -->
+        <mxCell id="erm1" parent="1" value="" style="edgeStyle=elbow;elbow=vertical;endArrow=none;strokeColor=#1565C0;strokeWidth=2;rounded=0;exitX=0.17;exitY=1;entryX=0.5;entryY=0;" edge="1" source="root" target="m1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="erm2" parent="1" value="" style="edgeStyle=elbow;elbow=vertical;endArrow=none;strokeColor=#1565C0;strokeWidth=2;rounded=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="root" target="m2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="erm3" parent="1" value="" style="edgeStyle=elbow;elbow=vertical;endArrow=none;strokeColor=#1565C0;strokeWidth=2;rounded=0;exitX=0.83;exitY=1;entryX=0.5;entryY=0;" edge="1" source="root" target="m3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- 游客端子功能 -->
+        <mxCell id="m1_0" parent="1" value="剧本浏览与选择" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64B5F6;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="60" y="300" width="150" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="em1_0" parent="1" value="" style="edgeStyle=elbow;elbow=vertical;endArrow=none;strokeColor=#1565C0;strokeWidth=2;rounded=0;exitX=0.05;exitY=1;entryX=0.5;entryY=0;" edge="1" source="m1" target="m1_0">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="m1_1" parent="1" value="在线购票与支付" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64B5F6;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="250" y="300" width="150" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="em1_1" parent="1" value="" style="edgeStyle=elbow;elbow=vertical;endArrow=none;strokeColor=#1565C0;strokeWidth=2;rounded=0;exitX=0.275;exitY=1;entryX=0.5;entryY=0;" edge="1" source="m1" target="m1_1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="m1_2" parent="1" value="角色领取" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64B5F6;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="440" y="300" width="150" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="em1_2" parent="1" value="" style="edgeStyle=elbow;elbow=vertical;endArrow=none;strokeColor=#1565C0;strokeWidth=2;rounded=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="m1" target="m1_2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="m1_3" parent="1" value="AR导览打卡" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64B5F6;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="630" y="300" width="150" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="em1_3" parent="1" value="" style="edgeStyle=elbow;elbow=vertical;endArrow=none;strokeColor=#1565C0;strokeWidth=2;rounded=0;exitX=0.725;exitY=1;entryX=0.5;entryY=0;" edge="1" source="m1" target="m1_3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="m1_4" parent="1" value="评价分享" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64B5F6;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="820" y="300" width="150" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="em1_4" parent="1" value="" style="edgeStyle=elbow;elbow=vertical;endArrow=none;strokeColor=#1565C0;strokeWidth=2;rounded=0;exitX=0.95;exitY=1;entryX=0.5;entryY=0;" edge="1" source="m1" target="m1_4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- 运营后台子功能 -->
+        <mxCell id="m2_0" parent="1" value="剧本配置与上架" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64B5F6;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="975" y="300" width="150" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="em2_0" parent="1" value="" style="edgeStyle=elbow;elbow=vertical;endArrow=none;strokeColor=#1565C0;strokeWidth=2;rounded=0;exitX=0.05;exitY=1;entryX=0.5;entryY=0;" edge="1" source="m2" target="m2_0">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="m2_1" parent="1" value="场次管理与调度" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64B5F6;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="1160" y="300" width="150" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="em2_1" parent="1" value="" style="edgeStyle=elbow;elbow=vertical;endArrow=none;strokeColor=#1565C0;strokeWidth=2;rounded=0;exitX=0.275;exitY=1;entryX=0.5;entryY=0;" edge="1" source="m2" target="m2_1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="m2_2" parent="1" value="NPC排班管理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64B5F6;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="1350" y="300" width="150" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="em2_2" parent="1" value="" style="edgeStyle=elbow;elbow=vertical;endArrow=none;strokeColor=#1565C0;strokeWidth=2;rounded=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="m2" target="m2_2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="m2_3" parent="1" value="数据统计与报表" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64B5F6;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="1540" y="300" width="150" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="em2_3" parent="1" value="" style="edgeStyle=elbow;elbow=vertical;endArrow=none;strokeColor=#1565C0;strokeWidth=2;rounded=0;exitX=0.725;exitY=1;entryX=0.5;entryY=0;" edge="1" source="m2" target="m2_3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="m2_4" parent="1" value="异常告警处理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64B5F6;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="1730" y="300" width="150" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="em2_4" parent="1" value="" style="edgeStyle=elbow;elbow=vertical;endArrow=none;strokeColor=#1565C0;strokeWidth=2;rounded=0;exitX=0.95;exitY=1;entryX=0.5;entryY=0;" edge="1" source="m2" target="m2_4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <!-- NPC端子功能 -->
+        <mxCell id="m3_0" parent="1" value="本场任务查看" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64B5F6;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="1950" y="300" width="150" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="em3_0" parent="1" value="" style="edgeStyle=elbow;elbow=vertical;endArrow=none;strokeColor=#1565C0;strokeWidth=2;rounded=0;exitX=0.125;exitY=1;entryX=0.5;entryY=0;" edge="1" source="m3" target="m3_0">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="m3_1" parent="1" value="游客进度核验" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64B5F6;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="2130" y="300" width="150" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="em3_1" parent="1" value="" style="edgeStyle=elbow;elbow=vertical;endArrow=none;strokeColor=#1565C0;strokeWidth=2;rounded=0;exitX=0.375;exitY=1;entryX=0.5;entryY=0;" edge="1" source="m3" target="m3_1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="m3_2" parent="1" value="线索发放确认" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64B5F6;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="2310" y="300" width="150" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="em3_2" parent="1" value="" style="edgeStyle=elbow;elbow=vertical;endArrow=none;strokeColor=#1565C0;strokeWidth=2;rounded=0;exitX=0.625;exitY=1;entryX=0.5;entryY=0;" edge="1" source="m3" target="m3_2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="m3_3" parent="1" value="互动任务记录与上报" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64B5F6;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="2490" y="300" width="150" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="em3_3" parent="1" value="" style="edgeStyle=elbow;elbow=vertical;endArrow=none;strokeColor=#1565C0;strokeWidth=2;rounded=0;exitX=0.875;exitY=1;entryX=0.5;entryY=0;" edge="1" source="m3" target="m3_3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

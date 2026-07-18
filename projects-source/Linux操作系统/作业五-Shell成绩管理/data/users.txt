@@ -1,0 +1,8 @@
+# 用户文件  格式: 用户名|密码|角色(admin/teacher/student)|数据范围
+# admin   → *                          （全部数据）
+# teacher → 计科1801,计科1802          （管辖班级，逗号分隔）
+# student → 2018182811                 （本人学号）
+admin|admin123|admin|*
+zhanglao|123456|teacher|计科1801,计科1802
+wanglao|123456|teacher|软件1801,软件1802
+tongguorui|123456|student|2018182811

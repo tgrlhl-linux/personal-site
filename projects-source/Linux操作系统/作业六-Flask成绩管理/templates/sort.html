@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>排序显示</h1>
+<div class="card" style="padding:20px;margin-bottom:20px;">
+<form method="POST">
+    <div class="form-inline">
+        <div class="form-group">
+            <label>排序依据</label>
+            <select name="sort_by" onchange="toggleSubject(this.value)">
+                <option value="total" {{ 'selected' if sort_by == 'total' }}>总分</option>
+                <option value="average" {{ 'selected' if sort_by == 'average' }}>平均分</option>
+                <option value="subject" {{ 'selected' if sort_by == 'subject' }}>指定科目</option>
+            </select>
+        </div>
+        <div class="form-group" id="subject-select" style="{% if sort_by != 'subject' %}display:none{% endif %}">
+            <label>选择科目</label>
+            <select name="subject_id">{% for s in subjects %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}</select>
+        </div>
+        <div class="form-group">
+            <label>排序方式</label>
+            <select name="order">
+                <option value="desc" {{ 'selected' if order == 'desc' }}>降序（高→低）</option>
+                <option value="asc" {{ 'selected' if order == 'asc' }}>升序（低→高）</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">排序</button>
+    </div>
+</form>
+</div>
+{% if results %}
+<div class="card" style="padding:20px;">
+<h2>{{ results.title }}</h2>
+<div class="table-container">
+<table class="table">
+    <thead><tr><th>#</th><th>学号</th><th>姓名</th><th>班级</th>{% if results.type == 'subject' %}<th>成绩</th><th>数值</th>{% elif results.type == 'total' %}<th>总分</th><th>科目数</th><th>平均分</th>{% elif results.type == 'average' %}<th>平均分</th><th>总分</th><th>科目数</th>{% endif %}</tr></thead>
+    <tbody>{% for r in results.rows %}<tr><td>{{ loop.index }}</td><td><a href="{{ url_for('student_detail', student_id=r.id) }}">{{ r.id }}</a></td><td>{{ r.name }}</td><td>{{ r.class_name }}</td>{% if results.type == 'subject' %}<td>{{ r.raw_score or '-' }}</td><td>{{ '%.0f'|format(r.numeric_score) if r.numeric_score is not none else '-' }}</td>{% elif results.type == 'total' %}<td><strong>{{ r.total }}</strong></td><td>{{ r.cnt }}</td><td>{{ r.avg }}</td>{% elif results.type == 'average' %}<td><strong>{{ r.avg }}</strong></td><td>{{ r.total }}</td><td>{{ r.cnt }}</td>{% endif %}</tr>{% endfor %}</tbody>
+</table></div></div>
+{% endif %}
+<script>function toggleSubject(v){document.getElementById('subject-select').style.display=(v==='subject')?'block':'none';}</script>
+{% endblock %}

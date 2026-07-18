@@ -1,0 +1,50 @@
+# Virtual Memory Test Data
+# Format: logical addresses, one per line
+# This sequence is designed to show differences between LRU and Second Chance
+
+# Phase 1: Fill initial pages (1-17)
+300   # page 1
+600   # page 2
+900   # page 3
+1200  # page 4
+1500  # page 5
+1800  # page 6
+2100  # page 7
+2400  # page 8
+2700  # page 9
+3000  # page 10
+3300  # page 11
+3600  # page 13
+3900  # page 14
+4200  # page 16
+4500  # page 17
+4800  # page 18
+5100  # page 19
+
+# Phase 2: Revisit some pages to create locality
+300   # page 1
+600   # page 2
+900   # page 3
+1200  # page 4
+1500  # page 5
+300   # page 1
+600   # page 2
+900   # page 3
+1200  # page 4
+1500  # page 5
+
+# Phase 3: Introduce new pages that force replacement
+5632  # page 22
+6144  # page 24
+6656  # page 26
+7168  # page 28
+7680  # page 30
+
+# Phase 4: More new pages and revisit old ones
+8192  # page 32
+300   # page 1
+600   # page 2
+8704  # page 34
+300   # page 1
+600   # page 2
+9216  # page 36

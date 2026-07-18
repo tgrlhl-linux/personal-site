@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>用户管理 <small>管理员专用</small></h1>
+<div class="card" style="padding:20px;margin-bottom:20px;">
+    <h2>添加用户</h2>
+    <form method="POST" action="{{ url_for('user_add') }}">
+        <div class="form-row">
+            <div class="form-group">
+                <label>用户名</label>
+                <input type="text" name="username" placeholder="请输入用户名" required>
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" name="password" placeholder="请输入密码" required>
+            </div>
+            <div class="form-group">
+                <label>角色</label>
+                <select name="role" id="role-select" onchange="toggleScopeField()">
+                    <option value="student">学生</option>
+                    <option value="teacher">教师</option>
+                    <option value="admin">管理员</option>
+                </select>
+            </div>
+            <div class="form-group" id="scope-field" style="display:block;">
+                <label>数据范围 <span style="color:red;">*</span></label>
+                <input type="text" name="scope" id="scope-input" placeholder="student: 输入学号 | teacher: 班级1,班级2" required>
+                <span class="text-muted" id="scope-hint">学生 → 填本人学号，如 2018182811</span>
+            </div>
+            <div class="form-group" style="align-self:flex-end;">
+                <button type="submit" class="btn btn-primary">添加</button>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="card" style="padding:20px;">
+    <h2>现有用户</h2>
+    <div class="table-container">
+    <table class="table">
+        <thead><tr><th>ID</th><th>用户名</th><th>角色</th><th>数据范围</th><th>操作</th></tr></thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td>{{ u.id }}</td>
+                <td>{{ u.username }}</td>
+                <td><span class="role-tag role-{{ u.role }}">{{ u.role }}</span></td>
+                <td>{{ u.scope or '*' }}</td>
+                <td>
+                    {% if u.username != 'admin' %}
+                    <form method="POST" action="{{ url_for('user_delete', user_id=u.id) }}" style="display:inline" onsubmit="return confirm('确认删除 {{ u.username }}？');">
+                        <button type="submit" class="btn-sm btn-danger">删除</button>
+                    </form>
+                    {% else %}<span class="text-muted">不可删除</span>{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+<script>
+function toggleScopeField() {
+    var role = document.getElementById('role-select').value;
+    var field = document.getElementById('scope-field');
+    var input = document.getElementById('scope-input');
+    var hint = document.getElementById('scope-hint');
+    if (role === 'admin') {
+        field.style.display = 'none';
+        input.required = false;
+    } else {
+        field.style.display = 'block';
+        input.required = true;
+        if (role === 'student') {
+            hint.textContent = '学生 → 填本人学号，如 2018182811';
+            input.placeholder = '如 2018182811';
+        } else {
+            hint.textContent = '教师 → 填管辖班级，用逗号分隔，如 计科1801,计科1802';
+            input.placeholder = '如 计科1801,计科1802';
+        }
+    }
+}
+// 页面加载时执行一次
+toggleScopeField();
+</script>
+{% endblock %}

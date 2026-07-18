@@ -1,0 +1,19 @@
+{
+  "name": "narrativeanalysis",
+  "version": "1.0.0",
+  "description": "**课程：** 大数据与数据思维 · 期末大作业 **成员：** 童国睿（数据管道/API/文档）、杨超越（MR/集群）、何锦辉（前端）、李景颖（算法/优化）",
+  "main": "generate_doc.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "docx": "^9.7.1"
+  }
+}

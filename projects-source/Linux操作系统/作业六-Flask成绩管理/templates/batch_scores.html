@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>批量录入成绩 <small>★ 推荐：考完试给全班登分</small></h1>
+<div class="card" style="padding:20px;margin-bottom:20px;">
+<form method="POST">
+    <div class="form-row">
+        <div class="form-group">
+            <label>选择科目</label>
+            <select name="subject_id" required>
+                <option value="">-- 请选择 --</option>
+                {% for s in subjects %}
+                <option value="{{ s.id }}" {% if selected_subject == s.id %}selected{% endif %}>{{ s.name }} [{{ s.credit }}学分]</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>成绩数据</label>
+        <p class="text-muted" style="margin:4px 0 8px 0;">
+            每行输入「<strong>学号 成绩</strong>」（空格分隔），支持后4位短学号（自动补全 20181828）
+        </p>
+        <textarea name="lines" rows="10" style="width:100%;font-family:monospace;padding:8px;" placeholder="示例：
+2018182811 85
+2812 90
+2813 78
+2815 92">{% if request.form.get('lines') %}{{ request.form['lines'] }}{% endif %}</textarea>
+    </div>
+    <div class="form-actions">
+        <button type="submit" name="action" value="preview" class="btn btn-primary">预览</button>
+    </div>
+</form>
+</div>
+
+{% if preview %}
+<div class="card" style="padding:20px;margin-bottom:20px;">
+    <h2>录入预览</h2>
+    {% if preview.errors %}
+    <div class="alert alert-error">
+        <strong>格式错误：</strong>
+        <ul>{% for e in preview.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+    </div>
+    {% endif %}
+    <p>科目：<strong>{{ preview.subject }}</strong> | 有效记录：<strong>{{ preview.total }}</strong> 条</p>
+    <div class="table-container">
+    <table class="table">
+        <thead><tr><th>学号</th><th>姓名</th><th>当前值</th><th>新值</th></tr></thead>
+        <tbody>
+            {% for e in preview.entries %}
+            <tr>
+                <td>{{ e.sid }}</td>
+                <td>{{ e.name }}</td>
+                <td>{{ e.current or '(空)' }}</td>
+                <td><strong>{{ e.score }}</strong></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="empty">无有效记录</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% if preview.entries %}
+    <form method="POST" style="margin-top:12px;">
+        <input type="hidden" name="subject_id" value="{{ selected_subject }}">
+        <input type="hidden" name="lines" value="{{ request.form.get('lines', '') }}">
+        <button type="submit" name="action" value="confirm" class="btn btn-primary"
+                onclick="return confirm('确认录入以上 {{ preview.total }} 条成绩？');">
+            ✅ 确认录入
+        </button>
+        <a href="{{ url_for('batch_scores') }}" class="btn">重新输入</a>
+    </form>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if result %}
+<div class="card" style="padding:20px;">
+    <div class="alert alert-success">
+        <strong>录入完成！</strong> 科目「{{ result.subject }}」: 成功 {{ result.success }} 条
+        {% if result.fail %}(失败 {{ result.fail }} 条){% endif %}
+    </div>
+    <a href="{{ url_for('batch_scores') }}" class="btn">继续录入</a>
+</div>
+{% endif %}
+{% endblock %}

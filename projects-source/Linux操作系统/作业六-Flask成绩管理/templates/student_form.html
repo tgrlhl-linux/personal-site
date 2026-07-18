@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+    <h1>{% if mode == 'edit' %}编辑{% else %}添加{% endif %}学生</h1>
+</div>
+<div class="card" style="padding:20px;">
+<form method="POST">
+    <div class="form-row">
+        <div class="form-group">
+            <label>学号</label>
+            {% if mode == 'edit' %}
+            <input type="text" value="{{ student.id }}" disabled>
+            {% else %}
+            <input type="text" name="sid" placeholder="如 2018182811" required>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label>姓名</label>
+            <input type="text" name="name" value="{{ student.name if mode == 'edit' else '' }}" required>
+        </div>
+        <div class="form-group">
+            <label>班级</label>
+            <select name="class_id">
+                {% for c in classes %}
+                <option value="{{ c.id }}" {% if mode == 'edit' and student.class_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <h2>各科成绩</h2>
+    <div class="scores-grid">
+        {% for subj in subjects %}
+        <div class="score-item">
+            <label>{{ subj.name }} [{{ subj.credit }}学分]</label>
+            <input type="text" name="score_{{ subj.id }}" value="{{ scores_data.get(subj.id, '') if mode == 'edit' else '' }}" placeholder="成绩">
+        </div>
+        {% endfor %}
+    </div>
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">{% if mode == 'edit' %}保存修改{% else %}添 加{% endif %}</button>
+        <a href="{{ url_for('student_list') }}" class="btn">取消</a>
+    </div>
+</form>
+</div>
+{% endblock %}

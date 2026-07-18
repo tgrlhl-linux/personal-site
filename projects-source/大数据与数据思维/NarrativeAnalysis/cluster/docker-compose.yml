@@ -1,0 +1,121 @@
+version: "3.8"
+
+services:
+  master:
+    build:
+      context: ..
+      dockerfile: cluster/Dockerfile
+    container_name: master
+    hostname: master
+    ports:
+      - "9870:9870"   # HDFS NameNode Web UI
+      - "8088:8088"   # YARN ResourceManager Web UI
+      - "9000:9000"   # HDFS NameNode RPC
+    environment:
+      - HADOOP_HOME=/opt/hadoop
+      - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
+    volumes:
+      - hadoop_master_data:/opt/hadoop/dfs
+      - ../data:/data
+      - ../mr-jobs:/mr-jobs
+    command: >
+      bash -c "
+        service ssh start &&
+        hdfs namenode -format -force -nonInteractive 2>/dev/null;
+        start-dfs.sh &&
+        start-yarn.sh &&
+        tail -f /dev/null
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9870"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - hadoop-net
+
+  slave1:
+    build:
+      context: ..
+      dockerfile: cluster/Dockerfile
+    container_name: slave1
+    hostname: slave1
+    environment:
+      - HADOOP_HOME=/opt/hadoop
+      - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
+    volumes:
+      - hadoop_slave1_data:/opt/hadoop/dfs
+    command: >
+      bash -c "
+        service ssh start &&
+        echo 'master' > /opt/hadoop/etc/hadoop/workers &&
+        echo 'slave1' >> /opt/hadoop/etc/hadoop/workers &&
+        echo 'slave2' >> /opt/hadoop/etc/hadoop/workers &&
+        hdfs datanode -regular 2>&1 &
+        yarn nodemanager 2>&1 &
+        tail -f /dev/null
+      "
+    depends_on:
+      - master
+    networks:
+      - hadoop-net
+
+  slave2:
+    build:
+      context: ..
+      dockerfile: cluster/Dockerfile
+    container_name: slave2
+    hostname: slave2
+    environment:
+      - HADOOP_HOME=/opt/hadoop
+      - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
+    volumes:
+      - hadoop_slave2_data:/opt/hadoop/dfs
+    command: >
+      bash -c "
+        service ssh start &&
+        hdfs datanode -regular 2>&1 &
+        yarn nodemanager 2>&1 &
+        tail -f /dev/null
+      "
+    depends_on:
+      - master
+    networks:
+      - hadoop-net
+
+  # ============================================================
+  # HBase (Standalone) + ZooKeeper
+  # 对应设计方案第五章 5.2 HBase 表设计
+  # 如需使用 HBase，取消下方注释并确保 host 有足够内存
+  # ============================================================
+  # zookeeper:
+  #   image: zookeeper:3.8
+  #   container_name: zookeeper
+  #   hostname: zookeeper
+  #   ports:
+  #     - "2181:2181"
+  #   networks:
+  #     - hadoop-net
+  #
+  # hbase-master:
+  #   image: harisekhon/hbase:2.2
+  #   container_name: hbase-master
+  #   hostname: hbase-master
+  #   ports:
+  #     - "16010:16010"  # HBase Master Web UI
+  #     - "9090:9090"    # HBase Thrift
+  #   environment:
+  #     - HBASE_ZOOKEEPER_QUORUM=zookeeper
+  #   depends_on:
+  #     - zookeeper
+  #   networks:
+  #     - hadoop-net
+
+volumes:
+  hadoop_master_data:
+  hadoop_slave1_data:
+  hadoop_slave2_data:
+
+networks:
+  hadoop-net:
+    driver: bridge

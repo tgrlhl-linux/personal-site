@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>进程调度可视化</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Consolas', monospace; background: #1a1a2e; color: #fff; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 20px; }
+        header h1 { color: #00d9ff; }
+        
+        .input-area { 
+            background: rgba(255,255,255,0.1); 
+            padding: 15px; 
+            border-radius: 10px; 
+            margin-bottom: 20px; 
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            background: #000;
+            border: 1px solid #333;
+            padding: 10px;
+            color: #00ff88;
+            font-family: 'Consolas', monospace;
+        }
+        button {
+            padding: 10px 20px;
+            background: linear-gradient(90deg, #00d9ff, #0099cc);
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { opacity: 0.8; }
+        button:disabled { background: #666; cursor: not-allowed; }
+        
+        .controls { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            margin-bottom: 20px; 
+            flex-wrap: wrap;
+        }
+        .time-display { 
+            margin-left: auto; 
+            font-size: 18px; 
+            color: #00d9ff; 
+            font-weight: bold;
+        }
+        
+        .queues {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .queue {
+            background: rgba(255,255,255,0.08);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 3px solid;
+            min-height: 100px;
+        }
+        .queue.ready { border-color: #00d9ff; }
+        .queue.running { border-color: #ff00ff; }
+        .queue.finished { border-color: #00ff88; }
+        .queue h3 { color: #00d9ff; margin-bottom: 10px; }
+        .proc-item {
+            background: rgba(0,217,255,0.1);
+            padding: 5px;
+            margin: 3px;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        .proc-running { background: rgba(255,0,255,0.3) !important; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
+        .gantt {
+            background: rgba(255,255,255,0.08);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .gantt h3 { color: #00d9ff; margin-bottom: 15px; }
+        .gantt-bar { display: flex; gap: 2px; height: 40px; flex-wrap: wrap; }
+        .gantt-block { 
+            min-width: 25px; 
+            height: 35px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 11px; 
+            color: #fff; 
+            border-radius: 3px;
+            transition: all 0.3s;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat {
+            background: rgba(0,217,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-label { display: block; color: #aaa; font-size: 12px; }
+        .stat-value { font-size: 24px; color: #00ff88; font-weight: bold; }
+        
+        .log {
+            background: rgba(255,255,255,0.08);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .log h3 { color: #00d9ff; margin-bottom: 10px; }
+        .log-content {
+            background: #000;
+            padding: 10px;
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            color: #00ff88;
+            font-size: 12px;
+        }
+        
+        .color-legend { margin-top: 10px; display: flex; gap: 15px; flex-wrap: wrap; }
+        .color-item { display: flex; align-items: center; gap: 5px; }
+        .color-dot { width: 15px; height: 15px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>进程调度可视化</h1>
+            <p>基于动态优先级的时间片轮转调度算法</p>
+        </header>
+
+        <div class="input-area">
+            <textarea id="input" placeholder="粘贴调度程序输出..."></textarea>
+            <button onclick="parse()">解析数据</button>
+        </div>
+
+        <div class="controls">
+            <button id="playBtn" onclick="play()" disabled>▶ 播放</button>
+            <button id="pauseBtn" onclick="pause()" disabled>⏸ 暂停</button>
+            <button id="stepBtn" onclick="step()" disabled>▶▶ 单步</button>
+            <button id="resetBtn" onclick="reset()" disabled>↺ 重置</button>
+            <span class="time-display">当前时间: <span id="currentTime">0</span></span>
+        </div>
+
+        <div class="queues">
+            <div class="queue ready">
+                <h3>就绪队列</h3>
+                <div id="readyQueue">空</div>
+            </div>
+            <div class="queue running">
+                <h3>运行队列</h3>
+                <div id="runningQueue">空</div>
+            </div>
+            <div class="queue finished">
+                <h3>完成队列</h3>
+                <div id="finishedQueue">空</div>
+            </div>
+        </div>
+
+        <div class="gantt">
+            <h3>甘特图</h3>
+            <div class="gantt-bar" id="ganttBar"></div>
+            <div class="color-legend" id="legend"></div>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <span class="stat-label">总进程数</span>
+                <span class="stat-value" id="total">-</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">已完成</span>
+                <span class="stat-value" id="completed">-</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">平均周转时间</span>
+                <span class="stat-value" id="avgTurn">-</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">平均等待时间</span>
+                <span class="stat-value" id="avgWait">-</span>
+            </div>
+        </div>
+
+        <div class="log">
+            <h3>调度日志</h3>
+            <div class="log-content" id="log"></div>
+        </div>
+    </div>
+
+    <script>
+        const colors = {'A':'#00d9ff','B':'#ff00ff','C':'#00ff88','D':'#ff6666','E':'#ffaa00',
+                       'F':'#aa00ff','G':'#00ffff','H':'#ff00aa','I':'#aaff00','J':'#ff66ff'};
+
+        let events = [];
+        let finishedProcs = [];
+        let allProcs = [];
+        let currentStep = 0;
+        let isPlaying = false;
+        let playInterval = null;
+        let ganttData = [];
+        let readyQueue = [];
+        let runningProc = null;
+        let finishedQueue = [];
+
+        function parse() {
+            const input = document.getElementById('input').value;
+            if (!input.trim()) { alert('请粘贴调度程序输出'); return; }
+            
+            events = [];
+            finishedProcs = [];
+            allProcs = [];
+            ganttData = [];
+            
+            const lines = input.split('\n');
+            let inResults = false;
+            
+            for (let line of lines) {
+                if (line.includes('[Time')) {
+                    let time = parseInt(line.match(/\[Time (\d+)\]/)[1]);
+                    let procMatch = line.match(/Process ([A-J])/);
+                    let priority = line.match(/priority: (\d+)/);
+                    priority = priority ? parseInt(priority[1]) : 0;
+                    
+                    let event = { time, line };
+                    
+                    if (procMatch) {
+                        let proc = procMatch[1];
+                        event.proc = proc;
+                        
+                        if (!allProcs.find(p => p.name == proc)) {
+                            allProcs.push({ name: proc, priority: priority });
+                        }
+                        
+                        if (line.includes('arrived')) {
+                            event.type = 'arrive';
+                        } else if (line.includes('starts running')) {
+                            event.type = 'start';
+                        } else if (line.includes('completed')) {
+                            event.type = 'finish';
+                            let turnaround = parseInt(line.match(/Turnaround: (\d+)/)[1]);
+                            let waiting = parseInt(line.match(/Waiting: (\d+)/)[1]);
+                            finishedProcs.push({ name: proc, turnaround, waiting });
+                        } else if (line.includes('quantum expired')) {
+                            event.type = 'quantum';
+                        }
+                    } else if (line.includes('CPU idle')) {
+                        event.type = 'idle';
+                    }
+                    
+                    events.push(event);
+                }
+                
+                if (line.includes('===== Scheduling Results =====')) {
+                    inResults = true;
+                    continue;
+                }
+                
+                if (inResults) {
+                    let parts = line.trim().split(/\s+/);
+                    if (parts.length >= 4 && parts[0].length == 1 && /[A-J]/.test(parts[0])) {
+                        let proc = parts[0];
+                        let turnaround = parseInt(parts[parts.length-2]);
+                        let waiting = parseInt(parts[parts.length-1]);
+                        if (!finishedProcs.find(p => p.name == proc)) {
+                            finishedProcs.push({ name: proc, turnaround, waiting });
+                        }
+                    }
+                }
+            }
+            
+            events.sort((a, b) => a.time - b.time);
+            reset();
+            
+            document.getElementById('playBtn').disabled = false;
+            document.getElementById('stepBtn').disabled = false;
+            document.getElementById('resetBtn').disabled = false;
+            document.getElementById('total').textContent = allProcs.length;
+            showLegend();
+        }
+
+        function reset() {
+            currentStep = 0;
+            isPlaying = false;
+            if (playInterval) { clearInterval(playInterval); playInterval = null; }
+            
+            ganttData = [];
+            readyQueue = [];
+            runningProc = null;
+            finishedQueue = [];
+            
+            document.getElementById('currentTime').textContent = '0';
+            document.getElementById('readyQueue').innerHTML = '空';
+            document.getElementById('runningQueue').innerHTML = '空';
+            document.getElementById('finishedQueue').innerHTML = '空';
+            document.getElementById('ganttBar').innerHTML = '';
+            document.getElementById('log').textContent = '';
+            document.getElementById('completed').textContent = '0';
+            document.getElementById('avgTurn').textContent = '-';
+            document.getElementById('avgWait').textContent = '-';
+            
+            document.getElementById('playBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('stepBtn').disabled = false;
+        }
+
+        function play() {
+            isPlaying = true;
+            document.getElementById('playBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('stepBtn').disabled = true;
+            
+            playInterval = setInterval(() => {
+                if (!step()) {
+                    pause();
+                }
+            }, 800);
+        }
+
+        function pause() {
+            isPlaying = false;
+            if (playInterval) { clearInterval(playInterval); playInterval = null; }
+            
+            document.getElementById('playBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('stepBtn').disabled = false;
+        }
+
+        function step() {
+            if (currentStep >= events.length) {
+                pause();
+                return false;
+            }
+            
+            const event = events[currentStep];
+            updateTime(event.time);
+            updateLog(event.line);
+            
+            if (event.type == 'arrive') {
+                readyQueue.push({ name: event.proc, priority: event.priority });
+                readyQueue.sort((a, b) => b.priority - a.priority);
+            } else if (event.type == 'start') {
+                runningProc = event.proc;
+                readyQueue = readyQueue.filter(p => p.name != event.proc);
+            } else if (event.type == 'finish') {
+                finishedQueue.push(event.proc);
+                runningProc = null;
+                updateStats();
+            } else if (event.type == 'quantum') {
+                readyQueue.push({ name: event.proc, priority: event.priority });
+                readyQueue.sort((a, b) => b.priority - a.priority);
+                runningProc = null;
+            }
+            
+            if (runningProc) {
+                updateGantt(runningProc, event.time);
+            }
+            
+            updateQueues();
+            currentStep++;
+            return true;
+        }
+
+        function updateTime(time) {
+            document.getElementById('currentTime').textContent = time;
+        }
+
+        function updateLog(line) {
+            const log = document.getElementById('log');
+            log.textContent += line + '\n';
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function updateQueues() {
+            const readyDiv = document.getElementById('readyQueue');
+            const runningDiv = document.getElementById('runningQueue');
+            const finishedDiv = document.getElementById('finishedQueue');
+            
+            readyDiv.innerHTML = readyQueue.length > 0 
+                ? readyQueue.map(p => `<div class="proc-item">${p.name}(${p.priority})</div>`).join('') 
+                : '空';
+            
+            runningDiv.innerHTML = runningProc 
+                ? `<div class="proc-item proc-running">${runningProc}</div>` 
+                : '空';
+            
+            finishedDiv.innerHTML = finishedQueue.length > 0 
+                ? finishedQueue.map(p => `<div class="proc-item">${p}</div>`).join('') 
+                : '空';
+        }
+
+        function updateGantt(proc, time) {
+            const bar = document.getElementById('ganttBar');
+            while (ganttData.length < time) {
+                ganttData.push(null);
+            }
+            ganttData[time - 1] = proc;
+            
+            bar.innerHTML = ganttData.map((p, i) => 
+                `<div class="gantt-block" style="background:${p ? colors[p] : '#333'}">${p || ''}</div>`
+            ).join('');
+        }
+
+        function updateStats() {
+            const completed = finishedQueue.length;
+            document.getElementById('completed').textContent = completed;
+            
+            if (completed > 0) {
+                const finished = finishedProcs.filter(p => finishedQueue.includes(p.name));
+                const avgTurn = finished.reduce((sum, p) => sum + p.turnaround, 0) / finished.length;
+                const avgWait = finished.reduce((sum, p) => sum + p.waiting, 0) / finished.length;
+                document.getElementById('avgTurn').textContent = avgTurn.toFixed(1);
+                document.getElementById('avgWait').textContent = avgWait.toFixed(1);
+            }
+        }
+
+        function showLegend() {
+            document.getElementById('legend').innerHTML = allProcs.map(p => 
+                `<div class="color-item"><div class="color-dot" style="background:${colors[p.name]}"></div>${p.name}</div>`
+            ).join('');
+        }
+    </script>
+</body>
+</html>
