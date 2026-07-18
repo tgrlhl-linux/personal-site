@@ -10,7 +10,7 @@ export async function GET({ params }) {
 
   const rows = await query('SELECT * FROM notes WHERE id = ?', [id]);
   if (rows.length === 0) {
-    return new Response(JSON.stringify({ error: '笔记不存在' }), {
+    return new Response(JSON.stringify({ error: '内容不存在' }), {
       status: 404, headers: { 'Content-Type': 'application/json' },
     });
   }
@@ -25,9 +25,11 @@ export async function PUT({ params, request }) {
   const body = await request.json();
   const { title, content, course, tags } = body;
 
+  const excerpt = (content || '').replace(/#{1,6}\s/g, '').replace(/\*\*/g, '').replace(/\n/g, ' ').trim().substring(0, 150);
+
   await query(
-    'UPDATE notes SET title = ?, content = ?, course = ?, tags = ? WHERE id = ?',
-    [title, content || '', course || '', JSON.stringify(tags || []), id]
+    'UPDATE notes SET title = ?, content = ?, excerpt = ?, course = ?, tags = ? WHERE id = ?',
+    [title, content || '', excerpt, course || '', JSON.stringify(tags || []), id]
   );
 
   return new Response(JSON.stringify({ success: true }), {

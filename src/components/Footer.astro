@@ -1,9 +1,10 @@
+---
+const year = new Date().getFullYear();
+---
+
 <footer class="footer">
-  <div class="container footer-inner">
-    <div class="footer-info">
-      <p>© {new Date().getFullYear()} Guorui Tong</p>
-      <p class="footer-tagline">记录成长 · 保持好奇</p>
-    </div>
+  <div class="footer-inner container-wide">
+    <p>© {year} Guorui Tong</p>
     <div class="footer-links">
       <a href="https://github.com/tgrlhl-linux" target="_blank" rel="noopener">GitHub</a>
       <a href="mailto:1767242545@qq.com">Email</a>
@@ -24,12 +25,8 @@
     flex-wrap: wrap;
     gap: 1rem;
   }
-  .footer p { margin: 0; font-size: 0.85rem; color: var(--text-muted); }
-  .footer-tagline { font-size: 0.8rem; margin-top: 0.2rem !important; }
+  .footer p { font-size: 0.8rem; color: var(--text-muted); margin: 0; }
   .footer-links { display: flex; gap: 1.5rem; }
-  .footer-links a {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-  }
+  .footer-links a { font-size: 0.8rem; color: var(--text-muted); text-decoration: none; }
   .footer-links a:hover { color: var(--accent); }
 </style>

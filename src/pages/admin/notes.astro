@@ -16,8 +16,7 @@ if (!authenticated) return Astro.redirect('/admin/login');
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>笔记管理</title>
-  <link rel="stylesheet" href="/admin/admin.css">
+  <title>内容管理</title>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif; background:#f5f4f0; color:#1c1a18; }
@@ -31,32 +30,61 @@ if (!authenticated) return Astro.redirect('/admin/login');
     .side-foot { padding:1rem 1.2rem; border-top:1px solid rgba(255,255,255,0.08); font-size:0.78rem; }
     .side-foot a { color:#7a7a8a; text-decoration:none; }
     .side-foot a:hover { color:#c17f59; }
-    .main { flex:1; padding:2rem; max-width:960px; }
-    .hd { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; }
-    .hd h1 { font-size:1.4rem; font-weight:600; margin:0; }
-    .hd p { font-size:0.82rem; color:#8a8a9a; margin:0; }
-    .filters { display:flex; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap; }
-    .filters input, .filters select { padding:0.4rem 0.7rem; border:1px solid rgba(0,0,0,0.08); border-radius:4px; font-size:0.82rem; }
-    .filters input { flex:1; min-width:200px; }
-    .btn { padding:0.5rem 1.2rem; border-radius:4px; font-size:0.85rem; cursor:pointer; border:none; text-decoration:none; display:inline-block; }
+    .main { flex:1; display:flex; flex-direction:column; min-width:0; }
+    .main-hd { padding:1.5rem 1.5rem 0; display:flex; justify-content:space-between; align-items:center; }
+    .main-hd h1 { font-size:1.4rem; font-weight:600; }
+    .main-hd p { font-size:0.82rem; color:#8a8a9a; }
+    .split { display:flex; flex:1; min-height:0; padding:1rem 1.5rem 1.5rem; gap:1rem; }
+    .tree-panel { width:300px; flex-shrink:0; background:#fff; border:1px solid rgba(0,0,0,0.06); border-radius:8px; display:flex; flex-direction:column; overflow:hidden; }
+    .tree-search { padding:0.6rem 0.8rem; border-bottom:1px solid rgba(0,0,0,0.06); }
+    .tree-search input { width:100%; padding:0.4rem 0.6rem; border:1px solid rgba(0,0,0,0.08); border-radius:4px; font-size:0.8rem; outline:none; }
+    .tree-search input:focus { border-color:#c17f59; }
+    .tree-scroll { flex:1; overflow-y:auto; padding:0.3rem 0; }
+    .tree-node { user-select:none; }
+    .tree-folder-label { display:flex; align-items:center; gap:0.3rem; padding:0.35rem 0.8rem; cursor:pointer; font-size:0.82rem; color:#1c1a18; transition:background 0.15s; }
+    .tree-folder-label:hover { background:rgba(0,0,0,0.03); }
+    .tree-folder-label .icon { width:16px; text-align:center; flex-shrink:0; font-size:0.65rem; color:#9a9aa8; transition:transform 0.15s; }
+    .tree-folder-label .icon.open { transform:rotate(90deg); }
+    .tree-folder-label .fi { width:16px; text-align:center; flex-shrink:0; }
+    .tree-folder-label .count { margin-left:auto; font-size:0.72rem; color:#9a9aa8; background:rgba(0,0,0,0.04); padding:0.05em 0.5em; border-radius:8px; }
+    .tree-folder-children { display:none; }
+    .tree-folder-children.open { display:block; }
+    .tree-file { display:flex; align-items:center; gap:0.3rem; padding:0.3rem 0.8rem 0.3rem 2rem; cursor:pointer; font-size:0.8rem; color:#5a5a5a; transition:background 0.15s; }
+    .tree-file:hover { background:rgba(0,0,0,0.03); color:#1c1a18; }
+    .tree-file.active { background:rgba(193,127,89,0.1); color:#c17f59; }
+    .tree-file .fi { width:16px; text-align:center; flex-shrink:0; color:#9a9aa8; }
+    .tree-empty { padding:1.5rem; text-align:center; color:#9a9aa8; font-size:0.82rem; }
+    .content-panel { flex:1; background:#fff; border:1px solid rgba(0,0,0,0.06); border-radius:8px; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+    .content-empty { flex:1; display:flex; align-items:center; justify-content:center; color:#9a9aa8; font-size:0.9rem; }
+    .content-note { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    .content-hd { padding:1.2rem 1.5rem 0.6rem; border-bottom:1px solid rgba(0,0,0,0.06); }
+    .content-hd h2 { font-size:1.1rem; font-weight:600; margin-bottom:0.3rem; word-break:break-word; }
+    .content-meta { font-size:0.78rem; color:#8a8a9a; }
+    .content-meta span { margin-right:1rem; }
+    .content-body { flex:1; overflow-y:auto; padding:1rem 1.5rem; font-size:0.85rem; line-height:1.7; color:#3a3a3a; }
+    .content-body .preview { white-space:pre-wrap; font-family:Consolas, "JetBrains Mono", monospace; font-size:0.8rem; color:#6a6a6a; }
+    .content-actions { padding:0.8rem 1.5rem; border-top:1px solid rgba(0,0,0,0.06); display:flex; gap:0.5rem; }
+    .btn { padding:0.45rem 1rem; border-radius:4px; font-size:0.82rem; cursor:pointer; border:none; text-decoration:none; display:inline-block; transition:opacity 0.15s; }
+    .btn:hover { opacity:0.85; }
     .btn-pri { background:#c17f59; color:#fff; }
-    .btn-pri:hover { opacity:0.9; }
-    .btn-sec { background:#f5f4f0; color:#1c1a18; border:1px solid rgba(0,0,0,0.1); }
-    .btn-sec:hover { background:#e8e4dd; }
+    .btn-sec { background:#f0eeea; color:#1c1a18; }
+    .btn-sec:hover { background:#e4e0d8; }
     .btn-del { background:#ff6b6b; color:#fff; }
-    .btn-sm { padding:0.3rem 0.8rem; font-size:0.78rem; }
-    .card { background:#fff; border:1px solid rgba(0,0,0,0.06); border-radius:8px; padding:0; overflow:hidden; }
-    table { width:100%; border-collapse:collapse; }
-    th { text-align:left; padding:0.6rem 0.8rem; font-weight:500; color:#8a8a9a; border-bottom:1px solid rgba(0,0,0,0.06); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.5px; }
-    td { padding:0.5rem 0.8rem; border-bottom:1px solid rgba(0,0,0,0.04); font-size:0.85rem; }
-    tr:hover td { background:rgba(0,0,0,0.01); }
-    .td-title a { color:#1c1a18; text-decoration:none; font-weight:500; }
-    .td-title a:hover { color:#c17f59; }
-    .td-meta { color:#8a8a9a; font-size:0.8rem; }
-    .td-actions { text-align:right; }
-    .tag { display:inline-block; font-size:0.7rem; padding:0.15em 0.5em; background:#ede3d8; color:#c17f59; border-radius:3px; }
-    .empty { text-align:center; padding:3rem; color:#8a8a9a; }
-    .loading { text-align:center; padding:2rem; color:#8a8a9a; }
+    .loading { padding:2rem; text-align:center; color:#9a9aa8; font-size:0.85rem; }
+    .tag { display:inline-block; font-size:0.7rem; padding:0.15em 0.5em; background:#ede3d8; color:#c17f59; border-radius:3px; margin-right:0.3rem; }
+    .toast { position:fixed; bottom:1.5rem; right:1.5rem; padding:0.6rem 1.2rem; border-radius:6px; font-size:0.82rem; color:#fff; opacity:0; transition:opacity 0.3s; pointer-events:none; z-index:999; }
+    .toast.show { opacity:1; }
+    .toast.ok { background:#4caf50; }
+    .toast.err { background:#ff6b6b; }
+    .type-badge { font-size:0.65rem; padding:0.1em 0.4em; border-radius:3px; margin-right:0.3rem; }
+    .t-note { background:#ede3d8; color:#c17f59; }
+    .t-project { background:#fef3e2; color:#f0883e; }
+    .t-hobby { background:#e6f4ea; color:#3fb950; }
+    .folder-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:0.3rem; flex-shrink:0; }
+    @media (max-width:768px) {
+      .split { flex-direction:column; }
+      .tree-panel { width:auto; max-height:240px; }
+    }
   </style>
 </head>
 <body>
@@ -65,86 +93,45 @@ if (!authenticated) return Astro.redirect('/admin/login');
     <div class="side-logo">管理后台</div>
     <nav class="side-nav">
       <a href="/admin">概览</a>
-      <a href="/admin/notes" class="active">笔记</a>
+      <a href="/admin/notes" class="active">内容</a>
     </nav>
     <div class="side-foot">
       <a href="/">查看网站</a>
     </div>
   </aside>
   <main class="main">
-    <div class="hd">
-      <div><h1>笔记管理</h1><p id="countInfo">加载中...</p></div>
-      <a href="/admin/notes/new" class="btn btn-pri">写新笔记</a>
+    <div class="main-hd">
+      <div><h1>内容管理</h1><p id="countInfo">加载中...</p></div>
+      <a href="/admin/notes/new" class="btn btn-pri">写笔记</a>
     </div>
 
-    <div class="filters">
-      <input type="text" id="searchInput" placeholder="搜索笔记...">
-      <select id="courseSelect">
-        <option value="">全部课程</option>
-      </select>
-      <button class="btn btn-pri btn-sm" id="filterBtn">筛选</button>
+    <div class="split">
+      <div class="tree-panel">
+        <div class="tree-search">
+          <input type="text" id="treeSearch" placeholder="搜索内容...">
+        </div>
+        <div class="tree-scroll" id="treeContainer">
+          <div class="loading">加载中...</div>
+        </div>
+      </div>
+      <div class="content-panel" id="contentPanel">
+        <div class="content-empty">选择一项内容查看详情</div>
+      </div>
     </div>
-
-    <div id="noteList"><div class="loading">加载中...</div></div>
   </main>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
-let allNotes = [];
+let allItems = [];
+let treeData = [];
+let activeId = null;
+let expandedFolders = new Set();
 
-async function loadNotes() {
-  const q = document.getElementById('searchInput').value;
-  const course = document.getElementById('courseSelect').value;
-  let url = '/api/notes';
-  const params = [];
-  if (q) params.push('q=' + encodeURIComponent(q));
-  if (course) params.push('course=' + encodeURIComponent(course));
-  if (params.length) url += '?' + params.join('&');
-
-  const res = await fetch(url);
-  const data = await res.json();
-  allNotes = data.notes || [];
-
-  document.getElementById('countInfo').textContent = '共 ' + allNotes.length + ' 篇笔记';
-
-  const sel = document.getElementById('courseSelect');
-  const currentVal = sel.value;
-  sel.innerHTML = '<option value="">全部课程</option>';
-  (data.courses || []).forEach(function(c) {
-    sel.innerHTML += '<option value="' + c + '">' + c + '</option>';
-  });
-  sel.value = currentVal;
-
-  renderNotes();
-}
-
-function renderNotes() {
-  const container = document.getElementById('noteList');
-  if (allNotes.length === 0) {
-    container.innerHTML = '<div class="empty">还没有笔记</div>';
-    return;
-  }
-  var html = '<div class="card"><table><thead><tr><th>标题</th><th>课程</th><th>日期</th><th></th></tr></thead><tbody>';
-  allNotes.forEach(function(n) {
-    var tags = '';
-    try {
-      var parsed = JSON.parse(n.tags || '[]');
-      tags = parsed.map(function(t) { return '<span class="tag">' + t + '</span>'; }).join('');
-    } catch(e) {}
-    var courseBadge = n.course ? '<span class="tag">' + n.course + '</span>' : '';
-    var dateStr = n.created_at ? new Date(n.created_at).toLocaleDateString() : '';
-    html += '<tr>';
-    html += '<td class="td-title"><a href="/admin/notes/edit/' + n.id + '">' + escapeHtml(n.title) + '</a></td>';
-    html += '<td class="td-meta">' + courseBadge + '</td>';
-    html += '<td class="td-meta">' + dateStr + '</td>';
-    html += '<td class="td-actions">';
-    html += '<a href="/admin/notes/edit/' + n.id + '" class="btn btn-sec btn-sm">编辑</a> ';
-    html += '<button class="btn btn-del btn-sm" data-id="' + n.id + '" data-title="' + escapeHtml(n.title) + '">删除</button>';
-    html += '</td></tr>';
-  });
-  html += '</tbody></table></div>';
-  container.innerHTML = html;
-}
+const typeIcons = { note: '📄', project: '🛠️', hobby: '🎨' };
+const typeLabels = { note: '笔记', project: '项目', hobby: '爱好' };
+const typeClasses = { note: 't-note', project: 't-project', hobby: 't-hobby' };
 
 function escapeHtml(str) {
   var div = document.createElement('div');
@@ -152,23 +139,163 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-document.getElementById('noteList').addEventListener('click', async function(e) {
-  if (e.target.tagName === 'BUTTON' && e.target.textContent === '删除') {
-    var id = e.target.dataset.id;
-    var title = e.target.dataset.title;
-    if (!confirm('确定删除 ' + title + ' ？')) return;
-    var res = await fetch('/api/notes/' + id, { method: 'DELETE' });
-    if (res.ok) { loadNotes(); }
-    else { alert('删除失败'); }
+function buildTree(items, search) {
+  const groups = {};
+  items.forEach(n => {
+    const key = n.course || (n.type === 'project' ? '课程项目' : n.type === 'hobby' ? '爱好' : '未分类');
+    const typeKey = n.type + '::' + key;
+    if (!groups[typeKey]) groups[typeKey] = { type: n.type, course: key, items: [] };
+    groups[typeKey].items.push(n);
+  });
+  const sorted = Object.entries(groups).sort((a, b) => {
+    const order = { note: 0, project: 1, hobby: 2 };
+    const ta = order[a[1].type] || 99, tb = order[b[1].type] || 99;
+    return ta - tb || a[1].course.localeCompare(b[1].course);
+  });
+  return sorted.map(([k, v]) => v);
+}
+
+function renderTree() {
+  const container = document.getElementById('treeContainer');
+  const search = document.getElementById('treeSearch').value.trim().toLowerCase();
+  let filtered = allItems;
+  if (search) {
+    filtered = allItems.filter(n => n.title.toLowerCase().includes(search) || (n.course||'').toLowerCase().includes(search));
+  }
+  const tree = buildTree(filtered, search);
+
+  if (tree.length === 0) {
+    container.innerHTML = '<div class="tree-empty">没有内容</div>';
+    return;
+  }
+
+  let html = '';
+  tree.forEach((group) => {
+    const key = group.type + '|' + group.course;
+    const isExpanded = expandedFolders.has(key) || !!search;
+    html += '<div class="tree-node tree-folder">';
+    html += '<div class="tree-folder-label" data-key="' + escapeAttr(key) + '" data-type="' + group.type + '">';
+    html += '<span class="icon' + (isExpanded ? ' open' : '') + '">▶</span>';
+    html += '<span class="fi">' + (group.type === 'note' ? '📚' : group.type === 'project' ? '🛠️' : '🎨') + '</span>';
+    html += '<span>' + escapeHtml(typeLabels[group.type]) + ' · ' + escapeHtml(group.course) + '</span>';
+    html += '<span class="count">' + group.items.length + '</span>';
+    html += '</div>';
+    html += '<div class="tree-folder-children' + (isExpanded ? ' open' : '') + '">';
+    group.items.forEach(n => {
+      const active = n.id === activeId ? ' active' : '';
+      html += '<div class="tree-file' + active + '" data-id="' + n.id + '">';
+      html += '<span class="fi">' + (typeIcons[n.type] || '📄') + '</span>';
+      html += '<span class="type-badge ' + (typeClasses[n.type] || '') + '">' + (typeLabels[n.type] || n.type) + '</span>';
+      html += '<span>' + escapeHtml(n.title) + '</span>';
+      html += '</div>';
+    });
+    html += '</div></div>';
+  });
+
+  container.innerHTML = html;
+  document.getElementById('countInfo').textContent = '共 ' + allItems.length + ' 项内容';
+}
+
+function escapeAttr(str) {
+  return (str||'').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function showItem(id) {
+  activeId = id;
+  const item = allItems.find(n => n.id === id);
+  if (!item) return;
+
+  const panel = document.getElementById('contentPanel');
+  let tags = '';
+  try { tags = JSON.parse(item.tags || '[]').map(function(t) { return '<span class="tag">' + escapeHtml(t) + '</span>'; }).join(''); } catch(e) {}
+
+  const dateStr = item.created_at ? new Date(item.created_at).toLocaleString('zh-CN') : '';
+  const excerpt = (item.content || '').substring(0, 500);
+  const typeLabel = typeLabels[item.type] || item.type;
+
+  panel.innerHTML = '<div class="content-note">'
+    + '<div class="content-hd">'
+    + '<h2>' + escapeHtml(item.title) + '</h2>'
+    + '<div class="content-meta">'
+    + '<span>📂 ' + typeLabel + '</span>'
+    + '<span>🏷️ ' + escapeHtml(item.course || '未分类') + '</span>'
+    + '<span>🕐 ' + dateStr + '</span>'
+    + (tags ? '<span>' + tags + '</span>' : '')
+    + '</div></div>'
+    + '<div class="content-body">'
+    + '<div class="preview">' + escapeHtml(excerpt) + (item.content && item.content.length > 500 ? '...' : '') + '</div>'
+    + '</div>'
+    + '<div class="content-actions">'
+    + '<a href="/admin/notes/edit/' + id + '" class="btn btn-pri">✏️ 编辑</a>'
+    + '<button class="btn btn-del" id="deleteBtn" data-id="' + id + '">🗑️ 删除</button>'
+    + '<a href="/' + (item.type === 'note' ? 'notes' : item.type === 'project' ? 'projects' : 'hobbies') + '/' + (item.slug || id) + '" target="_blank" class="btn btn-sec">🔗 查看</a>'
+    + '</div></div>';
+
+  document.querySelectorAll('.tree-file').forEach(el => el.classList.remove('active'));
+  var treeFile = document.querySelector('.tree-file[data-id="' + id + '"]');
+  if (treeFile) treeFile.classList.add('active');
+}
+
+// Events
+document.addEventListener('click', function(e) {
+  var folderLabel = e.target.closest('.tree-folder-label');
+  if (folderLabel) {
+    var key = folderLabel.dataset.key;
+    var children = folderLabel.nextElementSibling;
+    var icon = folderLabel.querySelector('.icon');
+    if (children) {
+      children.classList.toggle('open');
+      icon && icon.classList.toggle('open');
+      if (children.classList.contains('open')) expandedFolders.add(key);
+      else expandedFolders.delete(key);
+    }
+    return;
+  }
+  var fileEl = e.target.closest('.tree-file');
+  if (fileEl) {
+    showItem(parseInt(fileEl.dataset.id));
+    renderTree();
+    return;
   }
 });
 
-document.getElementById('filterBtn').addEventListener('click', loadNotes);
-document.getElementById('searchInput').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') loadNotes();
+document.getElementById('treeSearch').addEventListener('input', function() { renderTree(); });
+
+document.getElementById('contentPanel').addEventListener('click', async function(e) {
+  var btn = e.target.closest('#deleteBtn');
+  if (!btn) return;
+  var id = parseInt(btn.dataset.id);
+  var item = allItems.find(n => n.id === id);
+  if (!confirm('确定删除「' + (item ? item.title : '') + '」？')) return;
+  var res = await fetch('/api/notes/' + id, { method: 'DELETE' });
+  if (res.ok) {
+    showToast('已删除', 'ok');
+    activeId = null;
+    await loadData();
+  } else {
+    showToast('删除失败', 'err');
+  }
 });
 
-loadNotes();
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  setTimeout(function() { t.classList.remove('show'); }, 2000);
+}
+
+async function loadData() {
+  var res = await fetch('/api/contents');
+  var data = await res.json();
+  allItems = data.contents || [];
+  renderTree();
+  if (allItems.length > 0 && activeId === null) {
+    var firstFolder = document.querySelector('.tree-folder-label');
+    if (firstFolder) firstFolder.click();
+  }
+}
+
+loadData();
 </script>
 </body>
 </html>

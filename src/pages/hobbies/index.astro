@@ -1,60 +1,72 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { getCollection } from 'astro:content';
+import { query } from '../../db/mysql';
 
-const hobbies = (await getCollection('hobbies'))
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const hobbies = await query(
+  `SELECT id, title, slug, excerpt, tags, created_at
+   FROM notes WHERE type='hobby' AND status='published'
+   ORDER BY created_at DESC`
+);
 ---
 
-<Base title="爱好" description="生活中的热爱">
+<Base title="爱好" description="生活中的热爱" wide={true}>
   <div class="page-header">
     <h1>爱好</h1>
     <p>代码之外，还有更大的世界</p>
   </div>
 
   {hobbies.length === 0 ? (
-    <div class="empty-state">
-      <p>还没有添加爱好内容</p>
-    </div>
+    <div class="empty-state">还没有添加爱好内容</div>
   ) : (
-    <div class="grid hobbies-grid">
-      {hobbies.map(h => (
-        <a href={`/hobbies/${h.id}`} class="card hobby-card">
-          <h2>{h.data.title}</h2>
-          <p>{h.data.description}</p>
-          <div class="hobby-tags">
-            {h.data.tags.map(t => <span class="tag">{t}</span>)}
-          </div>
-        </a>
-      ))}
+    <div class="hb-grid">
+      {hobbies.map(h => {
+        const tagList = (() => { try { return JSON.parse(h.tags || '[]'); } catch { return []; } })();
+        return (
+          <a href={`/hobbies/${h.slug}`} class="hb-card" style="--cc:#79c0ff">
+            <div class="hb-top">
+              <span class="hb-emoji">
+                {h.title.includes('3D') ? '✦' : '▤'}
+              </span>
+            </div>
+            <h2 class="hb-title">{h.title}</h2>
+            <p class="hb-desc">{h.excerpt}</p>
+            <div class="hb-tags">
+              {tagList.slice(0, 4).map(t => <span class="hb-tag">{t}</span>)}
+            </div>
+          </a>
+        );
+      })}
     </div>
   )}
 </Base>
 
 <style>
-  .hobbies-grid { grid-template-columns: 1fr; }
-  @media (min-width: 640px) {
-    .hobbies-grid { grid-template-columns: repeat(2, 1fr); }
+  .hb-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
   }
-  .hobby-card {
+  .hb-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cc);
+    border-radius: var(--radius);
+    padding: 1.5rem;
     text-decoration: none;
     color: var(--text);
-    padding: 1.5rem;
+    transition: box-shadow 0.2s, transform 0.2s;
+    display: flex;
+    flex-direction: column;
   }
-  .hobby-card:hover { color: var(--text); }
-  .hobby-card h2 {
-    font-size: 1.2rem;
-    margin: 0 0 0.5rem;
+  .hb-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
   }
-  .hobby-card p {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin: 0 0 0.8rem;
-  }
-  .hobby-tags { display: flex; flex-wrap: wrap; }
-  .empty-state {
-    text-align: center;
-    padding: 4rem 0;
-    color: var(--text-muted);
-  }
+  .hb-top { margin-bottom: 0.8rem; }
+  .hb-emoji { font-size: 1.8rem; }
+  .hb-title { font-size: 1.2rem; font-weight: 600; margin: 0 0 0.5rem; }
+  .hb-desc { font-size: 0.88rem; color: var(--text-secondary); flex: 1; }
+  .hb-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.8rem; }
+  .hb-tag { font-size: 0.7rem; padding: 0.15em 0.5em; background: var(--bg-hover); border-radius: 4px; color: var(--text-secondary); }
+  .empty-state { text-align: center; padding: 4rem 0; color: var(--text-muted); }
 </style>

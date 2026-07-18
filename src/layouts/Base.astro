@@ -6,9 +6,11 @@ import Footer from '../components/Footer.astro';
 export interface Props {
   title?: string;
   description?: string;
+  wide?: boolean;
 }
 
-const { title = 'Guorui', description = 'Personal site' } = Astro.props;
+const { title = 'Guorui', description = 'Personal site', wide = false } = Astro.props;
+const containerClass = wide ? 'container-wide' : 'container';
 ---
 
 <!doctype html>
@@ -23,7 +25,7 @@ const { title = 'Guorui', description = 'Personal site' } = Astro.props;
   <body>
     <Header />
     <main class="page">
-      <div class="container">
+      <div class={containerClass}>
         <slot />
       </div>
     </main>

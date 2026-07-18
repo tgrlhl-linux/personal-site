@@ -33,10 +33,14 @@ if (!authenticated) return Astro.redirect('/admin/login');
     .main { flex:1; padding:2rem; max-width:900px; }
     .hd { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; }
     .hd h1 { font-size:1.4rem; font-weight:600; margin:0; }
-    .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-bottom:2rem; }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:2rem; }
     .stat { background:#fff; border:1px solid rgba(0,0,0,0.06); border-radius:8px; padding:1.5rem; text-align:center; }
-    .stat-num { font-size:2rem; font-weight:700; color:#c17f59; }
+    .stat-num { font-size:2rem; font-weight:700; }
     .stat-label { font-size:0.8rem; color:#8a8a9a; margin-top:0.2rem; }
+    .stat.s-note .stat-num { color:#c17f59; }
+    .stat.s-project .stat-num { color:#f0883e; }
+    .stat.s-hobby .stat-num { color:#3fb950; }
+    .stat.s-total .stat-num { color:#1a1a24; }
     .card { background:#fff; border:1px solid rgba(0,0,0,0.06); border-radius:8px; padding:1.5rem; }
     .card h2 { font-size:1rem; font-weight:600; margin-bottom:0.8rem; }
     .item { display:flex; justify-content:space-between; padding:0.5rem 0; border-bottom:1px solid rgba(0,0,0,0.04); }
@@ -44,6 +48,10 @@ if (!authenticated) return Astro.redirect('/admin/login');
     .item a { color:#1c1a18; text-decoration:none; font-size:0.9rem; }
     .item a:hover { color:#c17f59; }
     .item .date { font-size:0.78rem; color:#8a8a9a; }
+    .item .type { font-size:0.7rem; padding:0.1em 0.4em; border-radius:3px; }
+    .t-note { background:#ede3d8; color:#c17f59; }
+    .t-project { background:#fef3e2; color:#f0883e; }
+    .t-hobby { background:#e6f4ea; color:#3fb950; }
     .btn { padding:0.5rem 1.2rem; border-radius:4px; font-size:0.85rem; cursor:pointer; border:none; text-decoration:none; display:inline-block; }
     .btn-pri { background:#c17f59; color:#fff; }
     .btn-pri:hover { opacity:0.9; }
@@ -56,7 +64,7 @@ if (!authenticated) return Astro.redirect('/admin/login');
     <div class="side-logo">管理后台</div>
     <nav class="side-nav">
       <a href="/admin" class="active">概览</a>
-      <a href="/admin/notes">笔记</a>
+      <a href="/admin/notes">内容</a>
     </nav>
     <div class="side-foot">
       <a href="/">查看网站</a>
@@ -69,40 +77,56 @@ if (!authenticated) return Astro.redirect('/admin/login');
     </div>
 
     <div class="stats">
-      <div class="stat"><div class="stat-num" id="noteCount">-</div><div class="stat-label">笔记</div></div>
-      <div class="stat"><div class="stat-num" id="courseCount">-</div><div class="stat-label">课程分类</div></div>
-      <div class="stat"><div class="stat-num" id="hobbyCount">-</div><div class="stat-label">爱好</div></div>
+      <div class="stat s-note"><div class="stat-num" id="noteCount">-</div><div class="stat-label">笔记</div></div>
+      <div class="stat s-project"><div class="stat-num" id="projectCount">-</div><div class="stat-label">项目</div></div>
+      <div class="stat s-hobby"><div class="stat-num" id="hobbyCount">-</div><div class="stat-label">爱好</div></div>
+      <div class="stat s-total"><div class="stat-num" id="totalCount">-</div><div class="stat-label">总计</div></div>
     </div>
 
     <div class="card">
-      <h2>最近笔记</h2>
-      <div id="recentNotes"><div class="loading">加载中...</div></div>
+      <h2>最近更新</h2>
+      <div id="recentItems"><div class="loading">加载中...</div></div>
     </div>
   </main>
 </div>
 
 <script>
 async function loadDashboard() {
-  var res = await fetch('/api/notes?limit=5');
+  var res = await fetch('/api/contents?limit=10');
   var data = await res.json();
-  var notes = data.notes || [];
+  var items = data.contents || [];
 
-  document.getElementById('noteCount').textContent = data.total || notes.length;
-  document.getElementById('courseCount').textContent = (data.courses || []).length;
-  document.getElementById('hobbyCount').textContent = '0';
+  document.getElementById('noteCount').textContent = items.filter(i => i.type === 'note').length || data.total || '-';
+  document.getElementById('projectCount').textContent = items.filter(i => i.type === 'project').length || '-';
+  document.getElementById('hobbyCount').textContent = items.filter(i => i.type === 'hobby').length || '-';
+  document.getElementById('totalCount').textContent = data.total || items.length;
 
-  var container = document.getElementById('recentNotes');
-  if (notes.length === 0) {
-    container.innerHTML = '<div style="color:#8a8a9a;font-size:0.85rem;">还没有笔记</div>';
+  var container = document.getElementById('recentItems');
+  if (items.length === 0) {
+    container.innerHTML = '<div style="color:#8a8a9a;font-size:0.85rem;">还没有内容</div>';
     return;
   }
   var html = '';
-  notes.forEach(function(n) {
+  items.forEach(function(n) {
     var dateStr = n.created_at ? new Date(n.created_at).toLocaleDateString() : '';
-    html += '<div class="item"><a href="/admin/notes/edit/' + n.id + '">' + n.title + '</a><span class="date">' + dateStr + '</span></div>';
+    var typeLabel = { note: '笔记', project: '项目', hobby: '爱好' }[n.type] || n.type;
+    var typeClass = { note: 't-note', project: 't-project', hobby: 't-hobby' }[n.type] || '';
+    var link = n.type === 'note' ? '/notes/' + n.id : (n.type === 'project' ? '/projects/' + (n.slug || n.id) : '/hobbies/' + (n.slug || n.id));
+    html += '<div class="item">'
+      + '<span class="type ' + typeClass + '">' + typeLabel + '</span> '
+      + '<a href="' + link + '" target="_blank">' + escapeHtml(n.title) + '</a>'
+      + '<span class="date">' + dateStr + '</span>'
+      + '</div>';
   });
   container.innerHTML = html;
 }
+
+function escapeHtml(str) {
+  var div = document.createElement('div');
+  div.appendChild(document.createTextNode(str || ''));
+  return div.innerHTML;
+}
+
 loadDashboard();
 </script>
 </body>

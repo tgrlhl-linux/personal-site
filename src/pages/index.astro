@@ -1,169 +1,259 @@
 ---
 import Base from '../layouts/Base.astro';
-import ProjectCard from '../components/ProjectCard.astro';
-import { getCollection } from 'astro:content';
 import { query } from '../db/mysql';
 
-const projects = (await getCollection('projects'))
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
-  .slice(0, 5);
-
 const dbNotes = await query(
-  'SELECT id, title, LEFT(content, 150) AS excerpt, course, tags, created_at FROM notes ORDER BY created_at DESC LIMIT 3'
+  "SELECT id, title, excerpt, course, tags, created_at FROM notes WHERE type='note' AND status='published' ORDER BY created_at DESC LIMIT 6"
+);
+const dbProjects = await query(
+  "SELECT id, title, slug, excerpt, course as category, tags, metadata, created_at FROM notes WHERE type='project' AND status='published' ORDER BY created_at DESC LIMIT 6"
+);
+const dbHobbies = await query(
+  "SELECT id, title, slug, excerpt, tags FROM notes WHERE type='hobby' AND status='published' ORDER BY created_at DESC"
 );
 
-const hobbies = await getCollection('hobbies');
+const totalNotes = (await query("SELECT COUNT(*) AS c FROM notes WHERE type='note' AND status='published'"))[0].c;
+const totalProjects = (await query("SELECT COUNT(*) AS c FROM notes WHERE type='project' AND status='published'"))[0].c;
+
+const featured = dbProjects[0];
+const featuredMeta = featured ? (() => { try { return JSON.parse(featured.metadata || '{}'); } catch { return {}; } })() : {};
+const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags || '[]'); } catch { return []; } })() : [];
 ---
 
-<Base title="首页" description="童国睿的个人网站 — 记录成长、项目与思考">
-  <section class="hero">
-    <h1 class="hero-name">童国睿</h1>
-    <p class="hero-desc">
-      软件工程 · 大三 · 贵州大学<br />
-      记录课程项目、技术探索与生活爱好
-    </p>
-    <div class="hero-links">
-      <a href="/projects" class="btn">浏览项目</a>
-      <a href="/about" class="btn btn-outline">关于我</a>
-    </div>
-  </section>
+<Base title="首页" description="童国睿的个人网站" wide={true}>
+  <div class="home">
 
-  <section class="section">
+    <!-- Hero -->
+    <div class="hero-bento">
+      <div class="hero-text">
+        <h1>童国睿</h1>
+        <p class="hero-sub">软件工程 · 大三 · 贵州大学</p>
+        <p class="hero-desc">从底层系统到前端界面，用代码解决问题的过程都记录在这里。</p>
+        <div class="hero-links">
+          <a href="/projects" class="btn">浏览项目</a>
+          <a href="/about" class="btn btn-outline">关于我</a>
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div class="hs-item" style="--c:var(--c-os);--g:var(--c-os-glow)">
+          <span class="hs-num">{totalNotes}</span>
+          <span class="hs-label">笔记</span>
+        </div>
+        <div class="hs-item" style="--c:var(--c-db);--g:var(--c-db-glow)">
+          <span class="hs-num">{totalProjects}</span>
+          <span class="hs-label">项目</span>
+        </div>
+        <div class="hs-item" style="--c:var(--c-prob);--g:var(--c-prob-glow)">
+          <span class="hs-num">{dbHobbies.length}</span>
+          <span class="hs-label">爱好</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Featured Project -->
+    {featured && (
+      <a href={`/projects/${featured.slug}`} class="featured-card" style="--cc:#f0883e">
+        <div class="fc-label">
+          <span class="fc-badge">精选项目</span>
+          <span class="fc-date">{featuredMeta.date ? new Date(featuredMeta.date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'short' }) : ''}</span>
+        </div>
+        <h2 class="fc-title">{featured.title}</h2>
+        <p class="fc-desc">{featured.excerpt}</p>
+        <div class="fc-tags">
+          {featuredTags.slice(0, 4).map(t => <span class="fc-tag">{t}</span>)}
+        </div>
+      </a>
+    )}
+
+    <!-- Recent Notes -->
     <div class="section-header">
-      <h2>最新项目</h2>
+      <h2>最近笔记</h2>
+      <a href="/notes" class="section-more">查看全部 →</a>
+    </div>
+    <div class="notes-row">
+      {dbNotes.slice(0, 4).map(n => {
+        const shortTitle = n.title.replace(/^.*?·\s*/, '');
+        return (
+          <a href={`/notes/${n.id}`} class="nr-mini" style={`--c:${n.course === '操作系统' ? 'var(--c-os)' : n.course === '数据库原理' ? 'var(--c-db)' : n.course === '概率论与数理统计' ? 'var(--c-prob)' : 'var(--c-pol)'}`}>
+            <span class="nrm-dot"></span>
+            <span class="nrm-title">{shortTitle}</span>
+            <span class="nrm-course">{n.course}</span>
+          </a>
+        );
+      })}
+    </div>
+
+    <!-- Projects Mini -->
+    <div class="section-header">
+      <h2>项目速览</h2>
       <a href="/projects" class="section-more">查看全部 →</a>
     </div>
-    <div class="grid home-grid">
-      {projects.map(p => <ProjectCard project={p} />)}
+    <div class="proj-mini-grid">
+      {dbProjects.slice(0, 4).map(p => {
+        const meta = (() => { try { return JSON.parse(p.metadata || '{}'); } catch { return {}; } })();
+        return (
+          <a href={`/projects/${p.slug}`} class="pm-card">
+            <div class="pm-num">{String(dbProjects.indexOf(p) + 1).padStart(2, '0')}</div>
+            <div class="pm-title">{p.title}</div>
+            <div class="pm-date">{meta.date ? new Date(meta.date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'short' }) : ''}</div>
+          </a>
+        );
+      })}
     </div>
-  </section>
 
-  {dbNotes.length > 0 && (
-    <section class="section">
-      <div class="section-header">
-        <h2>最近笔记</h2>
-        <a href="/notes" class="section-more">查看全部 →</a>
-      </div>
-      <div class="note-list">
-        {dbNotes.map(n => (
-          <a href={`/notes/${n.id}`} class="note-item">
-            <span class="note-date">{new Date(n.created_at).toLocaleDateString('zh-CN')}</span>
-            <span class="note-title">{n.title}</span>
-            <span class="note-desc">{n.excerpt || ''}</span>
-          </a>
-        ))}
-      </div>
-    </section>
-  )}
+    <!-- Hobbies -->
+    {dbHobbies.length > 0 && (
+      <>
+        <div class="section-header">
+          <h2>爱好</h2>
+          <a href="/hobbies" class="section-more">查看全部 →</a>
+        </div>
+        <div class="hobby-row">
+          {dbHobbies.map(h => (
+            <a href={`/hobbies/${h.slug}`} class="hb-mini">
+              <span class="hbm-icon">{h.title.includes('3D') ? '✦' : '▤'}</span>
+              <span class="hbm-title">{h.title}</span>
+            </a>
+          ))}
+        </div>
+      </>
+    )}
 
-  {hobbies.length > 0 && (
-    <section class="section">
-      <div class="section-header">
-        <h2>爱好</h2>
-        <a href="/hobbies" class="section-more">查看全部 →</a>
-      </div>
-      <div class="grid home-grid">
-        {hobbies.map(h => (
-          <a href={`/hobbies/${h.id}`} class="card hobby-card">
-            <h3>{h.data.title}</h3>
-            <p>{h.data.description}</p>
-            <div class="hobby-tags">
-              {h.data.tags.map(t => <span class="tag">{t}</span>)}
-            </div>
-          </a>
-        ))}
-      </div>
-    </section>
-  )}
+  </div>
 </Base>
 
 <style>
-  .hero {
-    padding: 3rem 0 2.5rem;
-    text-align: center;
-  }
-  .hero-name {
-    font-size: 2.8rem;
-    font-weight: 700;
-    letter-spacing: 2px;
-    margin-bottom: 0.8rem;
-  }
-  .hero-desc {
-    color: var(--text-secondary);
-    font-size: 1.05rem;
-    line-height: 1.8;
-    margin-bottom: 1.5rem;
-  }
-  .hero-links { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; }
-  .btn-outline {
-    background: transparent;
-    border: 1px solid var(--accent);
-    color: var(--accent);
-  }
-  .btn-outline:hover { background: var(--accent-light); }
+  .home { display: flex; flex-direction: column; gap: 2rem; }
 
-  .section {
-    margin-bottom: 3rem;
-  }
-  .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 1.2rem;
-  }
-  .section-header h2 { margin: 0; }
-  .section-more {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-  }
-  .section-more:hover { color: var(--accent); }
-
-  .home-grid { grid-template-columns: 1fr; }
-  @media (min-width: 640px) {
-    .home-grid { grid-template-columns: repeat(2, 1fr); }
-  }
-
-  .note-list { display: flex; flex-direction: column; gap: 0.5rem; }
-  .note-item {
-    display: flex;
+  /* ── Hero ── */
+  .hero-bento {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
     gap: 1rem;
-    align-items: baseline;
-    padding: 0.8rem 1rem;
+    align-items: stretch;
+  }
+  .hero-text {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
-    transition: background 0.2s;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .hero-text h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+    background: linear-gradient(135deg, #e1e4e8, #8b949e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero-sub { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.8rem; }
+  .hero-desc { font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1.2rem; }
+  .hero-links { display: flex; gap: 0.6rem; }
+  .hero-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .hs-item {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--g);
+    border-radius: var(--radius);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: box-shadow 0.2s;
+  }
+  .hs-item:hover { box-shadow: 0 0 16px var(--g); }
+  .hs-num { font-size: 1.6rem; font-weight: 700; color: var(--c); line-height: 1.1; }
+  .hs-label { font-size: 0.75rem; color: var(--text-muted); }
+
+  /* ── Featured ── */
+  .featured-card {
+    display: block;
+    background: linear-gradient(135deg, var(--bg-card), rgba(240,136,62,0.04));
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cc);
+    border-radius: var(--radius);
+    padding: 1.5rem;
     text-decoration: none;
     color: var(--text);
+    transition: box-shadow 0.2s, transform 0.2s;
   }
-  .note-item:hover { background: var(--bg-hover); }
-  .note-date {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    white-space: nowrap;
-    min-width: 5rem;
-  }
-  .note-title {
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .note-desc {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  @media (max-width: 640px) {
-    .note-desc { display: none; }
-  }
+  .featured-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+  .fc-label { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.5rem; }
+  .fc-badge { font-size: 0.68rem; padding: 0.15em 0.6em; background: rgba(240,136,62,0.15); color: #f0883e; border-radius: 4px; }
+  .fc-date { font-size: 0.75rem; color: var(--text-muted); }
+  .fc-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 0.4rem; }
+  .fc-desc { font-size: 0.88rem; color: var(--text-secondary); }
+  .fc-tags { display: flex; gap: 0.3rem; margin-top: 0.6rem; flex-wrap: wrap; }
+  .fc-tag { font-size: 0.7rem; padding: 0.15em 0.5em; background: var(--bg-hover); border-radius: 4px; color: var(--text-secondary); }
 
-  .hobby-card { text-decoration: none; color: var(--text); }
-  .hobby-card h3 { margin: 0 0 0.5rem; font-size: 1.1rem; }
-  .hobby-card p {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin: 0 0 0.8rem;
+  /* Sections */
+  .section-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;
   }
-  .hobby-tags { display: flex; flex-wrap: wrap; }
+  .section-header h2 { font-size: 1rem; font-weight: 600; margin: 0; }
+  .section-more { font-size: 0.8rem; color: var(--text-muted); text-decoration: none; }
+  .section-more:hover { color: var(--accent); }
+
+  /* Notes row */
+  .notes-row { display: flex; flex-direction: column; gap: 0.3rem; }
+  .nr-mini {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.5rem 0.8rem; border-radius: 8px;
+    text-decoration: none; color: var(--text);
+    transition: background 0.1s;
+  }
+  .nr-mini:hover { background: var(--bg-hover); }
+  .nrm-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--c); flex-shrink: 0; }
+  .nrm-title { font-size: 0.9rem; flex: 1; }
+  .nrm-course { font-size: 0.7rem; color: var(--text-muted); }
+
+  /* Projects mini grid */
+  .proj-mini-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+  }
+  .pm-card {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.7rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    text-decoration: none; color: var(--text);
+    transition: box-shadow 0.15s;
+  }
+  .pm-card:hover { box-shadow: var(--shadow-hover); }
+  .pm-num { font-size: 0.72rem; font-family: var(--font-mono); color: var(--text-muted); }
+  .pm-title { font-size: 0.85rem; flex: 1; }
+  .pm-date { font-size: 0.72rem; color: var(--text-muted); }
+
+  /* Hobbies */
+  .hobby-row { display: flex; gap: 0.8rem; }
+  .hb-mini {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    text-decoration: none; color: var(--text);
+    transition: box-shadow 0.15s;
+  }
+  .hb-mini:hover { box-shadow: var(--shadow-hover); }
+  .hbm-icon { font-size: 1.2rem; }
+  .hbm-title { font-size: 0.88rem; }
+
+  @media (max-width: 640px) {
+    .hero-bento { grid-template-columns: 1fr; }
+    .proj-mini-grid { grid-template-columns: 1fr; }
+    .hobby-row { flex-direction: column; }
+  }
 </style>

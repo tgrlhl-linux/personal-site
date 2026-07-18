@@ -7,14 +7,16 @@ const links = [
   { href: '/timeline', label: '时间线' },
   { href: '/about', label: '关于' },
 ];
+const currentPath = Astro.url.pathname;
 ---
 
 <header class="header">
-  <div class="container header-inner">
-    <a href="/" class="logo">G<!-- -->R</a>
+  <div class="header-inner container-wide">
+    <a href="/" class="logo">GR</a>
     <nav class="nav">
       {links.map(link => (
-        <a href={link.href} class="nav-link">{link.label}</a>
+        <a href={link.href}
+           class={'nav-link' + (currentPath.startsWith(link.href) && link.href !== '/' ? ' active' : '')}>{link.label}</a>
       ))}
     </nav>
   </div>
@@ -23,12 +25,11 @@ const links = [
 <style>
   .header {
     border-bottom: 1px solid var(--border);
-    background: var(--bg);
+    background: rgba(11, 14, 20, 0.85);
+    backdrop-filter: blur(12px);
     position: sticky;
     top: 0;
     z-index: 100;
-    backdrop-filter: blur(8px);
-    background: rgba(250, 248, 245, 0.92);
   }
   .header-inner {
     display: flex;
@@ -37,40 +38,41 @@ const links = [
     height: 56px;
   }
   .logo {
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     font-weight: 700;
     letter-spacing: 1px;
     color: var(--text);
     text-decoration: none;
-    padding: 4px 8px;
-    border: 2px solid var(--accent);
-    border-radius: 4px;
+    padding: 3px 8px;
+    border: 2px solid var(--c-os);
+    border-radius: 6px;
     line-height: 1;
+    transition: all 0.2s;
   }
-  .logo:hover { color: var(--accent); }
-  .nav { display: flex; gap: 1.5rem; }
+  .logo:hover {
+    box-shadow: 0 0 16px var(--c-os-glow);
+    color: var(--c-os);
+  }
+  .nav { display: flex; gap: 0.25rem; }
   .nav-link {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
     color: var(--text-secondary);
-    transition: color 0.2s;
-    position: relative;
+    transition: all 0.15s;
+    text-decoration: none;
   }
-  .nav-link:hover { color: var(--accent); }
-  .nav-link::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: var(--accent);
-    transform: scaleX(0);
-    transition: transform 0.2s;
+  .nav-link:hover {
+    color: var(--text);
+    background: var(--bg-hover);
   }
-  .nav-link:hover::after { transform: scaleX(1); }
+  .nav-link.active {
+    color: var(--c-os);
+    background: var(--accent-light);
+  }
 
-  @media (max-width: 480px) {
-    .nav { gap: 0.8rem; }
-    .nav-link { font-size: 0.82rem; }
+  @media (max-width: 520px) {
+    .nav { gap: 0; }
+    .nav-link { font-size: 0.78rem; padding: 0.25rem 0.5rem; }
   }
 </style>

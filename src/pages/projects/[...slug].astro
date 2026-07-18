@@ -1,92 +1,97 @@
 ---
-export const prerender = true;
+export const prerender = false;
 
 import Base from '../../layouts/Base.astro';
-import { getCollection } from 'astro:content';
+import { query } from '../../db/mysql';
 
-export async function getStaticPaths() {
-  const projects = await getCollection('projects');
-  return projects.map(p => ({
-    params: { slug: p.id },
-    props: { entry: p },
-  }));
+const slug = Astro.params.slug;
+
+let error = null;
+let project = null;
+
+if (!slug) {
+  error = '无效的项目';
+} else {
+  const rows = await query("SELECT * FROM notes WHERE type='project' AND slug = ?", [slug]);
+  if (rows.length === 0) error = '项目不存在';
+  else project = rows[0];
 }
 
-const { entry } = Astro.props;
-const { Content } = await entry.render();
-const { title, description, date, tags, category, status } = entry.data;
-
-const statusLabel: Record<string, string> = {
-  completed: '已完成',
-  'in-progress': '进行中',
-  archived: '归档',
-};
+const meta = project ? (() => { try { return JSON.parse(project.metadata || '{}'); } catch { return {}; } })() : {};
+const tagList = project ? (() => { try { return JSON.parse(project.tags || '[]'); } catch { return []; } })() : [];
+const statusLabel = { completed: '已完成', 'in-progress': '进行中', archived: '归档' };
+const catLabel = { course: '课程', personal: '个人', tool: '工具' };
 ---
 
-<Base title={title} description={description}>
-  <article class="post">
-    <header class="post-header">
-      <div class="post-meta">
-        <span class="tag">{category === 'course' ? '课程' : category === 'personal' ? '个人' : '工具'}</span>
-        {status !== 'completed' && <span class="tag status-tag">{statusLabel[status]}</span>}
-        <time class="meta">{date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
-      </div>
-      <h1>{title}</h1>
-      <p class="post-desc">{description}</p>
-      <div class="post-tags">
-        {tags.map(t => <span class="tag">{t}</span>)}
-      </div>
-    </header>
-
-    <div class="post-content">
-      <Content />
+{error ? (
+  <Base title="项目不存在">
+    <div class="page-header">
+      <h1>项目不存在</h1>
+      <p><a href="/projects">← 返回项目列表</a></p>
     </div>
+  </Base>
+) : (
+  <Base title={project.title}>
+    <article class="post">
+      <header class="post-header">
+        <div class="post-meta">
+          <span class="tag">{catLabel[project.course] || project.course}</span>
+          {meta.projectStatus && meta.projectStatus !== 'completed' && <span class="tag status-tag">{statusLabel[meta.projectStatus]}</span>}
+          {meta.date && <time class="meta">{new Date(meta.date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}</time>}
+        </div>
+        <h1>{project.title}</h1>
+        <div class="post-tags">
+          {tagList.map(t => <span class="tag">{t}</span>)}
+        </div>
+      </header>
 
-    <nav class="post-nav">
-      <a href="/projects" class="btn">← 返回项目列表</a>
-    </nav>
-  </article>
-</Base>
+      <div class="post-content">
+        <div id="content">{project.content || ''}</div>
+      </div>
+
+      <nav class="post-nav">
+        <a href="/projects" class="btn">← 返回项目列表</a>
+      </nav>
+    </article>
+
+    <script>
+      import { marked } from 'marked';
+      marked.setOptions({ breaks: true, gfm: true });
+      const content = document.getElementById('content');
+      if (content) {
+        const md = content.textContent;
+        content.innerHTML = marked.parse(md);
+      }
+    </script>
+  </Base>
+)}
 
 <style>
-  .post-header {
-    margin-bottom: 2.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border);
-  }
+  .post-header { margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
   .post-meta { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.8rem; flex-wrap: wrap; }
-  .post-meta .meta { margin: 0; }
+  .post-meta .meta { margin: 0; color: var(--text-muted); }
   .post-header h1 { font-size: 1.8rem; margin-bottom: 0.6rem; }
-  .post-desc {
-    color: var(--text-secondary);
-    font-size: 1rem;
-    margin-bottom: 1rem;
-  }
   .post-tags { display: flex; flex-wrap: wrap; }
-  .status-tag { background: #fef3e2; color: #b8860b; }
+  .status-tag { background: rgba(210,153,34,0.15); color: #d29922; }
 
-  .post-content {
-    font-size: 1rem;
-    line-height: 1.8;
-    max-width: 100%;
-  }
-  .post-content h2 { margin-top: 2rem; }
-  .post-content h3 { margin-top: 1.5rem; }
-  .post-content ul, .post-content ol { margin-left: 1.5rem; }
+  .post-content { font-size: 1rem; line-height: 1.8; }
+  .post-content h1, .post-content h2, .post-content h3 { margin-top: 2rem; }
+  .post-content h1 { font-size: 1.6rem; }
+  .post-content h2 { font-size: 1.3rem; }
+  .post-content h3 { font-size: 1.1rem; }
+  .post-content p { margin-bottom: 0.8rem; }
+  .post-content ul { margin-left: 1.5rem; margin-bottom: 0.8rem; }
   .post-content li { margin-bottom: 0.3rem; }
-  .post-content img { border-radius: var(--radius); margin: 1rem 0; }
-  .post-content table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 1rem 0;
-    font-size: 0.9rem;
-  }
-  .post-content th, .post-content td {
-    border: 1px solid var(--border);
-    padding: 0.5rem 0.8rem;
-    text-align: left;
-  }
+  .post-content code { font-family: var(--font-mono); font-size: 0.85em; background: var(--bg-hover); padding: 0.15em 0.4em; border-radius: 3px; }
+  .post-content pre { background: var(--bg-raised); padding: 1rem; border-radius: var(--radius-sm); overflow-x: auto; margin: 1rem 0; border: 1px solid var(--border); }
+  .post-content pre code { background: none; padding: 0; }
+  .post-content blockquote { border-left: 3px solid var(--c-os); padding: 0.5rem 1rem; margin: 1rem 0; color: var(--text-secondary); background: var(--bg-hover); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+  .post-content table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  .post-content th, .post-content td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
   .post-content th { background: var(--bg-hover); font-weight: 600; }
-
+  .post-content tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+  .post-content img { max-width: 100%; height: auto; border-radius: var(--radius-sm); margin: 1rem 0; }
+  .post-content hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+  .post-content ol { margin-left: 1.5rem; margin-bottom: 0.8rem; }
   .post-nav { margin-top: 3rem; }
 </style>

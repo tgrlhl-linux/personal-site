@@ -1,56 +1,231 @@
 ---
 import Base from '../../layouts/Base.astro';
-import ProjectCard from '../../components/ProjectCard.astro';
-import { getCollection } from 'astro:content';
+import { query } from '../../db/mysql';
 
-const projects = (await getCollection('projects'))
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const projects = await query(
+  `SELECT id, title, slug, excerpt, course as category, tags, metadata, created_at
+   FROM notes WHERE type='project' AND status='published'
+   ORDER BY created_at DESC`
+);
 
-const categories = [...new Set(projects.map(p => p.data.category))];
-const allTags = [...new Set(projects.flatMap(p => p.data.tags))];
+const categoryLabels = {
+  course: '课程',
+  personal: '个人',
+  tool: '工具',
+};
+const categoryColors = {
+  course: '#f0883e',
+  personal: '#79c0ff',
+  tool: '#3fb950',
+};
+function catColor(c) { return categoryColors[c] || '#f0883e'; }
+function catLabel(c) { return categoryLabels[c] || c; }
+
+const grouped = {};
+for (const p of projects) {
+  const cat = p.category || 'course';
+  if (!grouped[cat]) grouped[cat] = [];
+  grouped[cat].push(p);
+}
+
+const catOrder = ['course', 'personal', 'tool'];
+const sortedGroups = Object.entries(grouped).sort((a, b) => catOrder.indexOf(a[0]) - catOrder.indexOf(b[0]));
+const totalStatus = { completed: 0, 'in-progress': 0, archived: 0 };
+projects.forEach(p => {
+  try {
+    const m = JSON.parse(p.metadata || '{}');
+    if (m.projectStatus) totalStatus[m.projectStatus]++;
+  } catch {}
+});
 ---
 
-<Base title="项目" description="课程项目与个人作品">
-  <div class="page-header">
-    <h1>项目</h1>
-    <p>课程作业、个人项目、工具开发 — 成长的每一步都留下痕迹</p>
-  </div>
-
-  <div class="project-stats">
-    <div class="stat">
-      <span class="stat-num">{projects.length}</span>
-      <span class="stat-label">项目总数</span>
-    </div>
-    <div class="stat">
-      <span class="stat-num">{categories.length}</span>
-      <span class="stat-label">类别</span>
-    </div>
-    <div class="stat">
-      <span class="stat-num">{allTags.length}</span>
-      <span class="stat-label">技术标签</span>
+<Base title="项目" description="课程项目与个人作品" wide={true}>
+  <div class="pp-header">
+    <div>
+      <h1>项目</h1>
+      <div class="pp-sub">{projects.length} 个项目 · {sortedGroups.length} 个分类</div>
     </div>
   </div>
 
-  <div class="grid projects-grid">
-    {projects.map(p => <ProjectCard project={p} />)}
-  </div>
+  {projects.length === 0 ? (
+    <div class="pp-empty">还没有项目</div>
+  ) : (
+    <div class="pp-bento">
+
+      <!-- Stats -->
+      <div class="pp-stat" style="--sc:#f0883e;--sb:rgba(240,136,62,0.2)">
+        <div class="stat-icon">🛠️</div>
+        <div class="stat-num">{projects.length}</div>
+        <div class="stat-label">项目总数</div>
+      </div>
+      <div class="pp-stat" style="--sc:#79c0ff;--sb:rgba(121,192,255,0.2)">
+        <div class="stat-icon">📂</div>
+        <div class="stat-num">{sortedGroups.length}</div>
+        <div class="stat-label">分类</div>
+      </div>
+      <div class="pp-stat" style="--sc:#3fb950;--sb:rgba(63,185,80,0.2)">
+        <div class="stat-icon">✅</div>
+        <div class="stat-num">{totalStatus.completed || 0}</div>
+        <div class="stat-label">已完成</div>
+      </div>
+      <div class="pp-stat" style="--sc:#d29922;--sb:rgba(210,153,34,0.2)">
+        <div class="stat-icon">🔄</div>
+        <div class="stat-num">{totalStatus['in-progress'] || 0}</div>
+        <div class="stat-label">进行中</div>
+      </div>
+
+      <!-- Featured: 最新项目作为主卡 -->
+      {(() => {
+        const featured = projects[0];
+        if (!featured) return '';
+        const meta = (() => { try { return JSON.parse(featured.metadata || '{}'); } catch { return {}; } })();
+        const tagList = (() => { try { return JSON.parse(featured.tags || '[]'); } catch { return []; } })();
+        return (
+          <a href={`/projects/${featured.slug}`} class="pp-featured" style={`--cc:${catColor(featured.category)}`}>
+            <div class="pf-label">
+              <span class="pf-cat" style={`background:${catColor(featured.category)}`}>{catLabel(featured.category)}</span>
+              <span class="pf-status">{meta.projectStatus === 'completed' ? '已完成' : meta.projectStatus === 'in-progress' ? '进行中' : ''}</span>
+            </div>
+            <div class="pf-title">{featured.title}</div>
+            <div class="pf-desc">{featured.excerpt}</div>
+            <div class="pf-tags">
+              {tagList.slice(0, 4).map(t => <span class="pf-tag">{t}</span>)}
+            </div>
+          </a>
+        );
+      })()}
+
+      <!-- 分类分组 -->
+      {sortedGroups.map(([cat, items]) => (
+        <div class="pp-group" style={`--cc:${catColor(cat)}`}>
+          <div class="pg-hd">
+            <span class="pg-dot" style={`background:${catColor(cat)};box-shadow:0 0 6px ${catColor(cat)}`}></span>
+            <span class="pg-name">{catLabel(cat)}</span>
+            <span class="pg-count">{items.length}</span>
+          </div>
+          <div class="pg-body">
+            {items.map((p, i) => {
+              const meta = (() => { try { return JSON.parse(p.metadata || '{}'); } catch { return {}; } })();
+              const dateStr = meta.date ? new Date(meta.date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'short' }) : '';
+              const tagList = (() => { try { return JSON.parse(p.tags || '[]'); } catch { return []; } })();
+              return (
+                <a href={`/projects/${p.slug}`} class="pg-item">
+                  <div class="pgi-num">{String(i + 1).padStart(2, '0')}</div>
+                  <div class="pgi-info">
+                    <div class="pgi-title">{p.title}</div>
+                    <div class="pgi-desc">{p.excerpt}</div>
+                    <div class="pgi-tags">
+                      {tagList.slice(0, 3).map(t => <span class="pgi-tag">{t}</span>)}
+                    </div>
+                  </div>
+                  <div class="pgi-date">{dateStr}</div>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+
+    </div>
+  )}
 </Base>
 
 <style>
-  .project-stats {
-    display: flex;
-    gap: 2rem;
-    margin-bottom: 2.5rem;
-    padding: 1.5rem;
+  .pp-header { margin-bottom: 1.2rem; }
+  .pp-header h1 { margin: 0; }
+  .pp-sub { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.1rem; }
+  .pp-empty { text-align: center; padding: 4rem; color: var(--text-muted); }
+
+  .pp-bento {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+
+  .pp-stat {
+    background: var(--bg-card);
+    border: 1px solid var(--sb);
+    border-radius: var(--radius);
+    padding: 1rem 0.8rem;
+    text-align: center;
+  }
+  .pp-stat .stat-icon { font-size: 1.2rem; margin-bottom: 0.2rem; }
+  .pp-stat .stat-num { font-size: 1.8rem; font-weight: 800; color: var(--sc); line-height: 1.1; }
+  .pp-stat .stat-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.1rem; }
+
+  .pp-featured {
+    grid-column: span 2;
+    grid-row: span 2;
     background: var(--bg-card);
     border: 1px solid var(--border);
+    border-left: 3px solid var(--cc);
     border-radius: var(--radius);
+    padding: 1.5rem;
+    text-decoration: none;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.2s, transform 0.2s;
   }
-  .stat { display: flex; flex-direction: column; align-items: center; }
-  .stat-num { font-size: 1.8rem; font-weight: 700; color: var(--accent); }
-  .stat-label { font-size: 0.8rem; color: var(--text-muted); }
-  .projects-grid { grid-template-columns: 1fr; }
-  @media (min-width: 640px) {
-    .projects-grid { grid-template-columns: repeat(2, 1fr); }
+  .pp-featured:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+  }
+  .pf-label { display: flex; gap: 0.5rem; margin-bottom: 0.6rem; }
+  .pf-cat { font-size: 0.68rem; padding: 0.1em 0.6em; border-radius: 4px; color: #fff; }
+  .pf-status { font-size: 0.68rem; color: var(--text-muted); }
+  .pf-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 0.5rem; }
+  .pf-desc { font-size: 0.88rem; color: var(--text-secondary); flex: 1; }
+  .pf-tags { display: flex; gap: 0.3rem; margin-top: 0.8rem; flex-wrap: wrap; }
+  .pf-tag { font-size: 0.7rem; padding: 0.15em 0.5em; background: var(--bg-hover); border-radius: 4px; color: var(--text-secondary); }
+
+  .pp-group {
+    grid-column: span 2;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cc);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .pg-hd {
+    padding: 0.8rem 1.2rem 0.3rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .pg-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .pg-name { font-weight: 600; font-size: 0.95rem; }
+  .pg-count { font-size: 0.7rem; color: var(--text-muted); background: var(--bg-hover); padding: 0.1em 0.5em; border-radius: 8px; }
+
+  .pg-body { padding: 0.2rem 0.8rem 0.8rem; }
+  .pg-item {
+    display: grid;
+    grid-template-columns: 2rem 1fr 6rem;
+    gap: 0.8rem;
+    align-items: start;
+    padding: 0.6rem 0.5rem;
+    margin: 0 -0.3rem;
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  .pg-item:last-child { border-bottom: none; }
+  .pg-item:hover { background: var(--bg-hover); }
+  .pgi-num { font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); padding-top: 0.15rem; }
+  .pgi-title { font-size: 0.9rem; font-weight: 500; }
+  .pgi-desc { font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.1rem; line-height: 1.4; }
+  .pgi-tags { display: flex; gap: 0.25rem; margin-top: 0.25rem; }
+  .pgi-tag { font-size: 0.65rem; padding: 0.1em 0.4em; background: var(--bg-hover); border-radius: 3px; color: var(--text-secondary); }
+  .pgi-date { font-size: 0.72rem; color: var(--text-muted); text-align: right; padding-top: 0.15rem; }
+
+  @media (max-width: 900px) {
+    .pp-bento { grid-template-columns: repeat(2, 1fr); }
+    .pp-featured { grid-column: span 2; grid-row: span 1; }
+  }
+  @media (max-width: 600px) {
+    .pp-bento { grid-template-columns: 1fr; }
+    .pp-featured, .pp-group { grid-column: span 1; }
+    .pg-item { grid-template-columns: 1.5rem 1fr; }
+    .pgi-date { display: none; }
   }
 </style>

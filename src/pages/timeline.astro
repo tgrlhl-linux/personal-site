@@ -1,10 +1,9 @@
 ---
 import Base from '../layouts/Base.astro';
-import { getCollection } from 'astro:content';
 import { query } from '../db/mysql';
 
-const dbNotes = await query('SELECT id, title, LEFT(content, 100) AS excerpt, created_at FROM notes ORDER BY created_at DESC');
-const projects = await getCollection('projects');
+const dbNotes = await query("SELECT id, title, excerpt, created_at FROM notes WHERE type='note' AND status='published' ORDER BY created_at DESC");
+const dbProjects = await query("SELECT id, title, slug, excerpt, metadata, created_at FROM notes WHERE type='project' AND status='published' ORDER BY created_at DESC");
 
 type Event = {
   date: Date;
@@ -15,17 +14,20 @@ type Event = {
 };
 
 const events: Event[] = [
-  ...projects.map(p => ({
-    date: p.data.date,
-    title: p.data.title,
-    description: p.data.description,
-    type: 'project' as const,
-    url: `/projects/${p.id}`,
-  })),
+  ...dbProjects.map(p => {
+    const meta = (() => { try { return JSON.parse(p.metadata || '{}'); } catch { return {}; } })();
+    return {
+      date: meta.date ? new Date(meta.date) : new Date(p.created_at),
+      title: p.title,
+      description: p.excerpt || p.title,
+      type: 'project' as const,
+      url: `/projects/${p.slug}`,
+    };
+  }),
   ...dbNotes.map(n => ({
     date: new Date(n.created_at),
     title: n.title,
-    description: (n.excerpt || n.title),
+    description: n.excerpt || n.title,
     type: 'note' as const,
     url: `/notes/${n.id}`,
   })),
@@ -41,9 +43,7 @@ const years = [...new Set(events.map(e => e.date.getFullYear()))].sort((a, b) =>
   </div>
 
   {events.length === 0 ? (
-    <div class="empty-state">
-      <p>还没有内容，敬请期待</p>
-    </div>
+    <div class="empty-state">还没有内容</div>
   ) : (
     <div class="timeline">
       {years.map(year => (
@@ -74,12 +74,12 @@ const years = [...new Set(events.map(e => e.date.getFullYear()))].sort((a, b) =>
   .year-group { margin-bottom: 2.5rem; }
   .year-heading {
     font-size: 1.5rem;
-    color: var(--accent);
+    color: var(--c-os);
     margin-bottom: 1rem;
     position: relative;
   }
   .year-line {
-    border-left: 2px solid var(--accent-light);
+    border-left: 2px solid var(--c-os-glow);
     padding-left: 1.5rem;
     margin-left: 0.5rem;
   }
@@ -102,23 +102,14 @@ const years = [...new Set(events.map(e => e.date.getFullYear()))].sort((a, b) =>
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: var(--accent-light);
-    border: 2px solid var(--accent);
+    background: var(--bg-card);
+    border: 2px solid var(--c-os);
   }
-  .type-project .event-dot { background: var(--accent); }
-  .type-note .event-dot { background: var(--bg-card); }
+  .type-project .event-dot { background: var(--c-os); border-color: var(--c-os); }
+  .type-note .event-dot { background: var(--c-db); border-color: var(--c-db); }
   .event-body { flex: 1; }
-  .event-body time { display: block; margin-bottom: 0.2rem; font-size: 0.82rem; }
-  .event-body h3 {
-    font-size: 1rem;
-    margin: 0 0 0.3rem;
-    font-weight: 600;
-  }
-  .event-body p {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    margin: 0;
-    line-height: 1.5;
-  }
+  .event-body time { display: block; margin-bottom: 0.2rem; font-size: 0.82rem; color: var(--text-muted); }
+  .event-body h3 { font-size: 1rem; margin: 0 0 0.3rem; font-weight: 600; }
+  .event-body p { font-size: 0.85rem; color: var(--text-secondary); margin: 0; line-height: 1.5; }
   .empty-state { text-align: center; padding: 4rem 0; color: var(--text-muted); }
 </style>

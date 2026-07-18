@@ -4,10 +4,10 @@ export async function GET({ url }) {
   const search = url.searchParams.get('q') || '';
   const course = url.searchParams.get('course') || '';
   const page = parseInt(url.searchParams.get('page') || '1');
-  const limit = 20;
+  const limit = parseInt(url.searchParams.get('limit') || '50');
   const offset = (page - 1) * limit;
 
-  let where = '1=1';
+  let where = "type = 'note' AND status = 'published'";
   const params = [];
 
   if (search) {
@@ -23,13 +23,15 @@ export async function GET({ url }) {
   const total = countRows[0].total;
 
   const rows = await query(
-    `SELECT id, title, LEFT(content, 200) AS excerpt, course, tags, created_at, updated_at
+    `SELECT id, title, slug, LEFT(excerpt, 200) AS excerpt, course, tags, metadata, created_at, updated_at
      FROM notes WHERE ${where}
      ORDER BY created_at DESC LIMIT ? OFFSET ?`,
     [...params, limit, offset]
   );
 
-  const courses = await query('SELECT DISTINCT course FROM notes WHERE course IS NOT NULL AND course != "" ORDER BY course');
+  const courses = await query(
+    `SELECT DISTINCT course FROM notes WHERE type='note' AND status='published' AND course IS NOT NULL AND course != '' ORDER BY course`
+  );
 
   return new Response(JSON.stringify({
     notes: rows,
@@ -52,9 +54,13 @@ export async function POST({ request }) {
     });
   }
 
+  const slug = 'note-' + Date.now();
+  const excerpt = (content || '').replace(/#{1,6}\s/g, '').replace(/\*\*/g, '').replace(/\n/g, ' ').trim().substring(0, 150);
+
   const result = await query(
-    'INSERT INTO notes (title, content, course, tags) VALUES (?, ?, ?, ?)',
-    [title, content || '', course || '', JSON.stringify(tags || [])]
+    `INSERT INTO notes (type, title, slug, content, excerpt, course, tags, status)
+     VALUES ('note', ?, ?, ?, ?, ?, ?, 'published')`,
+    [title, slug, content || '', excerpt, course || '', JSON.stringify(tags || [])]
   );
 
   return new Response(JSON.stringify({ id: result.insertId, success: true }), {

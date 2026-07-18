@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bento Grid · Dark Neon</title>
+<style>
+  :root {
+    --bg: #0b0e14;
+    --card-bg: #131820;
+    --card-border: rgba(255,255,255,0.06);
+    --text: #e1e4e8;
+    --text-secondary: #8b949e;
+    --text-muted: #586069;
+    --shadow: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-hover: 0 8px 32px rgba(0,0,0,0.5);
+    --radius: 14px;
+
+    --c-os: #58a6ff;
+    --c-os-glow: rgba(88,166,255,0.12);
+    --c-db: #3fb950;
+    --c-db-glow: rgba(63,185,80,0.12);
+    --c-prob: #d29922;
+    --c-prob-glow: rgba(210,153,34,0.12);
+    --c-pol: #bc8cff;
+    --c-pol-glow: rgba(188,140,255,0.12);
+
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    --font-mono: "Consolas", "JetBrains Mono", monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 2rem;
+  }
+  .page {
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  /* ── Header ── */
+  .page-hd {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+  }
+  .page-hd h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #e1e4e8, #8b949e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .page-hd .sub {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .search-box {
+    flex: 1;
+    min-width: 240px;
+    position: relative;
+  }
+  .search-box input {
+    width: 100%;
+    padding: 0.65rem 0.9rem 0.65rem 2.4rem;
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    background: var(--card-bg);
+    color: var(--text);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  .search-box input::placeholder { color: var(--text-muted); }
+  .search-box input:focus {
+    border-color: var(--c-os);
+    box-shadow: 0 0 0 3px var(--c-os-glow);
+  }
+  .search-box .icon {
+    position: absolute;
+    left: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 1rem;
+    pointer-events: none;
+  }
+  .filter-group {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .filter-pill {
+    padding: 0.45rem 1rem;
+    border-radius: 20px;
+    border: 1px solid var(--card-border);
+    background: var(--card-bg);
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+  .filter-pill:hover {
+    border-color: var(--text-muted);
+    background: rgba(255,255,255,0.04);
+  }
+  .filter-pill.active {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+  .filter-pill[data-course="os"]:hover:not(.active) { border-color: var(--c-os); color: var(--c-os); }
+  .filter-pill[data-course="db"]:hover:not(.active) { border-color: var(--c-db); color: var(--c-db); }
+  .filter-pill[data-course="prob"]:hover:not(.active) { border-color: var(--c-prob); color: var(--c-prob); }
+  .filter-pill[data-course="pol"]:hover:not(.active) { border-color: var(--c-pol); color: var(--c-pol); }
+
+  /* ── Bento Grid ── */
+  .bento {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    transition: box-shadow 0.25s, transform 0.2s, border-color 0.2s;
+  }
+  .card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+  }
+  .card-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  /* ── Stats ── */
+  .stat-card {
+    text-align: center;
+    padding: 1rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.04;
+    border-radius: var(--radius);
+  }
+  .stat-num {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+  }
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 0.15rem;
+  }
+  .stat-icon {
+    font-size: 1.2rem;
+    margin-bottom: 0.25rem;
+  }
+  .stat-card.s-os { border-color: rgba(88,166,255,0.2); }
+  .stat-card.s-os::before { background: var(--c-os); }
+  .stat-card.s-os .stat-num { color: var(--c-os); }
+  .stat-card.s-db { border-color: rgba(63,185,80,0.2); }
+  .stat-card.s-db::before { background: var(--c-db); }
+  .stat-card.s-db .stat-num { color: var(--c-db); }
+  .stat-card.s-prob { border-color: rgba(210,153,34,0.2); }
+  .stat-card.s-prob::before { background: var(--c-prob); }
+  .stat-card.s-prob .stat-num { color: var(--c-prob); }
+  .stat-card.s-pol { border-color: rgba(188,140,255,0.2); }
+  .stat-card.s-pol::before { background: var(--c-pol); }
+  .stat-card.s-pol .stat-num { color: var(--c-pol); }
+
+  /* ── Course cards ── */
+  .course-card {
+    padding: 0;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .course-hd {
+    padding: 1rem 1.25rem 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .course-hd-left {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .course-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 8px currentColor;
+  }
+  .course-name {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+  .course-count {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.04);
+    padding: 0.15em 0.6em;
+    border-radius: 8px;
+  }
+  .course-more {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .course-card:hover .course-more { opacity: 1; }
+  .course-more:hover { color: var(--text); }
+
+  .course-body {
+    padding: 0.2rem 1.25rem 1rem;
+  }
+
+  .note-row {
+    display: flex;
+    align-items: center;
+    padding: 0.35rem 0.5rem;
+    margin: 0 -0.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text);
+    gap: 0.5rem;
+    transition: background 0.12s;
+    cursor: pointer;
+  }
+  .note-row:hover {
+    background: rgba(255,255,255,0.04);
+  }
+  .note-row .idx {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    min-width: 1.5rem;
+    font-variant-numeric: tabular-nums;
+    font-family: var(--font-mono);
+  }
+  .note-row .title {
+    font-size: 0.85rem;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .note-row .date {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .course-foot {
+    padding: 0.5rem 1.25rem;
+    border-top: 1px solid var(--card-border);
+    font-size: 0.78rem;
+  }
+  .course-foot a {
+    color: var(--text-muted);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .course-foot a:hover { color: var(--text); }
+
+  /* Card spans */
+  .card-os {
+    grid-column: span 2;
+    grid-row: span 2;
+    border-left: 3px solid var(--c-os);
+    background: linear-gradient(135deg, var(--card-bg), rgba(88,166,255,0.03));
+  }
+  .card-db {
+    grid-column: span 2;
+    border-left: 3px solid var(--c-db);
+    background: linear-gradient(135deg, var(--card-bg), rgba(63,185,80,0.03));
+  }
+  .card-prob {
+    grid-column: span 2;
+    border-left: 3px solid var(--c-prob);
+    background: linear-gradient(135deg, var(--card-bg), rgba(210,153,34,0.03));
+  }
+  .card-pol {
+    grid-column: span 2;
+    border-left: 3px solid var(--c-pol);
+    background: linear-gradient(135deg, var(--card-bg), rgba(188,140,255,0.03));
+  }
+
+  .card-db .course-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.15rem;
+  }
+
+  /* Latest notes */
+  .latest-card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(255,255,255,0.04);
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+  }
+  .latest-item {
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--card-border);
+    text-decoration: none;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .latest-item:last-child { border-bottom: none; }
+  .latest-item:hover .latest-title { opacity: 1; }
+  .latest-course {
+    font-size: 0.65rem;
+    padding: 0.1em 0.5em;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 0.15rem;
+    font-weight: 500;
+  }
+  .latest-course.l-os { background: rgba(88,166,255,0.15); color: var(--c-os); }
+  .latest-course.l-db { background: rgba(63,185,80,0.15); color: var(--c-db); }
+  .latest-course.l-prob { background: rgba(210,153,34,0.15); color: var(--c-prob); }
+  .latest-course.l-pol { background: rgba(188,140,255,0.15); color: var(--c-pol); }
+  .latest-title {
+    font-size: 0.85rem;
+    font-weight: 500;
+    opacity: 0.85;
+    transition: opacity 0.15s;
+  }
+  .latest-date {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    margin-top: 0.1rem;
+  }
+
+  /* Tag cloud */
+  .tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.3rem;
+  }
+  .tag-item {
+    font-size: 0.68rem;
+    padding: 0.2em 0.6em;
+    background: rgba(255,255,255,0.04);
+    border-radius: 4px;
+    color: var(--text-secondary);
+    transition: all 0.12s;
+    cursor: default;
+  }
+  .tag-item:hover {
+    background: rgba(255,255,255,0.08);
+    color: var(--text);
+  }
+
+  /* ── Demo bar ── */
+  .demo-bar {
+    margin-top: 2rem;
+    padding: 1rem 1.25rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    font-size: 0.82rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    color: var(--text-secondary);
+  }
+  .demo-bar .tag {
+    padding: 0.2em 0.6em;
+    border-radius: 4px;
+    font-size: 0.7rem;
+  }
+  .tag-os { background: rgba(88,166,255,0.15); color: var(--c-os); }
+  .tag-db { background: rgba(63,185,80,0.15); color: var(--c-db); }
+  .tag-prob { background: rgba(210,153,34,0.15); color: var(--c-prob); }
+  .tag-pol { background: rgba(188,140,255,0.15); color: var(--c-pol); }
+  .demo-bar .hl {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  @media (max-width: 960px) {
+    .bento { grid-template-columns: repeat(2, 1fr); }
+    .card-os { grid-column: span 2; grid-row: span 1; }
+    body { padding: 1rem; }
+  }
+  @media (max-width: 600px) {
+    .bento { grid-template-columns: 1fr; }
+    .card-os, .card-db, .card-prob, .card-pol { grid-column: span 1; }
+    .card-db .course-body { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-hd">
+    <div>
+      <h1>📓 笔记</h1>
+      <div class="sub">课程笔记与技术思考 · 共 29 篇</div>
+    </div>
+    <div style="display:flex; gap:0.5rem; align-items:center;">
+      <span style="font-size:0.75rem; color:var(--text-muted);">暗色 · 霓虹</span>
+      <span style="display:inline-block; width:20px; height:20px; border-radius:50%; background:var(--c-os); box-shadow:0 0 12px var(--c-os);"></span>
+      <span style="display:inline-block; width:20px; height:20px; border-radius:50%; background:var(--c-db); box-shadow:0 0 12px var(--c-db);"></span>
+      <span style="display:inline-block; width:20px; height:20px; border-radius:50%; background:var(--c-prob); box-shadow:0 0 12px var(--c-prob);"></span>
+      <span style="display:inline-block; width:20px; height:20px; border-radius:50%; background:var(--c-pol); box-shadow:0 0 12px var(--c-pol);"></span>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="icon">⌕</span>
+      <input type="text" placeholder="搜索笔记标题、内容或标签...">
+    </div>
+    <div class="filter-group">
+      <span class="filter-pill active">全部</span>
+      <span class="filter-pill" data-course="os">操作系统</span>
+      <span class="filter-pill" data-course="db">数据库原理</span>
+      <span class="filter-pill" data-course="prob">概率论</span>
+      <span class="filter-pill" data-course="pol">习近平思想概论</span>
+    </div>
+  </div>
+
+  <!-- Bento Grid -->
+  <div class="bento">
+
+    <!-- Stats row -->
+    <div class="card stat-card s-os">
+      <div class="stat-icon">📘</div>
+      <div class="stat-num">29</div>
+      <div class="stat-label">笔记总数</div>
+    </div>
+    <div class="card stat-card s-db">
+      <div class="stat-icon">📗</div>
+      <div class="stat-num">4</div>
+      <div class="stat-label">课程分类</div>
+    </div>
+    <div class="card stat-card s-prob">
+      <div class="stat-icon">🏆</div>
+      <div class="stat-num">10</div>
+      <div class="stat-label">最多 · 操作系统</div>
+    </div>
+    <div class="card stat-card s-pol">
+      <div class="stat-icon">🕐</div>
+      <div class="stat-num">07/18</div>
+      <div class="stat-label">最后更新</div>
+    </div>
+
+    <!-- 操作系统 (2×2) -->
+    <div class="card course-card card-os">
+      <div class="course-hd">
+        <div class="course-hd-left">
+          <span class="course-dot" style="color:var(--c-os); background:var(--c-os);"></span>
+          <span class="course-name" style="color:var(--c-os);">操作系统</span>
+          <span class="course-count">10 篇</span>
+        </div>
+        <a href="#" class="course-more">全部 →</a>
+      </div>
+      <div class="course-body">
+        <div class="note-row"><span class="idx">·&nbsp;总览</span><span class="title">00 目录与总览</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;引论</span><span class="title">01 操作系统引论</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;进程</span><span class="title">02 进程描述与控制</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;调度</span><span class="title">03 处理机调度</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;同步</span><span class="title">04 进程同步与死锁</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;存储</span><span class="title">05 存储器管理</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;虚拟</span><span class="title">06 虚拟存储器</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;I/O</span><span class="title">07 输入输出系统</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;文件</span><span class="title">08 文件管理</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;磁盘</span><span class="title">09 磁盘存储器管理</span></div>
+      </div>
+      <div class="course-foot"><a href="#">📖 浏览全部 →</a></div>
+    </div>
+
+    <!-- Latest + Tags -->
+    <div class="card latest-card">
+      <div class="card-label">⚡ 最新</div>
+      <div class="latest-item">
+        <span class="latest-course l-os">操作系统</span>
+        <div class="latest-title">09 磁盘存储器管理</div>
+        <div class="latest-date">2026.07.18</div>
+      </div>
+      <div class="latest-item">
+        <span class="latest-course l-db">数据库原理</span>
+        <div class="latest-title">06 数据库设计</div>
+        <div class="latest-date">2026.07.18</div>
+      </div>
+      <div class="latest-item">
+        <span class="latest-course l-prob">概率论</span>
+        <div class="latest-title">05 参数估计与假设检验</div>
+        <div class="latest-date">2026.07.18</div>
+      </div>
+      <div style="margin-top:auto; padding-top:0.6rem; border-top:1px solid var(--card-border);">
+        <div class="card-label" style="margin-bottom:0.3rem;">🏷️ 标签</div>
+        <div class="tag-cloud">
+          <span class="tag-item">操作系统</span>
+          <span class="tag-item">数据库原理</span>
+          <span class="tag-item">期末复习</span>
+          <span class="tag-item">概率论</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 数据库原理 -->
+    <div class="card course-card card-db">
+      <div class="course-hd">
+        <div class="course-hd-left">
+          <span class="course-dot" style="color:var(--c-db); background:var(--c-db);"></span>
+          <span class="course-name" style="color:var(--c-db);">数据库原理</span>
+          <span class="course-count">7 篇</span>
+        </div>
+        <a href="#" class="course-more">全部 →</a>
+      </div>
+      <div class="course-body">
+        <div class="note-row"><span class="idx">·&nbsp;总览</span><span class="title">00 目录与总览</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;绪论</span><span class="title">01 绪论</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;关系</span><span class="title">02 关系数据库</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;SQL</span><span class="title">03 SQL语言</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;安全</span><span class="title">04 安全性与完整性</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;理论</span><span class="title">05 关系数据理论</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;设计</span><span class="title">06 数据库设计</span></div>
+      </div>
+      <div class="course-foot"><a href="#">📖 浏览全部 →</a></div>
+    </div>
+
+    <!-- 概率论 -->
+    <div class="card course-card card-prob">
+      <div class="course-hd">
+        <div class="course-hd-left">
+          <span class="course-dot" style="color:var(--c-prob); background:var(--c-prob);"></span>
+          <span class="course-name" style="color:var(--c-prob);">概率论与数理统计</span>
+          <span class="course-count">6 篇</span>
+        </div>
+        <a href="#" class="course-more">全部 →</a>
+      </div>
+      <div class="course-body" style="display:flex; flex-direction:column; gap:0.1rem;">
+        <div class="note-row"><span class="idx">·&nbsp;总览</span><span class="title">00 目录与总览</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;基础</span><span class="title">01 概率论基础</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;分布</span><span class="title">02 随机变量及其分布</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;数字</span><span class="title">03 数字特征与大数定律</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;统计</span><span class="title">04 数理统计基础</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;检验</span><span class="title">05 参数估计与假设检验</span></div>
+      </div>
+      <div class="course-foot"><a href="#">📖 浏览全部 →</a></div>
+    </div>
+
+    <!-- 习近平思想 -->
+    <div class="card course-card card-pol">
+      <div class="course-hd">
+        <div class="course-hd-left">
+          <span class="course-dot" style="color:var(--c-pol); background:var(--c-pol);"></span>
+          <span class="course-name" style="color:var(--c-pol);">习近平思想概论</span>
+          <span class="course-count">6 篇</span>
+        </div>
+        <a href="#" class="course-more">全部 →</a>
+      </div>
+      <div class="course-body" style="display:flex; flex-direction:column; gap:0.1rem;">
+        <div class="note-row"><span class="idx">·&nbsp;总览</span><span class="title">00 目录与总览</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;导论</span><span class="title">01 导论与新时代</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;经济</span><span class="title">02 经济社会民生</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;政治</span><span class="title">03 政治法治文化社会</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;生态</span><span class="title">04 生态文明与安全</span></div>
+        <div class="note-row"><span class="idx">·&nbsp;外交</span><span class="title">05 外交与党建</span></div>
+      </div>
+      <div class="course-foot"><a href="#">📖 浏览全部 →</a></div>
+    </div>
+
+  </div>
+
+  <!-- Demo bar -->
+  <div class="demo-bar">
+    <span>🎨</span>
+    <span class="hl">暗色 · 霓虹系</span>
+    <span class="tag tag-os">● 操作系统 · 58a6ff</span>
+    <span class="tag tag-db">● 数据库原理 · 3fb950</span>
+    <span class="tag tag-prob">● 概率论 · d29922</span>
+    <span class="tag tag-pol">● 习近平思想 · bc8cff</span>
+    <span style="margin-left:auto; opacity:0.5; font-size:0.72rem;">卡片悬浮发光 · 暗色基底</span>
+  </div>
+
+</div>
+</body>
+</html>
