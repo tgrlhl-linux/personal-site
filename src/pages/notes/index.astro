@@ -102,89 +102,95 @@ const allTags = [...new Set(notes.flatMap(n => {
       {search && <p class="np-empty-hint">没有找到匹配「{search}」的笔记</p>}
     </div>
   ) : (
-    <!-- Bento Grid -->
-    <div class="np-bento">
+    <!-- Card layout (参考项目页) -->
+    <div class="nc-layout">
 
       <!-- Stats row -->
-      <div class="np-stat" style="--stat-color:var(--c-os);--stat-border:rgba(88,166,255,0.2)">
-        <div class="stat-icon">📘</div>
-        <div class="stat-num">{notes.length}</div>
-        <div class="stat-label">笔记总数</div>
-      </div>
-      <div class="np-stat" style="--stat-color:var(--c-db);--stat-border:rgba(63,185,80,0.2)">
-        <div class="stat-icon">📗</div>
-        <div class="stat-num">{courses.length}</div>
-        <div class="stat-label">课程分类</div>
-      </div>
-      <div class="np-stat" style="--stat-color:var(--c-prob);--stat-border:rgba(210,153,34,0.2)">
-        <div class="stat-icon">🏆</div>
-        <div class="stat-num">{Math.max(...sortedGroups.map(g => g[1].length), 0)}</div>
-        <div class="stat-label">最多 · 操作系统</div>
-      </div>
-      <div class="np-stat" style="--stat-color:var(--c-pol);--stat-border:rgba(188,140,255,0.2)">
-        <div class="stat-icon">🕐</div>
-        <div class="stat-num">{new Date(latestNotes[0]?.created_at || Date.now()).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' })}</div>
-        <div class="stat-label">最后更新</div>
+      <div class="nc-stats">
+        <div class="nc-stat" style="--sc:var(--c-os);--sb:rgba(88,166,255,0.2)">
+          <div class="nc-stat-icon">📘</div>
+          <div class="nc-stat-num">{notes.length}</div>
+          <div class="nc-stat-label">笔记总数</div>
+        </div>
+        <div class="nc-stat" style="--sc:var(--c-db);--sb:rgba(63,185,80,0.2)">
+          <div class="nc-stat-icon">📗</div>
+          <div class="nc-stat-num">{courses.length}</div>
+          <div class="nc-stat-label">课程分类</div>
+        </div>
+        <div class="nc-stat" style="--sc:var(--c-prob);--sb:rgba(210,153,34,0.2)">
+          <div class="nc-stat-icon">🏆</div>
+          <div class="nc-stat-num">{Math.max(...sortedGroups.map(g => g[1].length), 0)}</div>
+          <div class="nc-stat-label">最多笔记</div>
+        </div>
+        <div class="nc-stat" style="--sc:var(--c-pol);--sb:rgba(188,140,255,0.2)">
+          <div class="nc-stat-icon">🕐</div>
+          <div class="nc-stat-num">{latestNotes[0] ? new Date(latestNotes[0].created_at).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }) : '--'}</div>
+          <div class="nc-stat-label">最后更新</div>
+        </div>
       </div>
 
-      <!-- Course blocks -->
-      {sortedGroups.map(([course, items]) => {
-        const color = cc(course);
-        const glow = cg(course);
-        const isLarge = items.length >= 8;
-        const isMedium = items.length >= 5;
-        return (
-          <div class={'np-course' + (isLarge ? ' course-lg' : isMedium ? ' course-md' : ' course-sm')}
-            style={`--cc:${color};--cg:${glow}`}
-          >
-            <div class="nc-hd">
-              <div class="nc-hd-left">
-                <span class="nc-dot" style="background:{color};box-shadow:0 0 8px {color}"></span>
-                <span class="nc-name" style="color:{color}">{course}</span>
-                <span class="nc-count">{items.length}</span>
-              </div>
-              <a href={`/notes?course=${encodeURIComponent(course)}`} class="nc-more">全部 →</a>
-            </div>
-            <div class="nc-body">
-              {items.map((n, i) => {
-                const tagList = (() => { try { return JSON.parse(n.tags || '[]'); } catch { return []; } })();
-                const shortTitle = n.title.replace(/^.*?·\s*/, '');
-                const num = String(i).padStart(2, '0');
-                return (
-                  <a href={`/notes/${n.id}`} class="nr">
-                    <span class="nr-idx" style="--nr-color:{color}">{num}</span>
-                    <span class="nr-title">{shortTitle}</span>
-                  </a>
-                );
-              })}
-            </div>
-            <div class="nc-foot">
-              <a href={`/notes?course=${encodeURIComponent(course)}`}>浏览全部 {items.length} 篇 →</a>
-            </div>
-          </div>
-        );
-      })}
-
-      <!-- Latest notes card -->
-      <div class="np-latest">
-        <div class="np-latest-label">⚡ 最近更新</div>
-        {latestNotes.map(n => {
-          const c = n.course || '';
-          const cName = c.replace(/[^一-鿿]/g, '');
+      <!-- Cards grouped by course (参考项目页分组设计) -->
+      <div class="nc-groups">
+        {sortedGroups.map(([course, items]) => {
+          const color = cc(course);
           return (
-            <a href={`/notes/${n.id}`} class="nl-item">
-              <span class={'nl-course c-' + cName}
-                style={`--c-bg:${cg(c)};--c-color:${cc(c)}`}
-              >{c}</span>
-              <div class="nl-title">{n.title.replace(/^.*?·\s*/, '')}</div>
-              <div class="nl-date">{new Date(n.created_at).toLocaleDateString('zh-CN')}</div>
-            </a>
+            <div class="nc-group" style={`--cc:${color}`}>
+              <div class="nc-grp-hd">
+                <span class="nc-grp-dot" style={`background:${color};box-shadow:0 0 6px ${color}`}></span>
+                <span class="nc-grp-name">{course}</span>
+                <span class="nc-grp-count">{items.length}</span>
+              </div>
+              <div class="nc-grp-body">
+                {items.map((n, i) => {
+                  const tagList = (() => { try { return JSON.parse(n.tags || '[]'); } catch { return []; } })();
+                  const shortTitle = n.title.replace(/^.*?·\s*/, '');
+                  const dateStr = new Date(n.created_at).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+                  return (
+                    <a href={`/notes/${n.id}`} class="nc-card" style={`--cc:${color}`}>
+                      <div class="ncc-left">
+                        <span class="ncc-num">{String(i + 1).padStart(2, '0')}</span>
+                        <span class="ncc-title">{shortTitle}</span>
+                        <div class="ncc-tags">
+                          {tagList.slice(0, 3).map(t => <span class="ncc-tag">{t}</span>)}
+                        </div>
+                      </div>
+                      <div class="ncc-right">
+                        <div class="ncc-excerpt">{n.excerpt || shortTitle}</div>
+                        <div class="ncc-meta">
+                          <span class="ncc-course" style={`color:${color}`}>{course}</span>
+                          <span class="ncc-date">{dateStr}</span>
+                        </div>
+                      </div>
+                      <div class="ncc-arrow">→</div>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
           );
         })}
-        <div class="np-latest-divider"></div>
-        <div class="np-latest-label" style="margin-top:0.6rem;">🏷️ 标签</div>
-        <div class="nl-tags">
-          {allTags.slice(0, 8).map(t => <span class="nl-tag">{t}</span>)}
+      </div>
+
+      <!-- Side row: latest + tags -->
+      <div class="nc-sidebar">
+        <div class="nc-latest">
+          <div class="nc-latest-label">⚡ 最近更新</div>
+          {latestNotes.map(n => {
+            const c = n.course || '';
+            return (
+              <a href={`/notes/${n.id}`} class="ncl-item">
+                <span class="ncl-course" style={`--c-bg:${cg(c)};--c-color:${cc(c)}`}>{c}</span>
+                <div class="ncl-title">{n.title.replace(/^.*?·\s*/, '')}</div>
+                <div class="ncl-date">{new Date(n.created_at).toLocaleDateString('zh-CN')}</div>
+              </a>
+            );
+          })}
+        </div>
+        <div class="nc-tags-card">
+          <div class="nc-tags-label">🏷️ 标签</div>
+          <div class="nc-tags-body">
+            {allTags.slice(0, 10).map(t => <span class="nc-tag">{t}</span>)}
+          </div>
         </div>
       </div>
 
@@ -246,149 +252,208 @@ const allTags = [...new Set(notes.flatMap(n => {
     border-color: transparent;
   }
 
-  /* ── Bento Grid ── */
-  .np-bento {
+  /* ── Card Layout（参考项目页） ── */
+  .nc-layout { max-width: var(--max-width-wide); margin: 0 auto; }
+
+  /* Stats row */
+  .nc-stats {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 0.75rem;
+    margin-bottom: 1.5rem;
   }
-
-  /* Stats */
-  .np-stat {
+  .nc-stat {
     background: var(--bg-card);
-    border: 1px solid var(--stat-border);
+    border: 1px solid var(--sb);
     border-radius: var(--radius);
     padding: 0.8rem 0.6rem;
     text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    transition: box-shadow 0.2s;
   }
-  .np-stat:hover {
-    box-shadow: 0 0 20px rgba(0,0,0,0.2);
-  }
-  .stat-icon { font-size: 1rem; margin-bottom: 0.15rem; }
-  .stat-num {
-    font-size: 1.5rem;
-    font-weight: 700;
-    line-height: 1.1;
+  .nc-stat-icon { font-size: 1rem; margin-bottom: 0.15rem; }
+  .nc-stat-num {
+    font-size: 1.5rem; font-weight: 700; color: var(--sc); line-height: 1.1;
     letter-spacing: -0.03em;
-    color: var(--stat-color);
   }
-  .stat-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.05rem; }
+  .nc-stat-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.05rem; }
 
-  /* Course block */
-  .np-course {
+  /* Groups container */
+  .nc-groups { display: flex; flex-direction: column; gap: 1.2rem; margin-bottom: 1.2rem; }
+  .nc-group {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-left: 3px solid var(--cc);
     border-radius: var(--radius);
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    transition: box-shadow 0.2s, transform 0.2s;
   }
-  .np-course:hover {
-    box-shadow: var(--shadow-hover);
-    transform: translateY(-2px);
+  .nc-grp-hd {
+    padding: 0.7rem 1.2rem 0.3rem;
+    display: flex; align-items: center; gap: 0.4rem;
   }
-  .course-lg { grid-column: span 2; grid-row: span 2; }
-  .course-md { grid-column: span 2; }
-  .course-sm { grid-column: span 2; }
-
-  .nc-hd {
-    padding: 0.7rem 1rem 0.3rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .nc-hd-left { display: flex; align-items: center; gap: 0.4rem; }
-  .nc-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .nc-name { font-size: 0.9rem; font-weight: 600; }
-  .nc-count {
+  .nc-grp-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .nc-grp-name { font-weight: 600; font-size: 0.9rem; }
+  .nc-grp-count {
     font-size: 0.65rem; color: var(--text-muted);
     background: var(--bg-hover); padding: 0.05em 0.45em; border-radius: 6px;
   }
-  .nc-more {
-    font-size: 0.7rem; color: var(--text-muted); text-decoration: none; opacity: 0;
-    transition: opacity 0.2s;
-  }
-  .np-course:hover .nc-more { opacity: 1; }
-  .nc-more:hover { color: var(--cc); }
+  .nc-grp-body { padding: 0.3rem 0.8rem 0.8rem; display: flex; flex-direction: column; gap: 0.5rem; }
 
-  .nc-body { padding: 0.1rem 1rem 0.6rem; flex: 1; }
-  .nr {
-    display: flex; align-items: center; gap: 0.4rem;
-    padding: 0.25rem 0.4rem; margin: 0 -0.4rem;
-    border-radius: 5px; text-decoration: none; color: var(--text);
-    transition: background 0.1s;
+  /* Note cards (参考 pg-card from projects) */
+  .nc-card {
+    display: grid;
+    grid-template-columns: 200px 1fr 2rem;
+    gap: 0;
+    align-items: center;
+    padding: 0;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.15s, border-color 0.2s;
+    position: relative;
   }
-  .nr:hover { background: var(--bg-hover); }
-  .nr-idx {
-    font-size: 0.65rem; color: var(--nr-color, var(--text-muted)); opacity: 0.6;
-    font-family: var(--font-mono); min-width: 1.3rem;
-    font-variant-numeric: tabular-nums;
+  .nc-card:hover {
+    box-shadow: 0 0 0 1px var(--cc), var(--shadow-hover);
+    transform: translateY(-2px);
+    border-color: var(--cc);
   }
-  .nr-title { font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ncc-left {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--cc) 8%, transparent), transparent);
+    padding: 0.75rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-height: 80px;
+    border-right: 1px solid var(--border);
+  }
+  .ncc-num {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    letter-spacing: 0.03em;
+  }
+  .ncc-title {
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .ncc-tags {
+    display: flex;
+    gap: 0.2rem;
+    flex-wrap: wrap;
+    margin-top: 0.05rem;
+  }
+  .ncc-tag {
+    font-size: 0.6rem;
+    padding: 0.1em 0.4em;
+    background: var(--bg-hover);
+    border-radius: 3px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+  .ncc-right {
+    padding: 0.75rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-height: 80px;
+    justify-content: center;
+  }
+  .ncc-excerpt {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .ncc-meta {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    margin-top: 0.1rem;
+  }
+  .ncc-course {
+    font-size: 0.65rem;
+    padding: 0.1em 0.5em;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--cc) 15%, transparent);
+  }
+  .ncc-date { font-size: 0.65rem; color: var(--text-muted); }
+  .ncc-arrow {
+    font-size: 1rem;
+    color: var(--text-muted);
+    padding-right: 0.6rem;
+    opacity: 0.3;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .nc-card:hover .ncc-arrow {
+    opacity: 1;
+    transform: translateX(3px);
+    color: var(--cc);
+  }
 
-  .nc-foot {
-    padding: 0.3rem 1rem;
-    border-top: 1px solid var(--border);
-    font-size: 0.72rem;
+  /* Sidebar: latest + tags */
+  .nc-sidebar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
   }
-  .nc-foot a { color: var(--text-muted); text-decoration: none; }
-  .nc-foot a:hover { color: var(--cc); }
-
-  /* Latest notes */
-  .np-latest {
+  .nc-latest, .nc-tags-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 1.2rem;
-    display: flex;
-    flex-direction: column;
   }
-  .np-latest-label {
+  .nc-latest-label, .nc-tags-label {
     font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
     letter-spacing: 1px; color: var(--text-muted); margin-bottom: 0.5rem;
   }
-  .nl-item {
-    display: block; padding: 0.5rem 0;
+  .ncl-item {
+    display: block; padding: 0.4rem 0;
     border-bottom: 1px solid var(--border);
     text-decoration: none; color: var(--text);
     transition: opacity 0.1s;
   }
-  .nl-item:last-of-type { border-bottom: none; }
-  .nl-item:hover { opacity: 0.85; }
-  .nl-course {
+  .ncl-item:last-of-type { border-bottom: none; }
+  .ncl-item:hover { opacity: 0.85; }
+  .ncl-course {
     font-size: 0.65rem; padding: 0.1em 0.5em; border-radius: 4px;
     display: inline-block; margin-bottom: 0.1rem;
     background: var(--c-bg); color: var(--c-color);
   }
-  .nl-title { font-size: 0.85rem; font-weight: 500; }
-  .nl-date { font-size: 0.68rem; color: var(--text-muted); margin-top: 0.05rem; }
-
-  .np-latest-divider { border-top: 1px solid var(--border); margin: 0.3rem 0; }
-  .nl-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; }
-  .nl-tag {
+  .ncl-title { font-size: 0.85rem; font-weight: 500; }
+  .ncl-date { font-size: 0.68rem; color: var(--text-muted); margin-top: 0.05rem; }
+  .nc-tags-body { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .nc-tag {
     font-size: 0.68rem; padding: 0.15em 0.5em;
     background: var(--bg-hover); border-radius: 4px;
     color: var(--text-secondary);
   }
 
-  /* Empty */
+  /* Empty state */
   .np-empty { text-align: center; padding: 4rem 0; color: var(--text-muted); }
   .np-empty-hint { font-size: 0.85rem; margin-top: 0.5rem; }
 
+  /* Responsive */
   @media (max-width: 900px) {
-    .np-bento { grid-template-columns: repeat(2, 1fr); }
-    .course-lg { grid-column: span 2; grid-row: span 1; }
+    .nc-stats { grid-template-columns: repeat(2, 1fr); }
+    .nc-card { grid-template-columns: 160px 1fr 1.5rem; }
+    .nc-sidebar { grid-template-columns: 1fr; }
   }
   @media (max-width: 600px) {
-    .np-bento { grid-template-columns: 1fr; }
-    .course-lg, .course-md, .course-sm { grid-column: span 1; }
+    .nc-stats { grid-template-columns: repeat(2, 1fr); }
+    .nc-card { grid-template-columns: 1fr; }
+    .ncc-left {
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      min-height: auto;
+      padding: 0.5rem 0.7rem;
+    }
+    .ncc-right { padding: 0.5rem 0.7rem; min-height: auto; }
+    .ncc-arrow { display: none; }
+    .nc-sidebar { grid-template-columns: 1fr; }
     .np-filters { order: -1; width: 100%; }
   }
 </style>

@@ -306,21 +306,228 @@ public class Tokenizer {
 
   // ─── HDFS 客户端 ─────────────────────────────────────────────────
   'hdfs-client': {
-    tech: ['Java', 'Hadoop 3.3.4', 'HDFS', 'JUnit'],
+    tech: ['Java', 'Hadoop 3.3.4', 'Maven', 'JUnit 4', 'HDFS'],
     features: [
-      '11 个 HDFS 操作完整覆盖',
-      '目录递归遍历与创建',
-      '文件上传下载与 IO 流操作',
-      '块信息读取与位置追踪',
-      '参数优先级：代码配置 > 资源文件 > 集群默认',
-      'JUnit 测试驱动开发',
+      '11 个 HDFS 操作完整覆盖（mkdir/upload/download/rename/delete）',
+      'IO 流底层操作：FSDataInputStream / FSDataOutputStream',
+      '块信息读取与 DataNode 位置追踪（BlockLocation）',
+      '递归目录遍历与文件属性读取（LocatedFileStatus）',
+      '参数优先级验证：代码配置 > hdfs-site.xml > 集群默认',
+      'JUnit 4 测试驱动开发，快速验证 HDFS 连通性',
     ],
     githubUrl: 'https://github.com/tgrlhl-linux/personal-site/tree/master/projects-source/大数据与数据思维/HDFSClientDemo',
     highlights: '基于 Hadoop 3.3.4 完全分布式集群的 HDFS Java API 实践，覆盖全部常用文件系统操作。',
     snippets: [
       {
-        title: 'HDFS 核心操作（11 个方法）',
-        description: 'JUnit 测试类封装的 11 个 HDFS 操作，包括目录管理、文件 CRUD、IO 流读写、块信息追踪。',
+        title: 'Maven 依赖配置',
+        description: 'pom.xml：Hadoop 3.3.4 客户端依赖 + JUnit 4 测试框架。编译目标 Java 8。',
+        language: 'xml',
+        code: `<dependencies>
+    <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>4.13.2</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-common</artifactId>
+        <version>3.3.4</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-client</artifactId>
+        <version>3.3.4</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-hdfs</artifactId>
+        <version>3.3.4</version>
+    </dependency>
+</dependencies>`,
+        file: 'pom.xml',
+      },
+      {
+        title: '连接建立与目录管理（mkdir / delete）',
+        description: '通过 FileSystem.get() 连接 HDFS 集群，创建和删除目录。DFS 配置使用 NameNode URI 直连。',
+        language: 'java',
+        code: `public class HdfsClient {
+    // 创建目录
+    @Test
+    public void testMkdirs() throws Exception {
+        Configuration conf = new Configuration();
+        FileSystem fs = FileSystem.get(
+            new URI("hdfs://192.168.88.100:9000"),
+            conf, "root"
+        );
+        fs.mkdirs(new Path("/test/hdfs/demo"));
+        fs.close();
+    }
+
+    // 删除目录（递归）
+    @Test
+    public void testDelete() throws Exception {
+        Configuration conf = new Configuration();
+        FileSystem fs = FileSystem.get(
+            new URI("hdfs://192.168.88.100:9000"),
+            conf, "root"
+        );
+        fs.delete(new Path("/test/hdfs/demo"), true);
+        fs.close();
+    }
+}`,
+        file: 'HdfsClient.java',
+      },
+      {
+        title: '文件上传（普通 & 参数优先级测试）',
+        description: 'copyFromLocalFile 上传本地文件到 HDFS。参数优先级演示：代码中设置 dfs.replication=2 覆盖 hdfs-site.xml 的默认值 1。',
+        language: 'java',
+        code: `    // 普通上传
+    @Test
+    public void testUpload() throws Exception {
+        Configuration conf = new Configuration();
+        FileSystem fs = FileSystem.get(
+            new URI("hdfs://192.168.88.100:9000"), conf, "root"
+        );
+        fs.copyFromLocalFile(
+            new Path("D:/test.txt"),
+            new Path("/test/hdfs/demo/test.txt")
+        );
+        fs.close();
+    }
+
+    // 参数优先级测试：代码配置 > 资源文件 > 集群默认
+    @Test
+    public void testUploadWithPriority() throws Exception {
+        Configuration conf = new Configuration();
+        conf.set("dfs.replication", "2");
+        FileSystem fs = FileSystem.get(
+            new URI("hdfs://192.168.88.100:9000"), conf, "root"
+        );
+        fs.copyFromLocalFile(
+            new Path("D:/test.txt"),
+            new Path("/test/hdfs/demo/priority_test.txt")
+        );
+        fs.close();
+    }`,
+        file: 'HdfsClient.java',
+      },
+      {
+        title: 'IO 流方式：文件上传与下载',
+        description: '底层流操作：用 FSDataOutputStream 写 HDFS、FSDataInputStream 读 HDFS，通过 IOUtils.copyBytes 完成流拷贝。',
+        language: 'java',
+        code: `    // IO 流方式上传
+    @Test
+    public void testUploadByIO() throws Exception {
+        Configuration conf = new Configuration();
+        FileSystem fs = FileSystem.get(
+            new URI("hdfs://192.168.88.100:9000"), conf, "root"
+        );
+        FileInputStream in = new FileInputStream("D:/test.txt");
+        FSDataOutputStream out = fs.create(
+            new Path("/test/hdfs/demo/io_upload.txt")
+        );
+        IOUtils.copyBytes(in, out, conf);
+        IOUtils.closeStream(in);
+        IOUtils.closeStream(out);
+        fs.close();
+    }
+
+    // IO 流方式下载
+    @Test
+    public void testDownloadByIO() throws Exception {
+        Configuration conf = new Configuration();
+        FileSystem fs = FileSystem.get(
+            new URI("hdfs://192.168.88.100:9000"), conf, "root"
+        );
+        FSDataInputStream in = fs.open(
+            new Path("/test/hdfs/demo/io_upload.txt")
+        );
+        FileOutputStream out = new FileOutputStream("D:/io_download.txt");
+        IOUtils.copyBytes(in, out, conf);
+        IOUtils.closeStream(in);
+        IOUtils.closeStream(out);
+        fs.close();
+    }`,
+        file: 'HdfsClient.java',
+      },
+      {
+        title: '数据块读取：按块偏移定位（seek）',
+        description: '演示 HDFS 块的概念。FSDataInputStream 支持 seek() 跳到指定偏移，每块 128MB。testReadFileSeek1 读前 128MB，testReadFileSeek2 从 128MB 位置开始读。',
+        language: 'java',
+        code: `    // 读取第一块（前 128MB）
+    @Test
+    public void testReadFileSeek1() throws Exception {
+        Configuration conf = new Configuration();
+        FileSystem fs = FileSystem.get(
+            new URI("hdfs://192.168.88.100:9000"), conf, "root"
+        );
+        FSDataInputStream fis = fs.open(
+            new Path("/test/hdfs/demo/test.txt")
+        );
+        FileOutputStream fos = new FileOutputStream("D:/test.txt.part1");
+        byte[] buf = new byte[1024];
+        for (int i = 0; i < 1024 * 128; i++) {
+            fis.read(buf);
+            fos.write(buf);
+        }
+        IOUtils.closeStream(fos);
+        IOUtils.closeStream(fis);
+        fs.close();
+    }
+
+    // 读取第二块（从 128MB 位置 seek）
+    @Test
+    public void testReadFileSeek2() throws Exception {
+        Configuration conf = new Configuration();
+        FileSystem fs = FileSystem.get(
+            new URI("hdfs://192.168.88.100:9000"), conf, "root"
+        );
+        FSDataInputStream fis = fs.open(
+            new Path("/test/hdfs/demo/test.txt")
+        );
+        FileOutputStream fos = new FileOutputStream("D:/test.txt.part2");
+        fis.seek(1024 * 1024 * 128);
+        IOUtils.copyBytes(fis, fos, conf);
+        IOUtils.closeStream(fos);
+        IOUtils.closeStream(fis);
+        fs.close();
+    }`,
+        file: 'HdfsClient.java',
+      },
+      {
+        title: '文件详情与块位置追踪（元数据读取）',
+        description: '递归遍历目录下所有文件，输出文件名、大小、权限、所有者，以及每个数据块的偏移量、长度和数据节点位置。',
+        language: 'java',
+        code: `    // 递归查看文件详情（含块所在主机）
+    @Test
+    public void testFileDetailWithBlocks() throws Exception {
+        Configuration conf = new Configuration();
+        FileSystem fs = FileSystem.get(
+            new URI("hdfs://192.168.88.100:9000"), conf, "root"
+        );
+        RemoteIterator<LocatedFileStatus> listFiles =
+            fs.listFiles(new Path("/test/hdfs/demo"), true);
+        while (listFiles.hasNext()) {
+            LocatedFileStatus status = listFiles.next();
+            System.out.println("路径：" + status.getPath());
+            System.out.println("大小：" + status.getLen() + " 字节");
+            System.out.println("权限：" + status.getPermission());
+            System.out.println("所有者：" + status.getOwner());
+
+            BlockLocation[] blocks = status.getBlockLocations();
+            for (BlockLocation blk : blocks) {
+                System.out.println("  块偏移：" + blk.getOffset() +
+                    "，长度：" + blk.getLength());
+                System.out.println("  DataNode：" +
+                    String.join(",", blk.getHosts()));
+            }
+        }
+        fs.close();
+    }`,
+        file: 'HdfsClient.java',
+      },
+    ],
+    fullFiles: [
         language: 'java',
         code: `package com.atguigu.hdfs;
 
@@ -588,6 +795,8 @@ public class HdfsClient {
       },
     ],
     fullFiles: [
+      { path: 'pom.xml', desc: 'Maven 项目配置（Hadoop 3.3.4 + JUnit 4）', lines: 45 },
+      { path: 'src/main/resources/hdfs-site.xml', desc: 'HDFS 客户端配置（副本数 = 1）', lines: 8 },
       { path: 'src/main/java/com/atguigu/hdfs/HdfsClient.java', desc: 'HDFS 客户端 11 个操作完整实现', lines: 262 },
     ],
     hasDemo: true,

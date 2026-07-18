@@ -1,5 +1,7 @@
 # Flask 成绩管理系统
 
+> **与本课程前置项目的关系**：此项目是 [Shell 成绩管理系统](/projects/linux-hw5-shell)（作业五）的 Web 化重构。相同的三级权限模型（admin/teacher/student）和数据隔离逻辑从 Shell 函数级别提升到 SQL 级别实现，存储从 CSV 文件迁移到 SQLite 数据库。
+
 ## 项目概述
 
 从 Shell 版成绩管理迁移到 Flask Web 框架的全栈重构。后端使用 Flask + SQLite，前端使用 Jinja2 模板引擎，实现了完整的成绩管理系统，包含数据隔离、权限控制、批量操作和多维度统计报表。

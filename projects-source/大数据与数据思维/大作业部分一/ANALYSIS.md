@@ -1,5 +1,7 @@
 # HDFS 数据处理 Pipeline
 
+> **与本课程完整项目的关系**：本目录是「[大数据叙事分析系统](/projects/narrative-analysis)」的数据管道组件（作业一）。完整的叙事分析系统在此基础上增加了 Flask API 后端和 Web 可视化前端。
+
 ## 项目概述
 
 大数据课程作业的数据预处理与导入管道，负责将电影剧本数据从原始格式清洗、转换并导入 Hadoop HBase。Pipeline 支持三种运行模式：完整流程（full）、仅生成 API 数据（api）、仅写入 HBase（hbase），可根据集群状态灵活选择。
