@@ -3,6 +3,7 @@ export const prerender = false;
 
 import Base from '../../layouts/Base.astro';
 import { query } from '../../db/mysql';
+import projectCode from '../../data/projectCode';
 
 const slug = Astro.params.slug;
 
@@ -11,16 +12,44 @@ let project = null;
 
 if (!slug) {
   error = '无效的项目';
+} else if (slug === 'code') {
+  // /projects/code → redirect to /projects
+  return Astro.redirect('/projects', 302);
 } else {
   const rows = await query("SELECT * FROM notes WHERE type='project' AND slug = ?", [slug]);
   if (rows.length === 0) error = '项目不存在';
   else project = rows[0];
 }
 
-const meta = project ? (() => { try { return JSON.parse(project.metadata || '{}'); } catch { return {}; } })() : {};
+const meta = project ? JSON.parse(project.metadata || '{}') : {};
 const tagList = project ? (() => { try { return JSON.parse(project.tags || '[]'); } catch { return []; } })() : [];
 const statusLabel = { completed: '已完成', 'in-progress': '进行中', archived: '归档' };
 const catLabel = { course: '课程', personal: '个人', tool: '工具' };
+
+const codeData = project ? projectCode[project.slug] : null;
+const hasCodeTab = codeData?.snippets?.length > 0;
+const hasFileTab = codeData?.fullFiles?.length > 0;
+const hasDemoTab = codeData?.hasDemo;
+const hasMultipleTabs = hasCodeTab || hasFileTab || hasDemoTab;
+
+// Escape HTML for safe embedding in script tags
+function esc(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function escAttr(str) {
+  if (!str) return '';
+  return str.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function codeLines(code) {
+  return (code || '').split('\n').length;
+}
+function escJS(str) {
+  if (!str) return '';
+  return str.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$')
+            .replace(/</g, '\\x3C').replace(/>/g, '\\x3E');
+}
 ---
 
 {error ? (
@@ -40,58 +69,404 @@ const catLabel = { course: '课程', personal: '个人', tool: '工具' };
           {meta.date && <time class="meta">{new Date(meta.date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}</time>}
         </div>
         <h1>{project.title}</h1>
+        {codeData?.highlights && <p class="post-highlight">{codeData.highlights}</p>}
         <div class="post-tags">
           {tagList.map(t => <span class="tag">{t}</span>)}
+          {codeData?.tech?.map(t => <span class="tag tech-tag">{t}</span>)}
         </div>
       </header>
 
-      <div class="post-content">
-        <div id="content">{project.content || ''}</div>
-      </div>
+      {hasMultipleTabs ? (
+        <>
+          <!-- Tab Bar -->
+          <div class="tabs" role="tablist">
+            <button class="tab active" data-tab="desc" role="tab" aria-selected="true">📖 项目说明</button>
+            {hasCodeTab && <button class="tab" data-tab="code" role="tab">💻 代码展示</button>}
+            {hasFileTab && <button class="tab" data-tab="files" role="tab">📁 完整文件</button>}
+            {hasDemoTab && <button class="tab" data-tab="demo" role="tab">🚀 在线体验</button>}
+          </div>
 
-      <nav class="post-nav">
-        <a href="/projects" class="btn">← 返回项目列表</a>
-      </nav>
+          <!-- Tab: 项目说明 -->
+          <div class="tab-panel active" id="panel-desc">
+            <div class="post-content" id="content">{project.content || ''}</div>
+          </div>
+
+          <!-- Tab: 代码展示 -->
+          {hasCodeTab && (
+            <div class="tab-panel" id="panel-code">
+              <div class="code-gallery">
+                {codeData.snippets.map((s, i) => (
+                  <div class="code-card">
+                    <div class="code-card-hd">
+                      <div class="code-card-title">
+                        <span class="code-lang-badge">{s.language}</span>
+                        <strong>{s.title}</strong>
+                      </div>
+                      <div class="code-card-meta">{s.file} · {codeLines(s.code)} 行</div>
+                    </div>
+                    {s.description && <p class="code-card-desc">{s.description}</p>}
+                    <div class="code-wrapper">
+                      <button class="code-copy" data-copy={i} title="复制代码">📋</button>
+                      <pre class={`code-block lang-${s.language}`}><code class={`lang-${s.language}`}>{esc(s.code)}</code></pre>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <!-- Tab: 完整文件 -->
+          {hasFileTab && (
+            <div class="tab-panel" id="panel-files">
+              <div class="file-list">
+                <p class="file-list-intro">该项目的完整源文件清单。可前往 <a href={codeData.githubUrl} target="_blank">GitHub 仓库 ↗</a> 查看全部代码。</p>
+                <table class="file-table">
+                  <thead>
+                    <tr><th>文件路径</th><th>说明</th><th>行数</th></tr>
+                  </thead>
+                  <tbody>
+                    {codeData.fullFiles.map(f => (
+                      <tr>
+                        <td class="file-path"><code>{f.path}</code></td>
+                        <td>{f.desc}</td>
+                        <td class="file-lines">{f.lines}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {codeData.features?.length > 0 && (
+                <div class="feat-section">
+                  <h3>✨ 功能特性</h3>
+                  <ul class="feat-list">
+                    {codeData.features.map(f => <li>{f}</li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          <!-- Tab: 在线体验 -->
+          {hasDemoTab && (
+            <div class="tab-panel" id="panel-demo">
+              {codeData.demoType === 'inline' ? (
+                <div class="demo-inline">
+                  <div class="demo-hd">
+                    <h3>🚀 在线体验</h3>
+                    <a href={codeData.demoUrl} target="_blank" class="btn btn-outline demo-open">在新窗口打开 ↗</a>
+                  </div>
+                  <div class="demo-frame-wrap">
+                    <iframe src={codeData.demoUrl} class="demo-frame" title="在线演示"></iframe>
+                  </div>
+                </div>
+              ) : codeData.demoType === 'external' ? (
+                <div class="demo-external">
+                  <div class="demo-card">
+                    <div class="demo-card-icon">🔗</div>
+                    <div class="demo-card-body">
+                      <h3>在线 Demo</h3>
+                      <p>该项目的在线版本已部署到独立平台。</p>
+                      <a href={codeData.demoUrl} target="_blank" class="btn">{codeData.demoUrl} ↗</a>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div class="demo-na">
+                  <p>该项目为 CLI/GUI 应用，无法在网页端直接运行。</p>
+                  <p>如需查看运行效果，请前往 <a href={codeData.githubUrl} target="_blank">GitHub 仓库 ↗</a> 查看 README 中的截图和说明。</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <nav class="post-nav">
+            <a href="/projects" class="btn">← 返回项目列表</a>
+          </nav>
+        </>
+      ) : (
+        <>
+          <!-- No code data → simple layout as before -->
+          <div class="post-content" id="content-simple">{project.content || ''}</div>
+          <nav class="post-nav">
+            <a href="/projects" class="btn">← 返回项目列表</a>
+          </nav>
+        </>
+      )}
+
     </article>
 
     <script>
+      // ── Markdown rendering ──
       import { marked } from 'marked';
       marked.setOptions({ breaks: true, gfm: true });
-      const content = document.getElementById('content');
-      if (content) {
-        const md = content.textContent;
-        content.innerHTML = marked.parse(md);
+      const contentEl = document.getElementById('content') || document.getElementById('content-simple');
+      if (contentEl) {
+        contentEl.innerHTML = marked.parse(contentEl.textContent);
       }
+
+      // ── Tab switching ──
+      document.querySelectorAll('.tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tab = btn.dataset.tab;
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          const panel = document.getElementById('panel-' + tab);
+          if (panel) panel.classList.add('active');
+          // Update URL hash
+          history.replaceState(null, '', '#' + tab);
+        });
+      });
+
+      // Open tab from URL hash
+      const hash = location.hash.slice(1);
+      if (hash) {
+        const tabBtn = document.querySelector(`.tab[data-tab="${hash}"]`);
+        if (tabBtn) tabBtn.click();
+      }
+
+      // ── Copy code button ──
+      document.querySelectorAll('.code-copy').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const pre = btn.nextElementSibling;
+          const code = pre?.querySelector('code');
+          if (!code) return;
+          navigator.clipboard.writeText(code.textContent || '').then(() => {
+            btn.textContent = '✅';
+            setTimeout(() => { btn.textContent = '📋'; }, 1500);
+          });
+        });
+      });
+
+    </script>
+
+    <!-- Syntax highlighting via highlight.js (loaded from CDN, not bundled) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script is:inline>
+    (function() {
+      // Load highlight.js from CDN using script tags (avoid Vite bundling)
+      var hljsLink = document.querySelector('link[href*="highlight.js/11.9.0/styles/github-dark"]');
+      if (!hljsLink) {
+        var l = document.createElement('link');
+        l.rel = 'stylesheet';
+        l.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css';
+        document.head.appendChild(l);
+      }
+
+      var langs = ['java', 'python', 'rust', 'bash', 'sql', 'javascript', 'xml'];
+      var loaded = 0;
+
+      function tryHighlight() {
+        if (typeof hljs === 'undefined') return;
+        document.querySelectorAll('.code-block code').forEach(function(block) {
+          hljs.highlightElement(block);
+        });
+      }
+
+      // Load core
+      var core = document.createElement('script');
+      core.src = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js';
+      core.onload = function() {
+        // Load language modules
+        langs.forEach(function(lang) {
+          var s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/' + lang + '.min.js';
+          s.onload = function() {
+            loaded++;
+            if (loaded === langs.length) {
+              // All languages loaded, highlight
+              tryHighlight();
+            }
+          };
+          s.onerror = function() { loaded++; if (loaded === langs.length) tryHighlight(); };
+          document.head.appendChild(s);
+        });
+        // Fallback: if languages don't load, highlight with what's available
+        loaded = langs.length; // Trigger after a delay as fallback
+        setTimeout(tryHighlight, 3000);
+      };
+      core.onerror = function() { /* fail silently */ };
+      document.head.appendChild(core);
+
+      // Also observe for dynamically added code blocks
+      if (window.MutationObserver) {
+        var observer = new MutationObserver(function() {
+          tryHighlight();
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+      }
+    })();
     </script>
   </Base>
 )}
 
 <style>
-  .post-header { margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
-  .post-meta { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.8rem; flex-wrap: wrap; }
+  /* ── Header ── */
+  .post-header { margin-bottom: 1.5rem; padding-bottom: 1.2rem; border-bottom: 1px solid var(--border); }
+  .post-meta { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem; flex-wrap: wrap; }
   .post-meta .meta { margin: 0; color: var(--text-muted); }
-  .post-header h1 { font-size: 1.8rem; margin-bottom: 0.6rem; }
-  .post-tags { display: flex; flex-wrap: wrap; }
+  .post-header h1 { font-size: 1.6rem; margin-bottom: 0.4rem; }
+  .post-highlight { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 0.6rem; }
+  .post-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; }
   .status-tag { background: rgba(210,153,34,0.15); color: #d29922; }
+  .tech-tag { background: rgba(88,166,255,0.12); color: #58a6ff; border-color: rgba(88,166,255,0.2); }
 
-  .post-content { font-size: 1rem; line-height: 1.8; }
-  .post-content h1, .post-content h2, .post-content h3 { margin-top: 2rem; }
-  .post-content h1 { font-size: 1.6rem; }
-  .post-content h2 { font-size: 1.3rem; }
-  .post-content h3 { font-size: 1.1rem; }
-  .post-content p { margin-bottom: 0.8rem; }
-  .post-content ul { margin-left: 1.5rem; margin-bottom: 0.8rem; }
-  .post-content li { margin-bottom: 0.3rem; }
-  .post-content code { font-family: var(--font-mono); font-size: 0.85em; background: var(--bg-hover); padding: 0.15em 0.4em; border-radius: 3px; }
-  .post-content pre { background: var(--bg-raised); padding: 1rem; border-radius: var(--radius-sm); overflow-x: auto; margin: 1rem 0; border: 1px solid var(--border); }
-  .post-content pre code { background: none; padding: 0; }
-  .post-content blockquote { border-left: 3px solid var(--c-os); padding: 0.5rem 1rem; margin: 1rem 0; color: var(--text-secondary); background: var(--bg-hover); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
-  .post-content table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
-  .post-content th, .post-content td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
-  .post-content th { background: var(--bg-hover); font-weight: 600; }
-  .post-content tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
-  .post-content img { max-width: 100%; height: auto; border-radius: var(--radius-sm); margin: 1rem 0; }
-  .post-content hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
-  .post-content ol { margin-left: 1.5rem; margin-bottom: 0.8rem; }
-  .post-nav { margin-top: 3rem; }
+  /* ── Tab Bar ── */
+  .tabs {
+    display: flex; gap: 0.25rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tab {
+    padding: 0.5rem 1rem;
+    border: none; background: none;
+    color: var(--text-muted); cursor: pointer;
+    font-size: 0.85rem; font-family: inherit;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    border-radius: 6px 6px 0 0;
+  }
+  .tab:hover { color: var(--text); background: var(--bg-hover); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── Markdown Content (same as before) ── */
+  .post-content { font-size: 0.95rem; line-height: 1.8; }
+  .post-content :global(h1), .post-content :global(h2), .post-content :global(h3) { margin-top: 1.8rem; }
+  .post-content :global(h1) { font-size: 1.5rem; }
+  .post-content :global(h2) { font-size: 1.25rem; }
+  .post-content :global(h3) { font-size: 1.05rem; }
+  .post-content :global(p) { margin-bottom: 0.8rem; }
+  .post-content :global(ul) { margin-left: 1.5rem; margin-bottom: 0.8rem; }
+  .post-content :global(li) { margin-bottom: 0.3rem; }
+  .post-content :global(code) { font-family: var(--font-mono); font-size: 0.85em; background: var(--bg-hover); padding: 0.15em 0.4em; border-radius: 3px; }
+  .post-content :global(pre) { background: #151b22; padding: 1rem; border-radius: 8px; overflow-x: auto; margin: 1rem 0; border: 1px solid var(--border); }
+  .post-content :global(pre code) { background: none; padding: 0; }
+  .post-content :global(blockquote) { border-left: 3px solid var(--c-os); padding: 0.5rem 1rem; margin: 1rem 0; color: var(--text-secondary); background: var(--bg-hover); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+  .post-content :global(table) { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.88rem; }
+  .post-content :global(th), .post-content :global(td) { border: 1px solid var(--border); padding: 0.4rem 0.6rem; text-align: left; }
+  .post-content :global(th) { background: var(--bg-hover); font-weight: 600; }
+  .post-content :global(img) { max-width: 100%; height: auto; border-radius: 8px; margin: 1rem 0; }
+  .post-content :global(hr) { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+  /* ── Code Gallery ── */
+  .code-gallery { display: flex; flex-direction: column; gap: 1.2rem; }
+  .code-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .code-card-hd {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap; gap: 0.3rem;
+  }
+  .code-card-title { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+  .code-card-title strong { color: var(--text); }
+  .code-lang-badge {
+    font-size: 0.65rem; padding: 0.1em 0.5em;
+    background: rgba(88,166,255,0.15); color: #58a6ff;
+    border-radius: 4px; font-family: var(--font-mono);
+    text-transform: uppercase;
+  }
+  .code-card-meta { font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); }
+  .code-card-desc { padding: 0.5rem 1rem 0; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6; }
+  .code-wrapper { position: relative; }
+  .code-copy {
+    position: absolute; top: 0.4rem; right: 0.5rem;
+    background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+    color: var(--text-muted); cursor: pointer;
+    padding: 0.2rem 0.4rem; border-radius: 4px;
+    font-size: 0.82rem; z-index: 2;
+    transition: all 0.15s;
+  }
+  .code-copy:hover { background: var(--bg-hover); color: var(--text); }
+  .code-block {
+    margin: 0 !important; border: none !important;
+    border-radius: 0 !important;
+    background: #0d1117 !important;
+  }
+  .code-block code {
+    font-size: 0.78rem !important;
+    line-height: 1.55 !important;
+  }
+
+  /* ── File List Tab ── */
+  .file-list { margin-bottom: 1.5rem; }
+  .file-list-intro { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem; }
+  .file-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  .file-table th, .file-table td { padding: 0.4rem 0.6rem; text-align: left; border-bottom: 1px solid var(--border); }
+  .file-table th { color: var(--text-muted); font-weight: 500; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .file-table tr:hover td { background: var(--bg-hover); }
+  .file-path code { font-size: 0.8rem; color: #58a6ff; }
+  .file-lines { text-align: center; color: var(--text-muted); font-family: var(--font-mono); width: 3rem; }
+
+  .feat-section { margin-top: 1.5rem; }
+  .feat-section h3 { font-size: 1rem; margin-bottom: 0.6rem; color: var(--text); }
+  .feat-list { list-style: none; padding: 0; }
+  .feat-list li {
+    padding: 0.35rem 0 0.35rem 1.2rem;
+    position: relative; font-size: 0.85rem;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+  }
+  .feat-list li:last-child { border-bottom: none; }
+  .feat-list li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); font-weight: bold; }
+
+  /* ── Demo Tab ── */
+  .demo-inline .demo-hd {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 0.8rem;
+  }
+  .demo-inline .demo-hd h3 { margin: 0; }
+  .demo-frame-wrap {
+    border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden;
+    background: var(--bg-card);
+  }
+  .demo-frame {
+    width: 100%; height: 70vh;
+    border: none; display: block;
+  }
+  .demo-open { font-size: 0.82rem; padding: 0.35rem 0.8rem; }
+
+  .demo-external { padding: 1rem 0; }
+  .demo-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    display: flex; gap: 1rem;
+    align-items: flex-start;
+  }
+  .demo-card-icon { font-size: 2rem; }
+  .demo-card-body h3 { margin: 0 0 0.3rem; font-size: 1rem; }
+  .demo-card-body p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.8rem; }
+
+  .demo-na {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    text-align: center;
+  }
+  .demo-na p { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem; }
+
+  .post-nav { margin-top: 2rem; }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .post-header h1 { font-size: 1.3rem; }
+    .tabs { gap: 0; }
+    .tab { padding: 0.45rem 0.7rem; font-size: 0.78rem; }
+    .code-card-hd { flex-direction: column; align-items: flex-start; }
+    .demo-frame { height: 50vh; }
+    .file-table { font-size: 0.75rem; }
+  }
 </style>

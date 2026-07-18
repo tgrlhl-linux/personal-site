@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Cosmic 3D — 三维宇宙可视化</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a1a; overflow: hidden; font-family: -apple-system, "Noto Sans SC", sans-serif; }
+  #canvas { width: 100vw; height: 100vh; display: block; }
+  .info {
+    position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+    color: rgba(255,255,255,0.5); font-size: 0.8rem;
+    text-align: center; pointer-events: none;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.4); padding: 0.5rem 1.2rem;
+    border-radius: 20px; backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .info span { opacity: 0.6; }
+  @media (max-width: 640px) { .info { font-size: 0.65rem; padding: 0.3rem 0.8rem; bottom: 1rem; } }
+</style>
+</head>
+<body>
+<div id="canvas"></div>
+<div class="info">🪐 拖拽旋转 · 滚轮缩放 <span>· Cosmis 3D</span></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ── Scene ──
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x070714);
+
+// ── Camera ──
+const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 3000);
+camera.position.set(0, 0, 400);
+
+// ── Renderer ──
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+document.getElementById('canvas').appendChild(renderer.domElement);
+
+// ── Controls ──
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.3;
+controls.minDistance = 50;
+controls.maxDistance = 2000;
+
+// ── Star texture ──
+function makeTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 32; canvas.height = 32;
+  const ctx = canvas.getContext('2d');
+  const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+  gradient.addColorStop(0, 'rgba(255,255,255,1)');
+  gradient.addColorStop(0.3, 'rgba(255,255,255,0.8)');
+  gradient.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 32, 32);
+  return new THREE.CanvasTexture(canvas);
+}
+
+// ── Main stars (sphere distribution) ──
+const STAR_COUNT = 5000;
+const positions = new Float32Array(STAR_COUNT * 3);
+const colors = new Float32Array(STAR_COUNT * 3);
+const sizes = new Float32Array(STAR_COUNT);
+
+for (let i = 0; i < STAR_COUNT; i++) {
+  const radius = 150 + Math.random() * 900;
+  const theta = Math.random() * Math.PI * 2;
+  const phi = Math.acos(2 * Math.random() - 1);
+  positions[i*3] = radius * Math.sin(phi) * Math.cos(theta);
+  positions[i*3+1] = radius * Math.sin(phi) * Math.sin(theta);
+  positions[i*3+2] = radius * Math.cos(phi);
+
+  const temp = 0.5 + Math.random() * 0.5;
+  colors[i*3] = temp * (0.8 + Math.random() * 0.2);
+  colors[i*3+1] = temp * (0.7 + Math.random() * 0.3);
+  colors[i*3+2] = 0.5 + Math.random() * 0.5;
+  sizes[i] = 0.3 + Math.random() * 2.5;
+}
+
+const starGeo = new THREE.BufferGeometry();
+starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+starGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+starGeo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+const starMat = new THREE.PointsMaterial({
+  size: 1.8, vertexColors: true, map: makeTexture(),
+  blending: THREE.AdditiveBlending, transparent: true, depthWrite: false,
+  sizeAttenuation: true,
+});
+const stars = new THREE.Points(starGeo, starMat);
+scene.add(stars);
+
+// ── Nebula clouds ──
+function createNebula(pos, size, color, count) {
+  const g = new THREE.BufferGeometry();
+  const p = new Float32Array(count * 3);
+  for (let i = 0; i < count * 3; i++) p[i] = (Math.random() - 0.5) * size;
+  g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+  const m = new THREE.PointsMaterial({
+    color, size: size * 0.04, transparent: true, opacity: 0.08,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+    sizeAttenuation: true,
+  });
+  const mesh = new THREE.Points(g, m);
+  mesh.position.set(pos[0], pos[1], pos[2]);
+  return mesh;
+}
+
+scene.add(createNebula([-200, 100, -300], 250, 0x4a6cff, 800));
+scene.add(createNebula([250, -80, -250], 200, 0xff6b8a, 600));
+scene.add(createNebula([-100, -150, -400], 300, 0x7b4aff, 700));
+
+// ── Orbit rings ──
+function createRing(radius, colorY, tiltX, speed) {
+  const count = 300;
+  const p = new Float32Array(count * 3);
+  const c = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2;
+    p[i*3] = Math.cos(angle) * radius;
+    p[i*3+1] = Math.sin(angle) * radius * 0.2;
+    p[i*3+2] = Math.sin(angle) * radius * 0.1;
+    const bright = 0.2 + Math.random() * 0.3;
+    c[i*3] = 1; c[i*3+1] = colorY; c[i*3+2] = 1;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(c, 3));
+  const m = new THREE.PointsMaterial({
+    size: 1.2, vertexColors: true, transparent: true, opacity: 0.3,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  });
+  const ring = new THREE.Points(g, m);
+  ring.rotation.x = tiltX;
+  ring.userData = { speed };
+  return ring;
+}
+
+const rings = [
+  createRing(250, 0.5, 0.3, 0.0008),
+  createRing(400, 0.7, -0.5, -0.0005),
+  createRing(180, 0.3, 0.8, 0.0012),
+];
+rings.forEach(r => scene.add(r));
+
+// ── Animate ──
+function animate() {
+  requestAnimationFrame(animate);
+  stars.rotation.y += 0.00015;
+  rings.forEach(r => r.rotation.z += r.userData.speed);
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+// ── Resize ──
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
