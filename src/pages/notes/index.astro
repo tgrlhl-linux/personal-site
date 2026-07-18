@@ -64,7 +64,7 @@ const courses = await query(
           <h2>{n.title}</h2>
           <p>{n.excerpt}</p>
           <div class="note-tags">
-            {(() => { try { return JSON.parse(n.tags || '[]').map(t => <span class="tag">{t}</span>); } catch { return (n.tags || '').split(',').map(t => <span class="tag">{t.trim()}</span>); } })()}
+            {Array.isArray(n.tags) ? n.tags.map(t => <span class="tag">{t}</span>) : (() => { try { return JSON.parse(n.tags || '[]').map(t => <span class="tag">{t}</span>); } catch { return (n.tags || '').split(',').map(t => <span class="tag">{t.trim()}</span>); } })()}
           </div>
         </a>
       ))}
