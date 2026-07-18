@@ -18,7 +18,7 @@ if (courseFilter) {
 
 const notes = await query(
   `SELECT id, title, LEFT(content, 200) AS excerpt, course, tags, created_at
-   FROM notes WHERE ${where} ORDER BY created_at DESC`,
+   FROM notes WHERE ${where} ORDER BY ${courseFilter ? 'title ASC' : 'created_at DESC'}`,
   params
 );
 
@@ -64,7 +64,7 @@ const courses = await query(
           <h2>{n.title}</h2>
           <p>{n.excerpt}</p>
           <div class="note-tags">
-            {JSON.parse(n.tags || '[]').map(t => <span class="tag">{t}</span>)}
+            {(() => { try { return JSON.parse(n.tags || '[]').map(t => <span class="tag">{t}</span>); } catch { return (n.tags || '').split(',').map(t => <span class="tag">{t.trim()}</span>); } })()}
           </div>
         </a>
       ))}

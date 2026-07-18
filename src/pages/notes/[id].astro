@@ -15,6 +15,12 @@ if (!id) {
   if (rows.length === 0) error = '笔记不存在';
   else note = rows[0];
 }
+
+const rawTags = note?.tags;
+const tags = Array.isArray(rawTags) ? rawTags :
+  (() => { try { return JSON.parse(rawTags || '[]'); } catch { return (rawTags || '').split(',').map(t => t.trim()); } })();
+const tagString = Array.isArray(rawTags) ? rawTags.join(' · ') :
+  (() => { try { return JSON.parse(rawTags || '[]').join(' · '); } catch { return (rawTags || '').split(',').join(' · '); } })();
 ---
 
 {error ? (
@@ -25,7 +31,7 @@ if (!id) {
     </div>
   </Base>
 ) : (
-  <Base title={note.title} description={(JSON.parse(note.tags || '[]') || []).join(' · ')}>
+  <Base title={note.title} description={tagString}>
     <article class="post">
       <header class="post-header">
         <div class="post-meta">
@@ -36,7 +42,7 @@ if (!id) {
         </div>
         <h1>{note.title}</h1>
         <div class="post-tags">
-          {JSON.parse(note.tags || '[]').map(t => <span class="tag">{t}</span>)}
+          {tags.map(t => <span class="tag">{t}</span>)}
         </div>
       </header>
 
@@ -50,24 +56,18 @@ if (!id) {
     </article>
 
     <script>
-      // Simple Markdown to HTML renderer
+      import { marked } from 'marked';
+
+      // Configure marked for security: allow raw HTML (SVG, etc.)
+      marked.setOptions({
+        breaks: true,
+        gfm: true,
+      });
+
       const content = document.getElementById('content');
       if (content) {
-        let md = content.textContent;
-        let html = md
-          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-          .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
-          .replace(/`([^`]+)`/g, '<code>$1</code>')
-          .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-          .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-          .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-          .replace(/\*(.+?)\*/g, '<em>$1</em>')
-          .replace(/^- (.+)$/gm, '<li>$1</li>')
-          .replace(/(<li>.*\n?)+/g, m => '<ul>' + m + '</ul>')
-          .replace(/\n\n/g, '</p><p>')
-          .replace(/\n/g, '<br>');
-        content.innerHTML = '<p>' + html + '</p>';
+        const md = content.textContent;
+        content.innerHTML = marked.parse(md);
       }
     </script>
   </Base>
@@ -94,5 +94,10 @@ if (!id) {
   .post-content table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
   .post-content th, .post-content td { border: 1px solid var(--border); padding: 0.5rem 0.8rem; text-align: left; }
   .post-content th { background: var(--bg-hover); font-weight: 600; }
+  .post-content tr:nth-child(even) td { background: rgba(0,0,0,0.02); }
+  .post-content svg { max-width: 100%; height: auto; margin: 1rem auto; display: block; }
+  .post-content img { max-width: 100%; height: auto; margin: 1rem auto; display: block; }
+  .post-content hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+  .post-content ol { margin-left: 1.5rem; margin-bottom: 0.8rem; }
   .post-nav { margin-top: 3rem; }
 </style>
