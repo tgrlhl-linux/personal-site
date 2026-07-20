@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PPT 设计作品集 — 在线演示</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,'Noto Sans SC',sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem}
+h1{font-size:1.4rem;margin-bottom:0.3rem;color:#f0883e}
+.sub{font-size:0.82rem;color:#8b949e;margin-bottom:2rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;max-width:900px;width:100%}
+.card{background:#161b22;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:1.5rem;text-decoration:none;color:inherit;transition:all 0.2s;display:flex;flex-direction:column;gap:0.5rem}
+.card:hover{transform:translateY(-3px);border-color:#f0883e;box-shadow:0 8px 30px rgba(240,136,62,0.1)}
+.card-icon{font-size:2rem}
+.card-title{font-size:1rem;font-weight:600}
+.card-desc{font-size:0.78rem;color:#8b949e;line-height:1.5}
+.card-tag{display:inline-block;font-size:0.65rem;padding:0.15em 0.6em;border-radius:4px;background:rgba(240,136,62,0.12);color:#f0883e;width:fit-content}
+.back{display:inline-block;margin-top:2rem;font-size:0.78rem;color:#8b949e;text-decoration:none}
+.back:hover{color:#f0883e}
+</style>
+</head>
+<body>
+<h1>▤ PPT 设计作品集</h1>
+<p class="sub">三套完整方案 · 点击进入浏览</p>
+<div class="cards">
+  <a href="/demos/ppt-works/anime.html" class="card">
+    <div class="card-icon">🎌</div>
+    <div class="card-title">动漫文化导览</div>
+    <div class="card-desc">日系风格 · 暗色沉浸 · 从起源到产业的全景式动漫文化展示。渐变光效、分层递进、信息可视化。</div>
+    <span class="card-tag">日系 · 暗色 · 信息型</span>
+  </a>
+  <a href="/demos/ppt-works/ghost-stories.html" class="card">
+    <div class="card-icon">🖌️</div>
+    <div class="card-title">聊斋志异</div>
+    <div class="card-desc">古风暗色 · 书法字体 · 墨迹纹理。竖排文字、水墨渲染、朱砂点缀，重现古典志怪意境。</div>
+    <span class="card-tag">古风 · 暗色 · 文学型</span>
+  </a>
+  <a href="/demos/ppt-works/presentation-mastery.html" class="card">
+    <div class="card-icon">🎤</div>
+    <div class="card-title">演讲艺术</div>
+    <div class="card-desc">现代轻量 · 暖色克制 · 版式严谨。覆盖演讲结构设计、肢体语言、PPT 设计原则。</div>
+    <span class="card-tag">现代 · 暖色 · 教育型</span>
+  </a>
+</div>
+<a href="/projects/ppt-design-works" class="back">← 返回项目详情</a>
+</body>
+</html>

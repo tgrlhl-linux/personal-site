@@ -1441,6 +1441,236 @@ def get_emotion_curve(movie_id):
     demoType: 'inline',
     demoUrl: '/demos/narrative-analysis',
   },
+
+  // ─── Cosmic 3D — 三维宇宙可视化 ────────────────────────────────
+  'cosmic-3d': {
+    tech: ['Three.js', 'JavaScript', 'WebGL', 'OrbitControls'],
+    features: [
+      'Three.js 3D 场景：4000 粒子星空、星云、光环',
+      'OrbitControls 交互：拖拽旋转、滚轮缩放',
+      '自动旋转 + 粒子动态漂移',
+      '纯前端，零外部依赖（除 Three.js CDN）',
+      '响应式：适配桌面和移动端',
+    ],
+    githubUrl: 'https://github.com/tgrlhl-linux/personal-site/tree/master/public/demos/cosmic-3d',
+    highlights: '基于 Three.js 构建的沉浸式 3D 宇宙可视化——4000 粒子星空、多色星云、光环系统，交互式拖拽探索。',
+    snippets: [
+      {
+        title: '场景搭建与星空粒子',
+        description: 'Three.js 场景初始化 + 4000 粒子球面分布，实现深邃星空背景。',
+        language: 'javascript',
+        code: `// ── Scene ──
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x070714);
+
+// ── Camera ──
+const camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.1, 3000);
+camera.position.set(0, 0, 400);
+
+// ── Renderer ──
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+
+// ── Controls ──
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.3;
+
+// ── Main stars (sphere distribution) ──
+const starGeo = new THREE.BufferGeometry();
+const positions = new Float32Array(4000 * 3);
+const colors = new Float32Array(4000 * 3);
+const sizes = new Float32Array(4000);
+
+for (let i = 0; i < 4000; i++) {
+  const theta = Math.random() * Math.PI * 2;
+  const phi = Math.acos(2 * Math.random() - 1);
+  const r = 100 + Math.random() * 500;
+  positions[i*3] = r * Math.sin(phi) * Math.cos(theta);
+  positions[i*3+1] = r * Math.cos(phi);
+  positions[i*3+2] = r * Math.sin(phi) * Math.sin(theta);
+  const c = new THREE.Color().setHSL(0.58 + Math.random() * 0.15, 0.6, 0.5 + Math.random() * 0.4);
+  colors[i*3] = c.r; colors[i*3+1] = c.g; colors[i*3+2] = c.b;
+  sizes[i] = 0.5 + Math.random() * 2;
+}
+
+starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+starGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+starGeo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+const starMat = new THREE.PointsMaterial({
+  size: 1.2, vertexColors: true, transparent: true,
+  opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false,
+});
+const stars = new THREE.Points(starGeo, starMat);
+scene.add(stars);`,
+        file: 'index.html (Three.js 场景核心)',
+      },
+      {
+        title: '星云与光环系统',
+        description: '粒子星云生成函数 + 发光光环旋转动画，增强宇宙层次感。',
+        language: 'javascript',
+        code: `// ── 星云生成 ──
+function createNebula(pos, size, color, count) {
+  const geo = new THREE.BufferGeometry();
+  const p = new Float32Array(count * 3);
+  const c = new Float32Array(count * 3);
+  const base = new THREE.Color(color);
+  for (let i = 0; i < count; i++) {
+    const r = Math.random() * size;
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    p[i*3] = pos[0] + r * Math.sin(phi) * Math.cos(theta);
+    p[i*3+1] = pos[1] + r * Math.cos(phi) * 0.3;
+    p[i*3+2] = pos[2] + r * Math.sin(phi) * Math.sin(theta);
+    const col = base.clone().lerp(new THREE.Color(0x000000), Math.random() * 0.7);
+    c[i*3] = col.r; c[i*3+1] = col.g; c[i*3+2] = col.b;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(p, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(c, 3));
+  return new THREE.Points(geo, new THREE.PointsMaterial({
+    size: 3, vertexColors: true, transparent: true,
+    opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false,
+  }));
+}
+
+// ── 光环生成 ──
+function createRing(radius, colorY, tiltX, speed) {
+  const count = 2000;
+  const geo = new THREE.BufferGeometry();
+  const p = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const r = radius + (Math.random() - 0.5) * 30;
+    p[i*3] = r * Math.cos(angle);
+    p[i*3+1] = (Math.random() - 0.5) * 4;
+    p[i*3+2] = r * Math.sin(angle);
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(p, 3));
+  return { mesh: new THREE.Points(geo, new THREE.PointsMaterial({
+    color: new THREE.Color().setHSL(colorY, 0.8, 0.5), size: 1.2,
+    transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending,
+  })), speed, tiltX };
+}
+
+// 添加光环
+const rings = [createRing(250, 0.5, 0.3, 0.0008),
+               createRing(400, 0.7, -0.5, -0.0005),
+               createRing(180, 0.3, 0.8, 0.0012)];
+rings.forEach(r => { r.mesh.rotation.x = r.tiltX; scene.add(r.mesh); });`,
+        file: 'index.html (星云与光环)',
+      },
+    ],
+    fullFiles: [
+      { path: 'public/demos/cosmic-3d/index.html', desc: '完整 Three.js 宇宙可视化（183 行）', lines: 183 },
+    ],
+    hasDemo: true,
+    demoType: 'inline',
+    demoUrl: '/demos/cosmic-3d',
+  },
+
+  // ─── PPT 设计作品集 ──────────────────────────────────────────────
+  'ppt-design-works': {
+    tech: ['HTML', 'CSS', 'JavaScript', '设计系统'],
+    features: [
+      '3 套完整 PPT 设计作品：动漫文化导览、聊斋志异、演讲艺术',
+      '纯 HTML/CSS 实现幻灯片效果，无需 PPT 软件',
+      '响应式键盘/鼠标翻页导航',
+      '深色/浅色多主题配色方案',
+      '每页独立视觉风格（日系、古风、现代）',
+    ],
+    githubUrl: 'https://github.com/tgrlhl-linux/personal-site/tree/master/projects-source/个人项目/ppt-design',
+    highlights: '用 HTML 呈现的 PPT 设计作品集——三套完整方案，涵盖日系动漫、古风聊斋、现代演讲三种风格，展现视觉设计和排版能力。',
+    snippets: [
+      {
+        title: '幻灯片框架（通用翻页系统）',
+        description: '纯 CSS/JS 幻灯片引擎，支持键盘方向键和点按导航。每页独立视觉风格，无缝过渡。',
+        language: 'javascript',
+        code: `// ── 幻灯片引擎 ──
+let current = 0;
+const slides = document.querySelectorAll('.slide');
+const dots = document.querySelectorAll('.nav-dot');
+
+function goTo(index) {
+  slides.forEach(s => s.classList.remove('active'));
+  dots.forEach(d => d.classList.remove('active'));
+  slides[index].classList.add('active');
+  dots[index].classList.add('active');
+  current = index;
+}
+
+// 键盘导航
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+    if (current < slides.length - 1) goTo(current + 1);
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    if (current > 0) goTo(current - 1);
+  }
+});
+
+// 导航点点击
+dots.forEach((dot, i) => dot.addEventListener('click', () => goTo(i)));
+
+// 箭头按钮
+document.querySelector('.arrow-right').addEventListener('click', () => {
+  if (current < slides.length - 1) goTo(current + 1);
+});
+document.querySelector('.arrow-left').addEventListener('click', () => {
+  if (current > 0) goTo(current - 1);
+});`,
+        file: 'index.html (幻灯片框架)',
+      },
+      {
+        title: '视觉主题示例（古风·聊斋）',
+        description: '以《聊斋志异》为例的古风暗色主题设计：书法字体、墨迹纹理、竖排文字布局。',
+        language: 'css',
+        code: `/* 聊斋 - 暗色古风主题 */
+body { background: #1a1410; }
+
+/* 封面：墨迹晕染 */
+.bg-ink {
+  background: radial-gradient(ellipse at 50% 40%, #2a1a10 0%, #0d0805 100%);
+}
+.bg-ink::before {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 30%, rgba(80,40,20,0.3) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 70%, rgba(40,20,10,0.4) 0%, transparent 50%);
+}
+
+/* 竖排文字 */
+.text-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  letter-spacing: 0.3em;
+}
+
+/* 水墨标题 */
+.title-brush {
+  font-family: 'Noto Serif SC', serif;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 900;
+  color: #e8d5c0;
+  text-shadow: 0 4px 40px rgba(0,0,0,0.8);
+  line-height: 1.6;
+}
+
+/* 朱砂点缀 */
+.accent-cinnabar { color: #c0392b; }`,
+        file: 'ghost-stories.html (古风主题 CSS)',
+      },
+    ],
+    fullFiles: [
+      { path: 'index.html', desc: '动漫文化导览（日系风）', lines: 220 },
+      { path: 'ghost-stories.html', desc: '聊斋志异（古风暗色）', lines: 195 },
+      { path: 'presentation-mastery.html', desc: '演讲艺术（现代风）', lines: 180 },
+    ],
+    hasDemo: true,
+    demoType: 'inline',
+    demoUrl: '/demos/ppt-works',
+  },
 };
 
 export default projects;
