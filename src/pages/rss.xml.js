@@ -10,18 +10,19 @@ const TYPE_META = {
   hobby:   { label: '🎨', link: (n) => `${siteUrl}/hobbies/${n.slug || n.id}` },
 };
 
-function xmlEscape(str) {
-  return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+function toPlainText(str) {
+  return (str || '')
+    .replace(/<[^>]*>/g, '')       // 去 HTML 标签（<svg>, <rect> 等）
+    .replace(/[#*_`\[\]]/g, '')     // 去 markdown 符号
+    .replace(/\n{2,}/g, '\n')       // 保留段落
+    .replace(/[ \t]+/g, ' ')
+    .trim();
 }
 
 function buildDescription(n) {
-  // Use excerpt first, then fallback to first 300 chars of content
-  if (n.excerpt) return xmlEscape(n.excerpt);
-  if (n.content) {
-    const clean = n.content.replace(/[#*_`\[\]]/g, '').replace(/\n+/g, ' ').trim();
-    return xmlEscape(clean.substring(0, 300));
-  }
-  return xmlEscape(n.title);
+  if (n.excerpt) return toPlainText(n.excerpt);
+  if (n.content) return toPlainText(n.content).substring(0, 300);
+  return n.title || '';
 }
 
 export async function GET() {
@@ -36,17 +37,16 @@ export async function GET() {
     const date = new Date(n.created_at).toUTCString();
     const updated = n.updated_at ? new Date(n.updated_at).toUTCString() : date;
     const desc = buildDescription(n);
-    const title = xmlEscape(n.title);
     const link = meta.link(n);
 
     return `
     <item>
-      <title><![CDATA[${title}]]></title>
+      <title><![CDATA[${n.title}]]></title>
       <link>${link}</link>
       <guid isPermaLink="true">${link}</guid>
       <description><![CDATA[${desc}]]></description>
       <pubDate>${date}</pubDate>
-      ${n.course ? `<category>${xmlEscape(n.course)}</category>` : ''}
+      ${n.course ? `<category><![CDATA[${n.course}]]></category>` : ''}
     </item>`;
   }).join('\n');
 
