@@ -327,8 +327,8 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
   }
   .ht-text {
     color: var(--text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
+    white-space: pre-wrap;
+    word-break: break-word;
   }
   .ht-cursor {
     color: var(--c-os);
@@ -380,9 +380,9 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
     if (el && !el.dataset.initialized) {
       el.dataset.initialized = 'true';
       const lines = [
-        '从底层系统到前端界面，用代码解决问题的过程都记录在这里。',
-        '软件工程 · 系统编程 · 数据库 · 全栈开发',
-        'INTJ · 持续学习 · 喜欢把复杂的东西变简单',
+        'Lone peak, bright star.',
+        'Embrace wind, pursue moon; Light flame, seek wild rivers.',
+        'Wings bloom within me, Sky needs no stair to reach.',
       ];
       let lineIdx = 0, charIdx = 0, deleting = false;
       function tick() {

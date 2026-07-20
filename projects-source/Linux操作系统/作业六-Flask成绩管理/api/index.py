@@ -197,6 +197,8 @@ def login_required(roles=None):
 
 @app.route('/login', methods=['GET','POST'])
 def login():
+    if request.method == 'GET' and session.get('user_id'):
+        return redirect(url_for('dashboard'))
     if request.method == 'POST':
         username = request.form.get('username','').strip()
         password = request.form.get('password','').strip()
