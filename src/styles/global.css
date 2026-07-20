@@ -84,7 +84,13 @@
 
 /* ── Reset ── */
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html { font-size: 16px; scroll-behavior: smooth; }
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  /* 防止 View Transitions 期间出现白底闪烁 */
+  background-color: #0d1117;
+  background-color: var(--bg);
+}
 
 body {
   font-family: var(--font-sans);
@@ -271,17 +277,22 @@ img, svg { max-width: 100%; height: auto; }
    ── View Transitions ──
    ══════════════════════════════════════════════════════ */
 ::view-transition-old(root) {
-  animation: vt-old 0.25s ease-out both;
+  animation: vt-old 0.22s ease-out both;
 }
 ::view-transition-new(root) {
-  animation: vt-new 0.35s ease-out both;
+  animation: vt-new 0.3s ease-out both;
+}
+
+/* 防止过渡期间透出白色背景 */
+::view-transition-image-pair(root) {
+  background-color: var(--bg, #0d1117);
 }
 
 @keyframes vt-old {
-  to { opacity: 0; transform: scale(0.98); }
+  to { opacity: 0; transform: scale(0.97); }
 }
 @keyframes vt-new {
-  from { opacity: 0; transform: scale(0.98) translateY(8px); }
+  from { transform: scale(0.97) translateY(6px); }
 }
 
 /* ── Skip to content ── */

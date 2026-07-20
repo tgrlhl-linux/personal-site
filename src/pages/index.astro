@@ -47,15 +47,15 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
       </div>
       <div class="hero-stats">
         <div class="hs-item" style="--c:var(--c-os);--g:var(--c-os-glow)">
-          <span class="hs-num" data-count="{totalNotes}">0</span>
+          <span class="hs-num" data-count="{Number(totalNotes)}">{Number(totalNotes)}</span>
           <span class="hs-label">笔记</span>
         </div>
         <div class="hs-item" style="--c:var(--c-db);--g:var(--c-db-glow)">
-          <span class="hs-num" data-count="{totalProjects}">0</span>
+          <span class="hs-num" data-count="{Number(totalProjects)}">{Number(totalProjects)}</span>
           <span class="hs-label">项目</span>
         </div>
         <div class="hs-item" style="--c:var(--c-prob);--g:var(--c-prob-glow)">
-          <span class="hs-num" data-count="{dbHobbies.length}">0</span>
+          <span class="hs-num" data-count="{Number(dbHobbies.length)}">{Number(dbHobbies.length)}</span>
           <span class="hs-label">爱好</span>
         </div>
       </div>
@@ -409,18 +409,21 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
       tick();
     }
 
-    // ── Count-up animation ──
+    // ── Count-up animation（稳退：target 无效则不动画） ──
     document.querySelectorAll('.hs-num[data-count]').forEach(el => {
       if (el.dataset.counted) return;
       el.dataset.counted = 'true';
-      const target = parseInt(el.dataset.count);
-      const duration = 1200;
+      const target = parseInt(el.dataset.count, 10);
+      if (isNaN(target) || target <= 0) return;
+      const display = el.textContent.trim();
+      el.textContent = '0';
+      const duration = 1000;
       const start = performance.now();
       function update(now) {
         const pct = Math.min((now - start) / duration, 1);
-        el.textContent = Math.floor(pct * target);
+        const val = Math.floor(pct * target);
+        el.textContent = val < target ? String(val) : String(target);
         if (pct < 1) requestAnimationFrame(update);
-        else el.textContent = target;
       }
       requestAnimationFrame(update);
     });
