@@ -85,11 +85,21 @@ def main():
             continue
 
         try:
-            sql = "INSERT INTO notes (title, content, course, tags) VALUES (%s, %s, %s, %s)"
-            cursor.execute(sql, (title, content, course_name, tags_json))
-            conn.commit()
-            note_id = cursor.lastrowid
-            print(f"  ✓ [{course_name}] {title} -> id={note_id}")
+            # UPSERT: 先查是否存在同标题+课程的笔记，存在则更新，否则插入
+            cursor.execute("SELECT id FROM notes WHERE title = %s AND course = %s", (title, course_name))
+            existing = cursor.fetchone()
+            if existing:
+                note_id = existing[0]
+                cursor.execute("UPDATE notes SET content = %s, tags = %s WHERE id = %s",
+                               (content, tags_json, note_id))
+                conn.commit()
+                print(f"  ~ [{course_name}] {title} -> id={note_id} (updated)")
+            else:
+                cursor.execute("INSERT INTO notes (title, content, course, tags) VALUES (%s, %s, %s, %s)",
+                               (title, content, course_name, tags_json))
+                conn.commit()
+                note_id = cursor.lastrowid
+                print(f"  ✓ [{course_name}] {title} -> id={note_id} (inserted)")
         except Exception as e:
             print(f"  ✗ [{course_name}] {title}: {e}")
 

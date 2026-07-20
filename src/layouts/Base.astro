@@ -31,18 +31,25 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-r
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0d1117" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
     <link rel="alternate" type="application/rss+xml" title="Guorui 的笔记" href="https://shengxia.dev/rss.xml" />
     <SEO title={title} description={description} url={pageUrl} image={image} publishDate={publishDate} />
     <ViewTransitions />
 
-    {{/* Prevent FOUC: apply theme before first paint */}}
+    {{/* Prevent FOUC: apply theme AND set CSS variable before first paint */}}
     <script is:inline>
     (function(){
       var t = localStorage.getItem('theme');
       if (!t) t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', t);
+      var root = document.documentElement;
+      root.setAttribute('data-theme', t);
+      {{/* 为 ::view-transition-* 伪元素提供显式 CSS 变量 */}}
+      root.style.setProperty('--vt-bg', t === 'light' ? '#f6f4f0' : '#0d1117');
+      {{/* 同步 color-scheme 和 theme-color */}}
+      root.style.colorScheme = t;
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t === 'light' ? '#f6f4f0' : '#0d1117');
     })();
     </script>
   </head>
@@ -68,10 +75,13 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-r
         const themeToggle = document.getElementById('theme-toggle');
         const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
         document.documentElement.setAttribute('data-theme', currentTheme);
+        document.documentElement.style.setProperty('--vt-bg', currentTheme === 'light' ? '#f6f4f0' : '#0d1117');
         if (themeToggle) {
           themeToggle.addEventListener('click', () => {
             const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
             document.documentElement.setAttribute('data-theme', next);
+            document.documentElement.style.setProperty('--vt-bg', next === 'light' ? '#f6f4f0' : '#0d1117');
+            document.querySelector('meta[name="theme-color"]')?.setAttribute('content', next === 'light' ? '#f6f4f0' : '#0d1117');
             localStorage.setItem('theme', next);
           });
         }

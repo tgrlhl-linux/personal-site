@@ -87,9 +87,16 @@
 html {
   font-size: 16px;
   scroll-behavior: smooth;
-  /* 防止 View Transitions 期间出现白底闪烁 */
+  /* 默认暗色背景（无 JS 时也正确） */
   background-color: #0d1117;
-  background-color: var(--bg);
+  color-scheme: dark;
+}
+/* CSS-only 亮色回退：即使 JS 未运行，系统偏好亮色时也亮 */
+@media (prefers-color-scheme: light) {
+  html {
+    background-color: #f6f4f0;
+    color-scheme: light;
+  }
 }
 
 body {
@@ -283,9 +290,22 @@ img, svg { max-width: 100%; height: auto; }
   animation: vt-new 0.3s ease-out both;
 }
 
-/* 防止过渡期间透出白色背景 */
+/* 防止过渡期间透出白色背景
+   ::view-transition-group(root) 是最外层容器，必须设背景
+   ::view-transition-image-pair(root) 是截图容器，也需背景
+   两组都设硬编码暗色 + CSS 变量（变量在过渡伪元素中可能不继承） */
+::view-transition-group(root) {
+  background-color: #0d1117;
+}
+[data-theme="light"]::view-transition-group(root) {
+  background-color: #f6f4f0;
+}
 ::view-transition-image-pair(root) {
-  background-color: var(--bg, #0d1117);
+  background-color: #0d1117;
+  background-color: var(--vt-bg, #0d1117);
+}
+[data-theme="light"]::view-transition-image-pair(root) {
+  background-color: #f6f4f0;
 }
 
 @keyframes vt-old {
