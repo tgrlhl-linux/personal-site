@@ -1,14 +1,15 @@
 ---
 import Base from '../layouts/Base.astro';
+export const prerender = true;
 ---
 
 <Base title="关于" description="关于童国睿">
-  <div class="page-header">
+  <div class="page-header" data-reveal="bottom">
     <h1>关于</h1>
   </div>
 
   <div class="about-content">
-    <section class="about-section">
+    <section class="about-section" data-reveal="bottom">
       <h2>👋 自我介绍</h2>
       <p>
         贵州大学软件工程专业大三学生。热衷于用代码解决问题，从底层系统到前端界面都乐在其中。
@@ -16,7 +17,7 @@ import Base from '../layouts/Base.astro';
       </p>
     </section>
 
-    <section class="about-section">
+    <section class="about-section" data-reveal="bottom">
       <h2>🎯 现在关注</h2>
       <ul>
         <li>系统编程（Rust、C、操作系统原理）</li>
@@ -26,7 +27,7 @@ import Base from '../layouts/Base.astro';
       </ul>
     </section>
 
-    <section class="about-section">
+    <section class="about-section" data-reveal="bottom">
       <h2>🛠️ 技术栈</h2>
       <div class="skills">
         {[
@@ -45,7 +46,7 @@ import Base from '../layouts/Base.astro';
       </div>
     </section>
 
-    <section class="about-section">
+    <section class="about-section" data-reveal="bottom">
       <h2>📬 联系</h2>
       <p>
         GitHub：<a href="https://github.com/tgrlhl-linux" target="_blank">github.com/tgrlhl-linux</a><br />

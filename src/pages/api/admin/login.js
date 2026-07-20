@@ -1,3 +1,5 @@
+import { createToken, COOKIE_NAME, MAX_AGE } from '../../../lib/auth.js';
+
 export async function POST({ request, cookies }) {
   const body = await request.json();
   const { username, password } = body;
@@ -6,13 +8,13 @@ export async function POST({ request, cookies }) {
   const adminPass = import.meta.env.ADMIN_PASSWORD;
 
   if (username === adminUser && password === adminPass) {
-    const token = Buffer.from(`${username}:${Date.now()}`).toString('base64');
-    cookies.set('admin_token', token, {
+    const token = createToken(username);
+    cookies.set(COOKIE_NAME, token, {
       httpOnly: true,
       sameSite: 'lax',
       secure: true,
       path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: MAX_AGE,
     });
     return new Response(JSON.stringify({ success: true }), {
       headers: { 'Content-Type': 'application/json' },

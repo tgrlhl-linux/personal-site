@@ -6,6 +6,10 @@ import path from 'node:path';
 import Base from '../../layouts/Base.astro';
 import { query } from '../../db/mysql';
 import projectCode from '../../data/projectCode';
+import { marked } from 'marked';
+import 'highlight.js/styles/github-dark.css';
+
+marked.setOptions({ breaks: true, gfm: true });
 
 const slug = Astro.params.slug;
 let error = null, project = null;
@@ -61,6 +65,12 @@ function esc(str) {
             .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 function codeLines(code) { return (code||'').split('\n').length; }
+
+// Pre-render analysis markdown server-side
+let renderedAnalysis = '';
+if (analysisContent) {
+  renderedAnalysis = marked.parse(analysisContent);
+}
 const projectDir = codeData?.githubUrl?.replace('https://github.com/tgrlhl-linux/personal-site/tree/master/', '') || '';
 ---
 
@@ -151,7 +161,7 @@ const projectDir = codeData?.githubUrl?.replace('https://github.com/tgrlhl-linux
                 <span>📖 技术分析报告</span>
                 <a href={codeData?.githubUrl?.replace('/tree/master/', '/blob/master/') + '/ANALYSIS.md'} target="_blank" class="pd-analysis-link">在 GitHub 查看 ↗</a>
               </div>
-              <div class="pd-card-body pd-analysis" id="analysisContent">{analysisContent}</div>
+              <div class="pd-card-body pd-analysis" set:html={renderedAnalysis}></div>
             </div>
           )}
 

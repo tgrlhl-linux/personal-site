@@ -3,17 +3,27 @@ import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import StarParticles from '../components/StarParticles.astro';
-import SplashScreen from '../components/SplashScreen.astro';
+import SEO from '../components/SEO.astro';
+import { ViewTransitions } from 'astro:transitions';
 
 export interface Props {
   title?: string;
   description?: string;
   wide?: boolean;
-  splash?: boolean;
+  /** Full page URL for SEO */
+  url?: string;
+  /** OG image path */
+  image?: string;
+  /** Article publish date */
+  publishDate?: string;
 }
 
-const { title = 'Guorui', description = 'Personal site', wide = false, splash = false } = Astro.props;
+const { title = 'Guorui', description = 'Personal site', wide = false, url, image, publishDate } = Astro.props;
 const containerClass = wide ? 'container-wide' : 'container';
+const pageUrl = url || Astro.url.pathname;
+
+// Moderate CDN caching for public pages (data changes infrequently)
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=60');
 ---
 
 <!doctype html>
@@ -21,13 +31,14 @@ const containerClass = wide ? 'container-wide' : 'container';
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content={description} />
-    <title>{title} — Guorui</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
+    <SEO title={title} description={description} url={pageUrl} image={image} publishDate={publishDate} />
+    <ViewTransitions />
   </head>
   <body>
-    {splash && <SplashScreen />}
     <StarParticles />
+    <div id="scroll-progress"></div>
     <Header />
     <main class="page">
       <div class={containerClass}>
@@ -35,5 +46,53 @@ const containerClass = wide ? 'container-wide' : 'container';
       </div>
     </main>
     <Footer />
+
+    <script>
+      // ── Cursor glow follower ──
+      document.addEventListener('mousemove', (e) => {
+        document.documentElement.style.setProperty('--mouse-x', e.clientX + 'px');
+        document.documentElement.style.setProperty('--mouse-y', e.clientY + 'px');
+      });
+
+      // ── Scroll Reveal Observer ──
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
+      );
+
+      document.querySelectorAll('[data-reveal]').forEach((el) => observer.observe(el));
+
+      // ── Scroll Progress Bar ──
+      const progressBar = document.getElementById('scroll-progress');
+      if (progressBar) {
+        window.addEventListener('scroll', () => {
+          const scrollTop = window.scrollY;
+          const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+          const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+          progressBar.style.width = progress + '%';
+        }, { passive: true });
+      }
+    </script>
+
+    <style>
+      #scroll-progress {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 2px;
+        width: 0%;
+        background: linear-gradient(90deg, var(--c-os), var(--c-pol));
+        z-index: 9999;
+        pointer-events: none;
+        transition: width 0.1s linear;
+      }
+    </style>
   </body>
 </html>

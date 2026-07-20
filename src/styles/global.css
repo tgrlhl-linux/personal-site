@@ -40,6 +40,10 @@
   --accent: var(--c-os);
   --accent-light: rgba(88,166,255,0.12);
   --accent-dark: #1f6feb;
+
+  /* ── Cursor ── */
+  --mouse-x: 50%;
+  --mouse-y: 50%;
 }
 
 /* ── Reset ── */
@@ -52,8 +56,18 @@ body {
   color: var(--text);
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
-  background-image: radial-gradient(ellipse at 50% 0%, rgba(20,60,120,0.06) 0%, transparent 70%);
-  background-attachment: fixed;
+  position: relative;
+}
+
+/* ── Cursor glow overlay ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: radial-gradient(800px at var(--mouse-x) var(--mouse-y), rgba(88,166,255,0.04) 0%, transparent 60%);
+  transition: background 0.1s ease;
 }
 
 /* ── Typography ── */
@@ -178,11 +192,73 @@ img, svg { max-width: 100%; height: auto; }
   font-size: 1rem;
 }
 
+/* ══════════════════════════════════════════════════════
+   ── Scroll Reveal Animations ──
+   ══════════════════════════════════════════════════════ */
+[data-reveal] {
+  opacity: 0;
+  transition: opacity 0.7s ease-out, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+[data-reveal="bottom"] { transform: translateY(24px); }
+[data-reveal="top"] { transform: translateY(-16px); }
+[data-reveal="left"] { transform: translateX(-24px); }
+[data-reveal="right"] { transform: translateX(24px); }
+[data-reveal="scale"] { transform: scale(0.95); }
+
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: translate(0) scale(1);
+}
+
+/* Stagger delays */
+[data-delay="50"]  { transition-delay: 0.05s; }
+[data-delay="100"] { transition-delay: 0.10s; }
+[data-delay="150"] { transition-delay: 0.15s; }
+[data-delay="200"] { transition-delay: 0.20s; }
+[data-delay="250"] { transition-delay: 0.25s; }
+[data-delay="300"] { transition-delay: 0.30s; }
+[data-delay="400"] { transition-delay: 0.40s; }
+[data-delay="500"] { transition-delay: 0.50s; }
+
+/* ══════════════════════════════════════════════════════
+   ── View Transitions ──
+   ══════════════════════════════════════════════════════ */
+::view-transition-old(root) {
+  animation: vt-old 0.25s ease-out both;
+}
+::view-transition-new(root) {
+  animation: vt-new 0.35s ease-out both;
+}
+
+@keyframes vt-old {
+  to { opacity: 0; transform: scale(0.98); }
+}
+@keyframes vt-new {
+  from { opacity: 0; transform: scale(0.98) translateY(8px); }
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ══════════════════════════════════════════════════════
+   ── Reduced Motion ──
+   ══════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
 
 /* ── Responsive ── */
 @media (max-width: 640px) {
@@ -190,9 +266,3 @@ img, svg { max-width: 100%; height: auto; }
   .container, .container-wide { padding: 0 1rem; }
   .page { padding: 1.2rem 0 2.5rem; }
 }
-
-/* ── Splash screen override ── */
-.splash-active .header { opacity: 0; pointer-events: none; }
-.splash-active .page { opacity: 0; }
-.splash-active .footer { opacity: 0; pointer-events: none; }
-.splash-active #starfield { opacity: 0.15 !important; transition: opacity 1s ease; }

@@ -3,17 +3,24 @@ export const prerender = false;
 
 import Base from '../../layouts/Base.astro';
 import { query } from '../../db/mysql';
+import { marked } from 'marked';
+
+marked.setOptions({ breaks: true, gfm: true });
 
 const id = parseInt(Astro.params.id);
 let note = null;
 let error = null;
+let renderedContent = '';
 
 if (!id) {
   error = '无效的笔记 ID';
 } else {
   const rows = await query('SELECT * FROM notes WHERE id = ?', [id]);
   if (rows.length === 0) error = '笔记不存在';
-  else note = rows[0];
+  else {
+    note = rows[0];
+    renderedContent = marked.parse(note.content || '');
+  }
 }
 
 const rawTags = note?.tags;
@@ -54,24 +61,12 @@ const courseColor = courseColors[note?.course] || '#58a6ff';
         </div>
       </header>
 
-      <div class="post-content">
-        <div id="content">{note.content || ''}</div>
-      </div>
+      <div class="post-content" set:html={renderedContent}></div>
 
       <nav class="post-nav">
         <a href="/notes" class="btn">← 返回笔记列表</a>
       </nav>
     </article>
-
-    <script>
-      import { marked } from 'marked';
-      marked.setOptions({ breaks: true, gfm: true });
-      const content = document.getElementById('content');
-      if (content) {
-        const md = content.textContent;
-        content.innerHTML = marked.parse(md);
-      }
-    </script>
   </Base>
 )}
 

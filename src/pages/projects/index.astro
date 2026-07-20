@@ -40,7 +40,7 @@ projects.forEach(p => {
 ---
 
 <Base title="项目" description="课程项目与个人作品" wide={true}>
-  <div class="pp-header">
+  <div class="pp-header" data-reveal="bottom">
     <div>
       <h1>项目</h1>
       <div class="pp-sub">{projects.length} 个项目 · {sortedGroups.length} 个分类</div>
@@ -53,7 +53,7 @@ projects.forEach(p => {
     <div class="pp-layout">
 
       <!-- Stats row -->
-      <div class="pp-stats">
+      <div class="pp-stats" data-reveal="bottom">
         <div class="pp-stat" style="--sc:#f0883e;--sb:rgba(240,136,62,0.2)">
           <div class="stat-icon">🛠️</div>
           <div class="stat-num">{projects.length}</div>
@@ -77,7 +77,7 @@ projects.forEach(p => {
       </div>
 
       <!-- Category groups with two-column cards -->
-      <div class="pp-cards">
+      <div class="pp-cards" data-reveal="bottom" data-delay="100">
         {sortedGroups.map(([cat, items]) => (
           <div class="pp-group" style={`--cc:${catColor(cat)}`}>
             <div class="pg-hd">
@@ -94,7 +94,7 @@ projects.forEach(p => {
                 return (
                   <a href={`/projects/${p.slug}`} class="pg-card" style={`--cc:${catColor(cat)}`}>
                     <!-- Left: compact -->
-                    <div class="pgc-left">
+                    <div class="pgc-left" transition:name={`proj-card-${p.slug}`}>
                       <div class="pgc-num">{String(i + 1).padStart(2, '0')}</div>
                       <div class="pgc-badge" style={`background:${catColor(cat)}`}>{catLabel(cat)}</div>
                       <div class="pgc-title">{p.title}</div>

@@ -106,7 +106,7 @@ const allTags = [...new Set(notes.flatMap(n => {
     <div class="nc-layout">
 
       <!-- Stats row -->
-      <div class="nc-stats">
+      <div class="nc-stats" data-reveal="bottom">
         <div class="nc-stat" style="--sc:var(--c-os);--sb:rgba(88,166,255,0.2)">
           <div class="nc-stat-icon">📘</div>
           <div class="nc-stat-num">{notes.length}</div>
@@ -134,7 +134,7 @@ const allTags = [...new Set(notes.flatMap(n => {
         {sortedGroups.map(([course, items]) => {
           const color = cc(course);
           return (
-            <div class="nc-group" style={`--cc:${color}`}>
+            <div class="nc-group" style={`--cc:${color}`} data-reveal="bottom" data-delay="100">
               <div class="nc-grp-hd">
                 <span class="nc-grp-dot" style={`background:${color};box-shadow:0 0 6px ${color}`}></span>
                 <span class="nc-grp-name">{course}</span>
@@ -146,7 +146,7 @@ const allTags = [...new Set(notes.flatMap(n => {
                   const shortTitle = n.title.replace(/^.*?·\s*/, '');
                   const dateStr = new Date(n.created_at).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
                   return (
-                    <a href={`/notes/${n.id}`} class="nc-card" style={`--cc:${color}`}>
+                    <a href={`/notes/${n.id}`} class="nc-card" style={`--cc:${color}`} data-reveal="bottom" data-delay={`${i * 50}`}>
                       <div class="ncc-left">
                         <span class="ncc-num">{String(i + 1).padStart(2, '0')}</span>
                         <span class="ncc-title">{shortTitle}</span>
@@ -173,7 +173,7 @@ const allTags = [...new Set(notes.flatMap(n => {
 
       <!-- Side row: latest + tags -->
       <div class="nc-sidebar">
-        <div class="nc-latest">
+        <div class="nc-latest" data-reveal="bottom" data-delay="150">
           <div class="nc-latest-label">⚡ 最近更新</div>
           {latestNotes.map(n => {
             const c = n.course || '';
@@ -186,7 +186,7 @@ const allTags = [...new Set(notes.flatMap(n => {
             );
           })}
         </div>
-        <div class="nc-tags-card">
+        <div class="nc-tags-card" data-reveal="bottom" data-delay="200">
           <div class="nc-tags-label">🏷️ 标签</div>
           <div class="nc-tags-body">
             {allTags.slice(0, 10).map(t => <span class="nc-tag">{t}</span>)}

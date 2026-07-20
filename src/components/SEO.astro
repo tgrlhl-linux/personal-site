@@ -1,0 +1,77 @@
+---
+export interface Props {
+  title: string;
+  description: string;
+  /** Full URL of the page, e.g. https://shengxia.dev/projects */
+  url?: string;
+  /** Path to OG image relative to site root, e.g. /og/default.png */
+  image?: string;
+  /** Article published date (ISO string) — only for content pages */
+  publishDate?: string;
+  /** Content type: 'website' or 'article' */
+  type?: 'website' | 'article';
+  /** JSON-LD structured data to merge into the base */
+  jsonLd?: Record<string, unknown>;
+}
+
+const {
+  title,
+  description,
+  url = 'https://shengxia.dev',
+  image = '/og/default.png',
+  publishDate,
+  type = 'website',
+  jsonLd,
+} = Astro.props;
+
+const siteTitle = title === '首页' ? 'Guorui — 童国睿的个人网站' : `${title} — Guorui`;
+const absoluteUrl = url.startsWith('http') ? url : `https://shengxia.dev${url}`;
+const absoluteImage = image.startsWith('http') ? image : `https://shengxia.dev${image}`;
+
+const baseLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: '童国睿',
+  url: 'https://shengxia.dev',
+  jobTitle: '软件工程学生',
+  alumniOf: '贵州大学',
+  sameAs: [
+    'https://github.com/tgrlhl-linux',
+  ],
+};
+---
+
+<!-- Primary Meta Tags -->
+<title>{siteTitle}</title>
+<meta name="title" content={siteTitle} />
+<meta name="description" content={description} />
+
+<!-- Open Graph -->
+<meta property="og:type" content={type} />
+<meta property="og:url" content={absoluteUrl} />
+<meta property="og:title" content={siteTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:image" content={absoluteImage} />
+<meta property="og:site_name" content="Guorui" />
+<meta property="og:locale" content="zh_CN" />
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={siteTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={absoluteImage} />
+
+<!-- Article meta -->
+{publishDate && <meta property="article:published_time" content={publishDate} />}
+
+<!-- JSON-LD -->
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd ? { ...baseLd, ...jsonLd } : baseLd)}></script>
+
+{/* Additional schema: WebSite */}
+<script type="application/ld+json" set:html={JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Guorui',
+  url: 'https://shengxia.dev',
+  description: '童国睿的个人网站 — 软件工程学习笔记与项目展示',
+})}></script>

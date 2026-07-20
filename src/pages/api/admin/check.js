@@ -1,17 +1,13 @@
-export async function GET({ cookies }) {
-  const token = cookies.get('admin_token')?.value;
-  const adminUser = import.meta.env.ADMIN_USERNAME || 'admin';
+import { verifyToken, COOKIE_NAME } from '../../../lib/auth.js';
 
-  if (token) {
-    try {
-      const decoded = Buffer.from(token, 'base64').toString();
-      const [username] = decoded.split(':');
-      if (username === adminUser) {
-        return new Response(JSON.stringify({ authenticated: true }), {
-          headers: { 'Content-Type': 'application/json' },
-        });
-      }
-    } catch {}
+export async function GET({ cookies }) {
+  const token = cookies.get(COOKIE_NAME)?.value;
+  const username = token ? verifyToken(token) : null;
+
+  if (username) {
+    return new Response(JSON.stringify({ authenticated: true, username }), {
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   return new Response(JSON.stringify({ authenticated: false }), {

@@ -20,18 +20,18 @@ const featuredMeta = featured ? (() => { try { return JSON.parse(featured.metada
 const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags || '[]'); } catch { return []; } })() : [];
 ---
 
-<Base title="首页" description="童国睿的个人网站" wide={true} splash={true}>
+<Base title="首页" description="童国睿的个人网站" wide={true}>
   <div class="home">
 
-    <!-- Signature Quote — floating art text -->
-    <div class="sig-wrapper">
+    <!-- Signature Quote — CSS entrance animation -->
+    <div class="sig-wrapper" data-reveal="bottom">
       <div class="sig-line sig-line-1">倦随尘絮争朝暮</div>
       <div class="sig-line sig-line-2">独逐星鸿赴大荒</div>
       <div class="sig-sub">—— 行路 · 自题</div>
     </div>
 
     <!-- Hero -->
-    <div class="hero-bento">
+    <div class="hero-bento" data-reveal="bottom" data-delay="100">
       <div class="hero-text">
         <h1>童国睿</h1>
         <p class="hero-sub">软件工程 · 大三 · 贵州大学</p>
@@ -59,7 +59,7 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
 
     <!-- Featured Project -->
     {featured && (
-      <a href={`/projects/${featured.slug}`} class="featured-card" style="--cc:#f0883e">
+      <a href={`/projects/${featured.slug}`} class="featured-card" style="--cc:#f0883e" data-reveal="bottom" data-delay="200">
         <div class="fc-label">
           <span class="fc-badge">精选项目</span>
           <span class="fc-date">{featuredMeta.date ? new Date(featuredMeta.date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'short' }) : ''}</span>
@@ -73,57 +73,61 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
     )}
 
     <!-- Recent Notes -->
-    <div class="section-header">
-      <h2>最近笔记</h2>
-      <a href="/notes" class="section-more">查看全部 →</a>
-    </div>
-    <div class="notes-row">
-      {dbNotes.slice(0, 4).map(n => {
-        const shortTitle = n.title.replace(/^.*?·\s*/, '');
-        return (
-          <a href={`/notes/${n.id}`} class="nr-mini" style={`--c:${n.course === '操作系统' ? 'var(--c-os)' : n.course === '数据库原理' ? 'var(--c-db)' : n.course === '概率论与数理统计' ? 'var(--c-prob)' : 'var(--c-pol)'}`}>
-            <span class="nrm-dot"></span>
-            <span class="nrm-title">{shortTitle}</span>
-            <span class="nrm-course">{n.course}</span>
-          </a>
-        );
-      })}
+    <div data-reveal="bottom" data-delay="300">
+      <div class="section-header">
+        <h2>最近笔记</h2>
+        <a href="/notes" class="section-more">查看全部 →</a>
+      </div>
+      <div class="notes-row">
+        {dbNotes.slice(0, 4).map((n, i) => {
+          const shortTitle = n.title.replace(/^.*?·\s*/, '');
+          return (
+            <a href={`/notes/${n.id}`} class="nr-mini" style={`--c:${n.course === '操作系统' ? 'var(--c-os)' : n.course === '数据库原理' ? 'var(--c-db)' : n.course === '概率论与数理统计' ? 'var(--c-prob)' : 'var(--c-pol)'}`} data-reveal="bottom" data-delay={`${350 + i * 50}`}>
+              <span class="nrm-dot"></span>
+              <span class="nrm-title">{shortTitle}</span>
+              <span class="nrm-course">{n.course}</span>
+            </a>
+          );
+        })}
+      </div>
     </div>
 
     <!-- Projects Mini -->
-    <div class="section-header">
-      <h2>项目速览</h2>
-      <a href="/projects" class="section-more">查看全部 →</a>
-    </div>
-    <div class="proj-mini-grid">
-      {dbProjects.slice(0, 4).map(p => {
-        const meta = (() => { try { return JSON.parse(p.metadata || '{}'); } catch { return {}; } })();
-        return (
-          <a href={`/projects/${p.slug}`} class="pm-card">
-            <div class="pm-num">{String(dbProjects.indexOf(p) + 1).padStart(2, '0')}</div>
-            <div class="pm-title">{p.title}</div>
-            <div class="pm-date">{meta.date ? new Date(meta.date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'short' }) : ''}</div>
-          </a>
-        );
-      })}
+    <div data-reveal="bottom" data-delay="350">
+      <div class="section-header">
+        <h2>项目速览</h2>
+        <a href="/projects" class="section-more">查看全部 →</a>
+      </div>
+      <div class="proj-mini-grid">
+        {dbProjects.slice(0, 4).map((p, i) => {
+          const meta = (() => { try { return JSON.parse(p.metadata || '{}'); } catch { return {}; } })();
+          return (
+            <a href={`/projects/${p.slug}`} class="pm-card" data-reveal="bottom" data-delay={`${400 + i * 50}`}>
+              <div class="pm-num">{String(i + 1).padStart(2, '0')}</div>
+              <div class="pm-title">{p.title}</div>
+              <div class="pm-date">{meta.date ? new Date(meta.date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'short' }) : ''}</div>
+            </a>
+          );
+        })}
+      </div>
     </div>
 
     <!-- Hobbies -->
     {dbHobbies.length > 0 && (
-      <>
+      <div data-reveal="bottom" data-delay="400">
         <div class="section-header">
           <h2>爱好</h2>
           <a href="/hobbies" class="section-more">查看全部 →</a>
         </div>
         <div class="hobby-row">
-          {dbHobbies.map(h => (
-            <a href={`/hobbies/${h.slug}`} class="hb-mini">
+          {dbHobbies.map((h, i) => (
+            <a href={`/hobbies/${h.slug}`} class="hb-mini" data-reveal="bottom" data-delay={`${450 + i * 50}`}>
               <span class="hbm-icon">{h.title.includes('3D') ? '✦' : '▤'}</span>
               <span class="hbm-title">{h.title}</span>
             </a>
           ))}
         </div>
-      </>
+      </div>
     )}
 
   </div>
@@ -135,13 +139,8 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
   /* ── Signature Quote ── */
   .sig-wrapper {
     text-align: center;
-    padding: 2.5rem 1rem 1.5rem;
+    padding: 3rem 1rem 1.5rem;
     position: relative;
-    animation: sigFadeIn 1.2s ease-out;
-  }
-  @keyframes sigFadeIn {
-    0% { opacity: 0; transform: translateY(12px); }
-    100% { opacity: 1; transform: translateY(0); }
   }
   .sig-line {
     font-size: 2.2rem;
@@ -153,16 +152,6 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
     -webkit-text-fill-color: transparent;
     text-shadow: none;
     filter: drop-shadow(0 0 30px rgba(88,166,255,0.15));
-  }
-  .sig-line-1 {
-    animation: sigDrift 6s ease-in-out infinite;
-  }
-  .sig-line-2 {
-    animation: sigDrift 6s ease-in-out infinite 0.3s;
-  }
-  @keyframes sigDrift {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-3px); }
   }
   .sig-sub {
     font-size: 0.8rem;
@@ -210,9 +199,12 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    transition: box-shadow 0.2s;
+    transition: box-shadow 0.3s, transform 0.2s;
   }
-  .hs-item:hover { box-shadow: 0 0 16px var(--g); }
+  .hs-item:hover {
+    box-shadow: 0 0 20px var(--g);
+    transform: translateY(-1px);
+  }
   .hs-num { font-size: 1.5rem; font-weight: 700; color: var(--c); line-height: 1.1; }
   .hs-label { font-size: 0.75rem; color: var(--text-muted); }
 
@@ -226,9 +218,20 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
     padding: 1.5rem;
     text-decoration: none;
     color: var(--text);
-    transition: box-shadow 0.2s, transform 0.2s;
+    transition: box-shadow 0.3s, transform 0.2s, border-color 0.2s;
+    position: relative;
+    overflow: hidden;
   }
-  .featured-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+  .featured-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    background: linear-gradient(135deg, rgba(240,136,62,0.06), transparent);
+    transition: opacity 0.3s;
+  }
+  .featured-card:hover::before { opacity: 1; }
+  .featured-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); border-color: var(--cc); }
   .fc-label { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.5rem; }
   .fc-badge { font-size: 0.68rem; padding: 0.15em 0.6em; background: rgba(240,136,62,0.15); color: #f0883e; border-radius: 4px; }
   .fc-date { font-size: 0.75rem; color: var(--text-muted); }
@@ -242,7 +245,7 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
     border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;
   }
   .section-header h2 { font-size: 0.95rem; font-weight: 600; margin: 0; }
-  .section-more { font-size: 0.78rem; color: var(--text-muted); text-decoration: none; }
+  .section-more { font-size: 0.78rem; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
   .section-more:hover { color: var(--accent); }
 
   .notes-row { display: flex; flex-direction: column; gap: 0.2rem; }
@@ -250,9 +253,9 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
     display: flex; align-items: center; gap: 0.6rem;
     padding: 0.45rem 0.8rem; border-radius: 6px;
     text-decoration: none; color: var(--text);
-    transition: background 0.1s;
+    transition: background 0.15s, padding 0.2s;
   }
-  .nr-mini:hover { background: var(--bg-hover); }
+  .nr-mini:hover { background: var(--bg-hover); padding-left: 1rem; }
   .nrm-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--c); flex-shrink: 0; }
   .nrm-title { font-size: 0.88rem; flex: 1; }
   .nrm-course { font-size: 0.7rem; color: var(--text-muted); }
@@ -269,9 +272,13 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     text-decoration: none; color: var(--text);
-    transition: box-shadow 0.15s;
+    transition: box-shadow 0.2s, transform 0.15s, border-color 0.2s;
   }
-  .pm-card:hover { box-shadow: var(--shadow-hover); }
+  .pm-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-1px);
+    border-color: var(--accent);
+  }
   .pm-num { font-size: 0.72rem; font-family: var(--font-mono); color: var(--text-muted); }
   .pm-title { font-size: 0.85rem; flex: 1; }
   .pm-date { font-size: 0.72rem; color: var(--text-muted); }
@@ -284,9 +291,9 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     text-decoration: none; color: var(--text);
-    transition: box-shadow 0.15s;
+    transition: box-shadow 0.2s, transform 0.15s;
   }
-  .hb-mini:hover { box-shadow: var(--shadow-hover); }
+  .hb-mini:hover { box-shadow: var(--shadow-hover); transform: translateY(-1px); }
   .hbm-icon { font-size: 1.2rem; }
   .hbm-title { font-size: 0.85rem; }
 

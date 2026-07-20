@@ -37,7 +37,7 @@ const years = [...new Set(events.map(e => e.date.getFullYear()))].sort((a, b) =>
 ---
 
 <Base title="时间线" description="成长历程">
-  <div class="page-header">
+  <div class="page-header" data-reveal="bottom">
     <h1>时间线</h1>
     <p>走过的每一步</p>
   </div>
@@ -47,7 +47,7 @@ const years = [...new Set(events.map(e => e.date.getFullYear()))].sort((a, b) =>
   ) : (
     <div class="timeline">
       {years.map(year => (
-        <div class="year-group">
+        <div class="year-group" data-reveal="bottom">
           <h2 class="year-heading">{year}</h2>
           <div class="year-line">
             {events.filter(e => e.date.getFullYear() === year).map(e => (

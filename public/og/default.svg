@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d1117"/>
+      <stop offset="50%" stop-color="#161b22"/>
+      <stop offset="100%" stop-color="#0d1117"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#58a6ff"/>
+      <stop offset="100%" stop-color="#bc8cff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="200" cy="150" r="300" fill="rgba(88,166,255,0.03)"/>
+  <circle cx="1000" cy="500" r="250" fill="rgba(188,140,255,0.03)"/>
+  <text x="600" y="260" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="300" font-size="48" fill="#58a6ff" letter-spacing="8">倦随尘絮争朝暮</text>
+  <text x="600" y="330" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="300" font-size="48" fill="#bc8cff" letter-spacing="8">独逐星鸿赴大荒</text>
+  <text x="600" y="400" text-anchor="middle" font-family="system-ui, sans-serif" font-size="20" fill="#6e7681" letter-spacing="4">—— 行路 · 自题</text>
+  <rect x="450" y="440" width="300" height="2" rx="1" fill="url(#accent)"/>
+  <text x="600" y="490" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="700" font-size="28" fill="#e6edf3">童国睿 Guorui</text>
+  <text x="600" y="520" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="#8b949e">软件工程 · 贵州大学</text>
+</svg>
