@@ -70,17 +70,16 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-r
        * 页面 JavaScript — 在首次加载和 View Transition 导航后均执行
        * 使用 astro:page-load 事件确保导航后重新初始化
        */
-      let themeInitialized = false;
       document.addEventListener('astro:page-load', () => {
         // ── Theme (暗/亮色) ──
         const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
         document.documentElement.setAttribute('data-theme', currentTheme);
         document.documentElement.style.setProperty('--vt-bg', currentTheme === 'light' ? '#f6f4f0' : '#0d1117');
 
-        // 主题切换按钮：只在首次绑定时注册事件（用标志位防止重复）
+        // 主题切换按钮：用 dataset 标记防止同一个元素重复绑；View Transition 后新元素无标记，会正确绑定
         const themeToggle = document.getElementById('theme-toggle');
-        if (themeToggle && !themeInitialized) {
-          themeInitialized = true;
+        if (themeToggle && !themeToggle.dataset.themeBound) {
+          themeToggle.dataset.themeBound = 'true';
           themeToggle.addEventListener('click', () => {
             const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
             document.documentElement.setAttribute('data-theme', next);
