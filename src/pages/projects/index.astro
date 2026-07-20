@@ -89,7 +89,7 @@ projects.forEach(p => {
               {items.map((p, i) => {
                 const meta = (() => { try { return JSON.parse(p.metadata || '{}'); } catch { return {}; } })();
                 const dateStr = meta.date ? new Date(meta.date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'short' }) : '';
-                const tagList = (() => { try { return JSON.parse(p.tags || '[]'); } catch { return []; } })();
+                const tagList = (() => { if (Array.isArray(p.tags)) return p.tags; try { return JSON.parse(p.tags || '[]'); } catch { return []; } })();
                 const statusLabel = meta.projectStatus === 'completed' ? '已完成' : meta.projectStatus === 'in-progress' ? '进行中' : '';
                 return (
                   <a href={`/projects/${p.slug}`} class="pg-card" style={`--cc:${catColor(cat)}`}>

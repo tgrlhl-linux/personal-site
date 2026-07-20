@@ -20,7 +20,10 @@ const hobbies = await query(
   ) : (
     <div class="hb-grid">
       {hobbies.map(h => {
-        const tagList = (() => { try { return JSON.parse(h.tags || '[]'); } catch { return []; } })();
+        const tagList = (() => {
+          if (Array.isArray(h.tags)) return h.tags;
+          try { return JSON.parse(h.tags || '[]'); } catch { return []; }
+        })();
         return (
           <a href={`/hobbies/${h.slug}`} class="hb-card" style="--cc:#79c0ff">
             <div class="hb-top">

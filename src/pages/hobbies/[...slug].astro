@@ -24,7 +24,10 @@ if (!slug) {
   }
 }
 
-const tagList = hobby ? (() => { try { return JSON.parse(hobby.tags || '[]'); } catch { return []; } })() : [];
+const tagList = hobby ? (() => {
+  if (Array.isArray(hobby.tags)) return hobby.tags;
+  try { return JSON.parse(hobby.tags || '[]'); } catch { return []; }
+})() : [];
 ---
 
 {error ? (

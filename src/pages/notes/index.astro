@@ -62,6 +62,7 @@ const latestNotes = [...notes].sort((a, b) => new Date(b.created_at) - new Date(
 
 // All unique tags
 const allTags = [...new Set(notes.flatMap(n => {
+  if (Array.isArray(n.tags)) return n.tags;
   try { return JSON.parse(n.tags || '[]'); } catch { return []; }
 }))];
 ---
@@ -146,7 +147,7 @@ const allTags = [...new Set(notes.flatMap(n => {
               </div>
               <div class="nc-grp-body">
                 {items.map((n, i) => {
-                  const tagList = (() => { try { return JSON.parse(n.tags || '[]'); } catch { return []; } })();
+                  const tagList = (() => { if (Array.isArray(n.tags)) return n.tags; try { return JSON.parse(n.tags || '[]'); } catch { return []; } })();
                   const shortTitle = n.title.replace(/^.*?·\s*/, '');
                   const dateStr = new Date(n.created_at).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
                   return (

@@ -111,7 +111,7 @@ Promise.all([
 
   // Parse tags
   var tags = [];
-  try { tags = JSON.parse(note.tags || '[]'); } catch(e) {}
+  try { tags = Array.isArray(note.tags) ? note.tags : JSON.parse(note.tags || '[]'); } catch(e) {}
   document.getElementById('tags').value = tags.join(', ');
 }).catch(function(err) {
   document.getElementById('status').textContent = '加载失败';

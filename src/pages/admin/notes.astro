@@ -201,7 +201,7 @@ function showItem(id) {
 
   const panel = document.getElementById('contentPanel');
   let tags = '';
-  try { tags = JSON.parse(item.tags || '[]').map(function(t) { return '<span class="tag">' + escapeHtml(t) + '</span>'; }).join(''); } catch(e) {}
+  try { tags = (Array.isArray(item.tags) ? item.tags : JSON.parse(item.tags || '[]')).map(function(t) { return '<span class="tag">' + escapeHtml(t) + '</span>'; }).join(''); } catch(e) {}
 
   const dateStr = item.created_at ? new Date(item.created_at).toLocaleString('zh-CN') : '';
   const excerpt = (item.content || '').substring(0, 500);

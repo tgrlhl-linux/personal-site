@@ -17,7 +17,7 @@ const totalProjects = (await query("SELECT COUNT(*) AS c FROM notes WHERE type='
 
 const featured = dbProjects[0];
 const featuredMeta = featured ? (() => { try { return JSON.parse(featured.metadata || '{}'); } catch { return {}; } })() : {};
-const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags || '[]'); } catch { return []; } })() : [];
+const featuredTags = featured ? (() => { if (Array.isArray(featured.tags)) return featured.tags; try { return JSON.parse(featured.tags || '[]'); } catch { return []; } })() : [];
 ---
 
 <Base title="首页" description="童国睿的个人网站" wide={true}>
