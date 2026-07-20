@@ -4,7 +4,7 @@
 Vercel Serverless — Flask 成绩管理系统（完整版）
 冷启动时自动用种子数据初始化 SQLite。
 """
-import os, sys, sqlite3, random, re, functools
+import os, sys, sqlite3, random, re, math, functools
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -79,7 +79,25 @@ def get_all_students(db, page=1, per_page=20, search='', class_id=None, role='ad
     students = db.execute(f'SELECT s.id,s.name,c.name as class_name FROM students s LEFT JOIN classes c ON s.class_id=c.id {where} ORDER BY s.id LIMIT ? OFFSET ?', params+[per_page,offset]).fetchall()
     return students, total, page, (total+per_page-1)//per_page
 
-# ── DB seed ──
+# ── DB seed (400+ records) ──
+# 姓名池（真实感中文名，覆盖常见姓氏）
+FIRST_NAMES = ['伟','芳','娜','敏','静','强','磊','洋','勇','军','杰','涛','明','超','辉','鹏','飞','宇','浩','峰',
+               '雪','婷','悦','慧','静','倩','琳','璐','颖','萌','帅','博','晨','旭','昊','鑫','瑞','彬','智','威',
+               '健','平','刚','亮','华','玲','娟','英','艳','莉','霞','琼','芳','媛','婷','蕾','蕊','薇','莹','怡']
+LAST_NAMES = ['张','李','王','刘','陈','杨','赵','黄','周','吴','徐','孙','胡','朱','高','林','何','郭','马','罗',
+              '梁','宋','郑','谢','韩','唐','冯','于','董','程','曹','袁','邓','许','傅','沈','曾','彭','吕','苏',
+              '卢','蒋','蔡','贾','丁','魏','薛','叶','阎','余','潘','杜','戴','夏','钟','汪','田','任','姜','范',
+              '方','石','姚','谭','廖','邹','熊','金','陆','郝','孔','白','崔','康','毛','邱','秦','江','史','顾']
+# 正态分布模拟成绩（均分75，标准差15，截断到[0,100]）
+def score_distribution():
+    u = random.random()
+    # Box-Muller 变换
+    r = math.sqrt(-2.0 * math.log(u if u > 0 else 0.0001))
+    theta = 2.0 * math.pi * random.random()
+    z = r * math.cos(theta)
+    s = 75 + z * 15  # 均分75, 标准差15
+    return max(min(round(s, 1), 100), 0)
+
 def seed_demo_data():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = sqlite3.connect(DB_PATH); c = conn.cursor()
@@ -88,22 +106,72 @@ def seed_demo_data():
         CREATE TABLE IF NOT EXISTS subjects(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT UNIQUE NOT NULL,credit REAL DEFAULT 0);
         CREATE TABLE IF NOT EXISTS scores(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT REFERENCES students(id),subject_id INTEGER REFERENCES subjects(id),raw_score TEXT,numeric_score REAL,UNIQUE(student_id,subject_id));
         CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,username TEXT UNIQUE NOT NULL,password TEXT NOT NULL,role TEXT NOT NULL CHECK(role IN('admin','teacher','student')),scope TEXT DEFAULT '*');''')
-    cid={}
-    for n,co,dep in [('计科1801','信息科学与工程学院','计算机科学系'),('计科1802','信息科学与工程学院','计算机科学系'),('软件1801','信息科学与工程学院','软件工程系'),('软件1802','信息科学与工程学院','软件工程系')]:
-        c.execute('INSERT OR IGNORE INTO classes(name,college,department) VALUES(?,?,?)',(n,co,dep))
-    for r in c.execute('SELECT id,name FROM classes'): cid[r[1]]=r[0]
-    sid_map={}
-    for n,cr in [('高等数学[5]',5),('线性代数[3]',3),('C语言程序设计[4]',4),('数据结构[4]',4),('操作系统[3]',3),('数据库原理[3]',3)]:
-        c.execute('INSERT OR IGNORE INTO subjects(name,credit) VALUES(?,?)',(n,cr))
-    for r in c.execute('SELECT id,name FROM subjects'): sid_map[r[1]]=r[0]
     random.seed(42)
-    for sn,nm,cl in [('2018182801','张三','计科1801'),('2018182802','李四','计科1801'),('2018182803','王五','计科1802'),('2018182804','赵六','软件1801'),('2018182805','钱七','软件1802')]:
-        c.execute('INSERT OR IGNORE INTO students(id,name,class_id) VALUES(?,?,?)',(sn,nm,cid.get(cl)))
-        for subj_id in sid_map.values():
-            score = round(random.uniform(55,100),1)
-            c.execute('INSERT OR IGNORE INTO scores(student_id,subject_id,raw_score,numeric_score) VALUES(?,?,?,?)',(sn,subj_id,str(score),score))
-    for u,p,r,s in [('admin','admin123','admin','*'),('zhanglao','123456','teacher','计科1801,计科1802'),('wanglao','123456','teacher','软件1801,软件1802'),('2018182801','123456','student','2018182801')]:
-        c.execute('INSERT OR IGNORE INTO users(username,password,role,scope) VALUES(?,?,?,?)',(u,p,r,s))
+
+    # ── 6 个班级，3 个学院 ──
+    classes_data = [
+        ('计科1801', '信息科学与工程学院', '计算机科学系'),
+        ('计科1802', '信息科学与工程学院', '计算机科学系'),
+        ('软件1801', '信息科学与工程学院', '软件工程系'),
+        ('软件1802', '信息科学与工程学院', '软件工程系'),
+        ('大数据1801', '信息科学与工程学院', '数据科学系'),
+        ('网络1801', '信息科学与工程学院', '网络工程系'),
+    ]
+    cid = {}
+    for n, co, dep in classes_data:
+        c.execute('INSERT OR IGNORE INTO classes(name,college,department) VALUES(?,?,?)', (n, co, dep))
+    for r in c.execute('SELECT id,name FROM classes'): cid[r[1]] = r[0]
+
+    # ── 8 门课程（含学分） ──
+    subjects_data = [
+        ('高等数学[5]', 5), ('线性代数[3]', 3), ('C语言程序设计[4]', 4),
+        ('数据结构[4]', 4), ('操作系统[3]', 3), ('数据库原理[3]', 3),
+        ('Python程序设计[3]', 3), ('计算机网络[3]', 3),
+    ]
+    sid_map = {}
+    for n, cr in subjects_data:
+        c.execute('INSERT OR IGNORE INTO subjects(name,credit) VALUES(?,?)', (n, cr))
+    for r in c.execute('SELECT id,name FROM subjects'): sid_map[r[1]] = r[0]
+
+    # ── 78 名学生，每班约 13 人（×6=78）──
+    class_names = [cd[0] for cd in classes_data]
+    students = []
+    used_names = set()
+    for ci, cn in enumerate(class_names):
+        base = 2018182800 + ci * 15
+        count = 13 if ci < 6 else 12
+        for j in range(1, count + 1):
+            while True:
+                ln = random.choice(LAST_NAMES)
+                fn = random.choice(FIRST_NAMES)
+                name = ln + fn
+                if name not in used_names:
+                    used_names.add(name)
+                    break
+            sid = str(base + j)
+            students.append((sid, name, cn))
+            c.execute('INSERT OR IGNORE INTO students(id,name,class_id) VALUES(?,?,?)', (sid, name, cid.get(cn)))
+
+    # ── 成绩：78 人 × 8 门 = 624 条 ──
+    for sid, nm, _ in students:
+        for sub_name, sub_id in sid_map.items():
+            score = score_distribution()
+            c.execute('INSERT OR IGNORE INTO scores(student_id,subject_id,raw_score,numeric_score) VALUES(?,?,?,?)',
+                      (sid, sub_id, str(score), score))
+
+    # ── 用户 ──
+    users = [
+        ('admin',    'admin123', 'admin',   '*'),
+        ('zhanglao', '123456',   'teacher', '计科1801,计科1802'),
+        ('wanglao',  '123456',   'teacher', '软件1801,软件1802'),
+        ('chenlao',  '123456',   'teacher', '大数据1801'),
+        ('liulao',   '123456',   'teacher', '网络1801'),
+    ]
+    # 为前 10 名学生创建学生账户
+    for sid, nm, _ in students[:10]:
+        users.append((sid, '123456', 'student', sid))
+    for u, p, r, s in users:
+        c.execute('INSERT OR IGNORE INTO users(username,password,role,scope) VALUES(?,?,?,?)', (u, p, r, s))
     conn.commit(); conn.close()
 
 def ensure_db():
