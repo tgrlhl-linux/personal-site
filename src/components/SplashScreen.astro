@@ -1,0 +1,461 @@
+<!-- ── 入口 Splash ──
+Three.js 全屏动画：鲸鱼跃海 → 3D 艺术字 → 首页过渡
+仅播一次（sessionStorage），prefers-reduced-motion 跳过
+-->
+
+<div id="splash-overlay" class="splash-overlay">
+  <div id="splash-scene"></div>
+  <button id="splash-skip" class="splash-skip">跳过 ›</button>
+  <div id="splash-progress" class="splash-progress">
+    <div class="splash-progress-bar"></div>
+  </div>
+</div>
+
+<style>
+  .splash-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #060a14;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.8s ease, transform 1s ease;
+    transform-origin: center;
+  }
+  .splash-overlay.fade-out {
+    opacity: 0;
+    transform: scale(1.05);
+    pointer-events: none;
+  }
+  .splash-overlay.removed {
+    display: none;
+  }
+  #splash-scene {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    inset: 0;
+  }
+  #splash-scene canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .splash-skip {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 10000;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.5);
+    padding: 0.5rem 1.2rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    backdrop-filter: blur(4px);
+    font-family: -apple-system, "Noto Sans SC", sans-serif;
+  }
+  .splash-skip:hover {
+    background: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.8);
+    border-color: rgba(255,255,255,0.2);
+  }
+  .splash-progress {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    z-index: 10000;
+    background: rgba(255,255,255,0.05);
+  }
+  .splash-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #58a6ff, #bc8cff);
+    transition: width 0.3s linear;
+  }
+  @media (max-width: 640px) {
+    .splash-skip { bottom: 1rem; right: 1rem; font-size: 0.7rem; padding: 0.4rem 1rem; }
+  }
+</style>
+
+<script is:inline type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+
+<script is:inline type="module">
+// ═══════════════════════════════════════════════════════════
+// 入口 Splash 动画 — Three.js
+// ═══════════════════════════════════════════════════════════
+
+import * as THREE from 'three';
+
+// ── DOM refs ──
+const overlay = document.getElementById('splash-overlay');
+const container = document.getElementById('splash-scene');
+const skipBtn = document.getElementById('splash-skip');
+const progressBar = document.querySelector('.splash-progress-bar');
+
+// ── Check if animation should run ──
+function shouldSkip() {
+  if (sessionStorage.getItem('splash_played')) return true;
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return true;
+  try {
+    const c = document.createElement('canvas');
+    const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+    if (!gl) return true;
+    const di = gl.getExtension('WEBGL_debug_renderer_info');
+    if (di) {
+      const r = gl.getParameter(di.UNMASKED_RENDERER_WEBGL);
+      if (r && r.match(/(SwiftShader|llvmpipe|Software)/i)) return true;
+    }
+  } catch { return true; }
+  return false;
+}
+
+if (shouldSkip()) {
+  overlay.style.display = 'none';
+  overlay.classList.add('removed');
+  sessionStorage.setItem('splash_played', '1');
+} else {
+  main();
+}
+
+// ═══════════════════════════════════════════════════════════
+// main — 仅在不跳过时执行
+// ═══════════════════════════════════════════════════════════
+function main() {
+  document.body.classList.add('splash-active');
+
+  const TOTAL_DURATION = 6.0;
+  const state = { skipped: false, finished: false, phase: 'loading' };
+
+  // ── Scene ──
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x060a14, 0.008);
+
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+  camera.position.set(0, 8, 30);
+  camera.lookAt(0, 0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  container.appendChild(renderer.domElement);
+
+  // ── Lights ──
+  scene.add(new THREE.AmbientLight(0x1a2a4a, 0.6));
+  const dir = new THREE.DirectionalLight(0x8ab4ff, 1.2); dir.position.set(5, 20, 10); scene.add(dir);
+  const bl = new THREE.DirectionalLight(0x4a6aff, 0.4); bl.position.set(-5, -5, -15); scene.add(bl);
+  const rl = new THREE.DirectionalLight(0xbc8cff, 0.3); rl.position.set(-10, 5, 5); scene.add(rl);
+
+  // ═══ Ocean ═══
+  const oW = 80, oS = 80;
+  const oGeo = new THREE.PlaneGeometry(oW, oW, oS, oS);
+  oGeo.rotateX(-Math.PI / 2);
+  const oMat = new THREE.MeshStandardMaterial({ color: 0x0a1e32, roughness: 0.7, metalness: 0.3, transparent: true, opacity: 0.92, side: THREE.DoubleSide });
+  const ocean = new THREE.Mesh(oGeo, oMat); ocean.position.y = -6; scene.add(ocean);
+  const wMat = new THREE.MeshBasicMaterial({ color: 0x1a4a7a, wireframe: true, transparent: true, opacity: 0.08 });
+  const wOcean = new THREE.Mesh(oGeo.clone(), wMat); wOcean.position.y = -6; scene.add(wOcean);
+  const oPos = oGeo.attributes.position, wPos = wOcean.geometry.attributes.position;
+
+  function updateOcean(time) {
+    for (let i = 0; i < oPos.count; i++) {
+      const x = oPos.getX(i), z = oPos.getZ(i);
+      const y = Math.sin(x * 0.12 + time * 0.7) * 0.35 + Math.sin(z * 0.1 + time * 0.5) * 0.45
+             + Math.sin((x + z) * 0.06 + time * 1.1) * 0.2 + Math.sin(x * 0.2 + z * 0.15 + time * 0.9) * 0.15;
+      oPos.setY(i, y); wPos.setY(i, y);
+    }
+    oPos.needsUpdate = true; wPos.needsUpdate = true;
+    oGeo.computeVertexNormals(); wOcean.geometry.computeVertexNormals();
+  }
+
+  // ═══ Whale ═══
+  function createWhale() {
+    const g = new THREE.Group();
+    const bg = new THREE.SphereGeometry(1, 14, 10);
+    const bp = bg.attributes.position;
+    for (let i = 0; i < bp.count; i++) {
+      let x = bp.getX(i), y = bp.getY(i), z = bp.getZ(i);
+      const za = Math.abs(z), taper = za < 0.85 ? 1 : (1 - (za - 0.85) / 0.15) * 0.6;
+      const nt = z < -0.7 ? (z + 1) / 0.3 * 0.4 + 0.6 : 1;
+      bp.setXYZ(i, x * taper * nt, y * taper * 0.6, z * 2.6);
+    }
+    bp.needsUpdate = true; bg.computeVertexNormals();
+    const bm = new THREE.MeshStandardMaterial({ color: 0x1a2d4a, emissive: 0x0a1a30, emissiveIntensity: 0.25, roughness: 0.5, metalness: 0.3, flatShading: true });
+    const body = new THREE.Mesh(bg, bm); g.add(body);
+
+    const blg = new THREE.SphereGeometry(0.85, 12, 8);
+    const blp = blg.attributes.position;
+    for (let i = 0; i < blp.count; i++) {
+      let x = blp.getX(i), y = blp.getY(i), z = blp.getZ(i);
+      const za = Math.abs(z), taper = za < 0.85 ? 1 : (1 - (za - 0.85) / 0.15) * 0.6;
+      blp.setXYZ(i, x * taper, Math.max(y * taper * 0.4, -0.3), z * 2.4);
+    }
+    blp.needsUpdate = true; blg.computeVertexNormals();
+    const blm = new THREE.MeshStandardMaterial({ color: 0x3a5a7a, emissive: 0x1a2a3a, emissiveIntensity: 0.15, roughness: 0.6, metalness: 0.1, flatShading: true });
+    const belly = new THREE.Mesh(blg, blm); belly.position.y = -0.15; g.add(belly);
+
+    const tm = new THREE.MeshStandardMaterial({ color: 0x1a2d4a, flatShading: true, roughness: 0.5, metalness: 0.2 });
+    function extShape(pts, dep) {
+      const s = new THREE.Shape(); s.moveTo(pts[0][0], pts[0][1]);
+      for (let k = 1; k < pts.length; k++) s.lineTo(pts[k][0], pts[k][1]);
+      s.closePath();
+      return new THREE.Mesh(new THREE.ExtrudeGeometry(s, { steps: 1, depth: dep, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 2 }), tm);
+    }
+    const tail = extShape([[0,0],[-0.7,0.1],[-0.5,0.8],[0,0.6],[0.5,0.8],[0.7,0.1]], 0.08);
+    tail.position.set(0, 0.1, -2.5); tail.rotation.x = -0.1; g.add(tail);
+    const dors = extShape([[0,0],[-0.25,0.4],[0.25,0.4]], 0.06);
+    dors.position.set(0, 0.45, -0.2); g.add(dors);
+
+    function addFin(side) {
+      const s = new THREE.Shape();
+      s.moveTo(0,0); s.quadraticCurveTo(side*0.5,0.1,side*0.7,0.35); s.quadraticCurveTo(side*0.3,0.2,0,0);
+      const m = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { steps: 1, depth: 0.04, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 2 }), tm);
+      m.position.set(side*0.5, -0.1, 0.6); m.rotation.z = side*0.3; g.add(m);
+    }
+    addFin(1); addFin(-1);
+
+    const el = new THREE.LineSegments(new THREE.EdgesGeometry(bg), new THREE.LineBasicMaterial({ color: 0x4a8aff, transparent: true, opacity: 0.12 }));
+    g.add(el);
+    return g;
+  }
+
+  const whale = createWhale();
+  whale.scale.set(0.7, 0.7, 0.7);
+  scene.add(whale);
+
+  // ═══ Bezier path ═══
+  const P0 = new THREE.Vector3(-28, -8, 2), P1 = new THREE.Vector3(-12, -2, 5), P2 = new THREE.Vector3(4, 16, 0), P3 = new THREE.Vector3(25, -10, -4);
+  function bezier(t) {
+    const u = 1 - t;
+    return new THREE.Vector3().copy(P0).multiplyScalar(u*u*u).add(P1.clone().multiplyScalar(3*u*u*t)).add(P2.clone().multiplyScalar(3*u*t*t)).add(P3.clone().multiplyScalar(t*t*t));
+  }
+  function bezierTan(t) {
+    const u = 1 - t;
+    return new THREE.Vector3().copy(P0).multiplyScalar(-3*u*u).add(P1.clone().multiplyScalar(3*(u*u-2*u*t))).add(P2.clone().multiplyScalar(3*(2*t*u-t*t))).add(P3.clone().multiplyScalar(3*t*t));
+  }
+
+  // ═══ Splash particles ═══
+  const SP_COUNT = 200;
+  const spGeo = new THREE.BufferGeometry();
+  const spPos = new Float32Array(SP_COUNT * 3);
+  const spVel = Array.from({ length: SP_COUNT }, () => ({ x: 0, y: 0, z: 0 }));
+  const spLife = new Float32Array(SP_COUNT);
+  spGeo.setAttribute('position', new THREE.BufferAttribute(spPos, 3));
+  const spMat = new THREE.PointsMaterial({ color: 0x8ac4ff, size: 0.25, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+  const splash = new THREE.Points(spGeo, spMat);
+  splash.visible = false; scene.add(splash);
+  let splashActive = false, splashAge = 0;
+
+  function triggerSplash(pos) {
+    splash.position.copy(pos);
+    splash.visible = true; splashActive = true; splashAge = 0;
+    const pa = splash.geometry.attributes.position;
+    for (let i = 0; i < SP_COUNT; i++) {
+      const a = Math.random() * Math.PI * 2, el = Math.random() * Math.PI * 0.5, sp = 2 + Math.random() * 4;
+      spVel[i] = { x: Math.cos(a) * Math.cos(el) * sp, y: Math.sin(el) * sp + 1.5, z: Math.sin(a) * Math.cos(el) * sp };
+      pa.setXYZ(i, 0, 0, 0); spLife[i] = 0.5 + Math.random() * 0.8;
+    }
+    pa.needsUpdate = true;
+  }
+
+  function updateSplash(dt) {
+    if (!splashActive) return;
+    splashAge += dt;
+    const pa = splash.geometry.attributes.position; let allDead = true;
+    for (let i = 0; i < SP_COUNT; i++) {
+      const pct = splashAge / spLife[i];
+      if (pct >= 1) { pa.setXYZ(i, 0, -100, 0); continue; }
+      allDead = false;
+      const dec = 1 - pct, grav = pct * 6;
+      pa.setXYZ(i, spVel[i].x * splashAge * dec, spVel[i].y * splashAge * dec - grav, spVel[i].z * splashAge * dec);
+    }
+    pa.needsUpdate = true;
+    splash.material.opacity = Math.max(0, 1 - splashAge / 1.5);
+    if (allDead) { splashActive = false; splash.visible = false; }
+  }
+
+  // ═══ Ambient particles ═══
+  const apCount = 300;
+  const apPos = new Float32Array(apCount * 3);
+  for (let i = 0; i < apCount; i++) { apPos[i*3] = (Math.random() - 0.5) * 80; apPos[i*3+1] = (Math.random() - 0.5) * 40; apPos[i*3+2] = (Math.random() - 0.5) * 40 - 10; }
+  const apGeo = new THREE.BufferGeometry(); apGeo.setAttribute('position', new THREE.BufferAttribute(apPos, 3));
+  const ambientP = new THREE.Points(apGeo, new THREE.PointsMaterial({ color: 0x6a9aff, size: 0.08, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true }));
+  scene.add(ambientP);
+
+  // ═══ 3D Text ═══
+  function makeTextTexture(l1, l2) {
+    const c = document.createElement('canvas'), ctx = c.getContext('2d');
+    c.width = 1200; c.height = 500;
+    ctx.clearRect(0, 0, c.width, c.height);
+    const font = 'bold 90px "Microsoft YaHei","Noto Sans SC","PingFang SC",sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+    ctx.save(); ctx.shadowColor = 'rgba(88,166,255,0.5)'; ctx.shadowBlur = 30; ctx.font = font;
+    const g1 = ctx.createLinearGradient(0,0,c.width,0); g1.addColorStop(0,'#58a6ff'); g1.addColorStop(0.5,'#bc8cff'); g1.addColorStop(1,'#e6edf3');
+    ctx.fillStyle = g1; ctx.fillText(l1, c.width/2, c.height*0.3);
+    ctx.shadowBlur = 50; ctx.fillText(l1, c.width/2, c.height*0.3); ctx.restore();
+
+    ctx.save(); ctx.shadowColor = 'rgba(188,140,255,0.4)'; ctx.shadowBlur = 25; ctx.font = font;
+    const g2 = ctx.createLinearGradient(0,0,c.width,0); g2.addColorStop(0,'#bc8cff'); g2.addColorStop(0.5,'#58a6ff'); g2.addColorStop(1,'#e6edf3');
+    ctx.fillStyle = g2; ctx.fillText(l2, c.width/2, c.height*0.7);
+    ctx.shadowBlur = 40; ctx.fillText(l2, c.width/2, c.height*0.7); ctx.restore();
+
+    ctx.save(); ctx.font = '30px "Microsoft YaHei","Noto Sans SC","PingFang SC",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillText('—— 行路 · 自题', c.width/2, c.height*0.88); ctx.restore();
+
+    const tex = new THREE.CanvasTexture(c); tex.needsUpdate = true; return tex;
+  }
+
+  const textTex = makeTextTexture('倦随尘絮争朝暮', '独逐星鸿赴大荒');
+  const tMat = new THREE.MeshBasicMaterial({ map: textTex, transparent: true, side: THREE.DoubleSide, depthWrite: false, opacity: 0 });
+  const tMesh = new THREE.Mesh(new THREE.PlaneGeometry(14, 5.5), tMat);
+  tMesh.position.set(0, 2, 5); tMesh.visible = false; scene.add(tMesh);
+  const gMat = new THREE.MeshBasicMaterial({ map: textTex, transparent: true, side: THREE.DoubleSide, depthWrite: false, opacity: 0, blending: THREE.AdditiveBlending });
+  const gMesh = new THREE.Mesh(new THREE.PlaneGeometry(15, 6), gMat);
+  gMesh.position.set(0, 2, 4.6); gMesh.visible = false; scene.add(gMesh);
+
+  // Text halo particles
+  const tpCount = 50;
+  const tpPos = new Float32Array(tpCount * 3);
+  for (let i = 0; i < tpCount; i++) { const a = Math.random() * Math.PI * 2, r = 5 + Math.random() * 3; tpPos[i*3] = Math.cos(a) * r; tpPos[i*3+1] = Math.sin(a) * r * 0.6; tpPos[i*3+2] = (Math.random() - 0.5) * 2; }
+  const tpGeo = new THREE.BufferGeometry(); tpGeo.setAttribute('position', new THREE.BufferAttribute(tpPos, 3));
+  const tpMat = new THREE.PointsMaterial({ color: 0x8ab4ff, size: 0.15, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+  const tpMesh = new THREE.Points(tpGeo, tpMat); tpMesh.position.set(0, 2, 5); tpMesh.visible = false; scene.add(tpMesh);
+
+  // ═══ Timeline ═══
+  const PH = {
+    FADE_IN: [0, 1.0], WHALE_PREP: [0.3, 1.0], WHALE_ARC: [0.8, 3.0],
+    WHALE_DIVE: [2.8, 3.6], TEXT_SHOW: [3.4, 5.0], TRANSITION: [4.8, 6.0],
+  };
+  const clamp = (v, mn, mx) => Math.max(mn, Math.min(mx, v));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const sm = (t) => t * t * (3 - 2 * t);
+  const cStart = new THREE.Vector3(0, 8, 30), cMid = new THREE.Vector3(0, 3, 20);
+
+  // ═══ Mobile perf ═══
+  if (window.innerWidth < 480) { renderer.setPixelRatio(1); }
+
+  // ═══ Animation loop ═══
+  let st = 0, pt = 0;
+  function animate(ts) {
+    if (!st) { st = ts; pt = ts; }
+    const dt = Math.min((ts - pt) / 1000, 0.05); pt = ts;
+    const t = (ts - st) / 1000;
+
+    if (state.phase === 'loading') state.phase = 'playing';
+
+    if (state.phase === 'playing' || state.phase === 'transitioning') {
+      // Ocean
+      updateOcean(t);
+
+      // Ambient particles
+      const ap = ambientP.geometry.attributes.position;
+      for (let i = 0; i < apCount; i++) { ap.array[i*3] += Math.sin(t + i) * 0.01; ap.array[i*3+1] += Math.cos(t * 0.7 + i * 0.5) * 0.008; }
+      ap.needsUpdate = true;
+
+      // ── Whale animation ──
+      if (t >= PH.WHALE_PREP[0] && t < PH.WHALE_DIVE[1]) {
+        if (t < PH.WHALE_ARC[0]) {
+          const p = (t - PH.WHALE_PREP[0]) / (PH.WHALE_ARC[0] - PH.WHALE_PREP[0]);
+          const bp = bezier(p * 0.15); whale.position.copy(bp);
+          const tan = bezierTan(p * 0.15);
+          if (tan.length() > 0.001) whale.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), tan.clone().normalize());
+        } else if (t <= PH.WHALE_ARC[1]) {
+          const arc = sm(clamp((t - PH.WHALE_ARC[0]) / (PH.WHALE_ARC[1] - PH.WHALE_ARC[0]), 0, 1));
+          const bp = bezier(arc); whale.position.copy(bp);
+          const tan = bezierTan(arc);
+          if (tan.length() > 0.001) whale.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), tan.clone().normalize());
+          whale.scale.setScalar(0.7 * (1 + Math.sin(arc * Math.PI) * 0.08));
+        }
+        if (t >= PH.WHALE_DIVE[0] && t < PH.WHALE_DIVE[0] + 0.15) triggerSplash(bezier(0.85));
+      }
+
+      // Whale exit
+      if (t >= PH.WHALE_DIVE[1] && t < PH.TEXT_SHOW[0]) {
+        const e = (t - PH.WHALE_DIVE[1]) / (PH.TEXT_SHOW[0] - PH.WHALE_DIVE[1]);
+        whale.position.copy(bezier(0.95 + e * 0.05));
+        whale.scale.setScalar(0.7 * (1 - e * 0.5));
+        whale.children.forEach(c => { if (c.material) { c.material.transparent = true; c.material.opacity = 1 - e; } });
+      }
+
+      updateSplash(dt);
+
+      // ── Whale fade in ──
+      if (t < PH.WHALE_ARC[0] && t > PH.FADE_IN[0]) {
+        const f = clamp((t - PH.FADE_IN[0]) / 0.4, 0, 1);
+        whale.children.forEach(c => { if (c.material) { c.material.transparent = true; c.material.opacity = f; } });
+      }
+
+      // ── Text reveal ──
+      if (t >= PH.TEXT_SHOW[0]) {
+        const tt = sm(clamp((t - PH.TEXT_SHOW[0]) / (PH.TEXT_SHOW[1] - PH.TEXT_SHOW[0]), 0, 1));
+        tMesh.visible = true; gMesh.visible = true; tpMesh.visible = true;
+        const yBase = lerp(-4, 2, tt) + Math.sin(t * 0.8) * 0.15;
+        tMesh.position.y = yBase; gMesh.position.y = yBase;
+        tMat.opacity = tt; gMat.opacity = tt * 0.3 * (0.8 + Math.sin(t * 1.5) * 0.2);
+        tpMesh.material.opacity = tt * 0.5;
+        const ry = Math.sin(t * 0.3) * 0.05;
+        tMesh.rotation.y = ry; gMesh.rotation.y = ry;
+      }
+
+      // ── Camera ──
+      if (t < PH.WHALE_ARC[0]) camera.position.lerpVectors(cStart, cMid, t / PH.WHALE_ARC[0]);
+      else if (t < PH.TEXT_SHOW[0]) camera.position.lerpVectors(cMid, new THREE.Vector3(0, 3, 22), clamp((t - PH.WHALE_ARC[0]) / 1.5, 0, 1));
+      else camera.position.lerpVectors(new THREE.Vector3(0, 3, 22), new THREE.Vector3(0, 5, 28), clamp((t - PH.TEXT_SHOW[0]) / 1, 0, 1));
+      camera.lookAt(0, t < PH.TEXT_SHOW[0] ? -2 : 2, 0);
+
+      // Progress
+      if (progressBar) progressBar.style.width = Math.min(t / TOTAL_DURATION, 1) * 100 + '%';
+
+      // Transition
+      if (t >= PH.TRANSITION[0] && state.phase === 'playing') {
+        state.phase = 'transitioning';
+        beginTransition();
+      }
+    }
+
+    renderer.render(scene, camera);
+    if (state.phase !== 'done') requestAnimationFrame(animate);
+  }
+
+  // ═══ Transition ═══
+  function beginTransition() {
+    state.finished = true;
+    sessionStorage.setItem('splash_played', '1');
+    overlay.classList.add('fade-out');
+    setTimeout(() => {
+      document.body.classList.remove('splash-active');
+      overlay.classList.add('removed');
+      state.phase = 'done';
+      renderer.dispose();
+    }, 1000);
+    if (progressBar) progressBar.style.width = '100%';
+  }
+
+  // ═══ Skip ═══
+  function skip() {
+    if (state.skipped || state.phase === 'done') return;
+    state.skipped = true; state.phase = 'transitioning';
+    beginTransition();
+  }
+  skipBtn?.addEventListener('click', skip);
+  overlay?.addEventListener('click', (e) => { if (e.target === overlay || e.target === container) skip(); });
+  window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+  window.addEventListener('keydown', (e) => { if (['Escape', ' ', 'Enter'].includes(e.key)) skip(); });
+
+  requestAnimationFrame(animate);
+}
+</script>

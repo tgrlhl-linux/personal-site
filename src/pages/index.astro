@@ -20,7 +20,7 @@ const featuredMeta = featured ? (() => { try { return JSON.parse(featured.metada
 const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags || '[]'); } catch { return []; } })() : [];
 ---
 
-<Base title="首页" description="童国睿的个人网站" wide={true}>
+<Base title="首页" description="童国睿的个人网站" wide={true} splash={true}>
   <div class="home">
 
     <!-- Signature Quote — floating art text -->

@@ -52,6 +52,8 @@ body {
   color: var(--text);
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
+  background-image: radial-gradient(ellipse at 50% 0%, rgba(20,60,120,0.06) 0%, transparent 70%);
+  background-attachment: fixed;
 }
 
 /* ── Typography ── */
@@ -188,3 +190,9 @@ img, svg { max-width: 100%; height: auto; }
   .container, .container-wide { padding: 0 1rem; }
   .page { padding: 1.2rem 0 2.5rem; }
 }
+
+/* ── Splash screen override ── */
+.splash-active .header { opacity: 0; pointer-events: none; }
+.splash-active .page { opacity: 0; }
+.splash-active .footer { opacity: 0; pointer-events: none; }
+.splash-active #starfield { opacity: 0.15 !important; transition: opacity 1s ease; }

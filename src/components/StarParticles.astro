@@ -6,9 +6,9 @@
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     let w, h, particles = [];
-    const COUNT = 120;
-    const MAX_SPEED = 0.15;
-    const CONNECT_DIST = 120;
+    const COUNT = 200;
+    const MAX_SPEED = 0.2;
+    const CONNECT_DIST = 150;
 
     function resize() {
       w = canvas.width = window.innerWidth;
@@ -21,8 +21,8 @@
         y: Math.random() * h,
         vx: (Math.random() - 0.5) * MAX_SPEED * 0.5,
         vy: -Math.random() * MAX_SPEED - 0.02,
-        r: Math.random() * 1.8 + 0.4,
-        a: Math.random() * 0.5 + 0.2,
+        r: Math.random() * 2.2 + 0.6,
+        a: Math.random() * 0.5 + 0.4,
         phase: Math.random() * Math.PI * 2,
       };
     }
@@ -46,7 +46,7 @@
         const p = particles[i];
 
         // Twinkle
-        const twinkle = Math.sin(Date.now() * 0.001 + p.phase) * 0.15 + 0.85;
+        const twinkle = Math.sin(Date.now() * 0.002 + p.phase) * 0.1 + 0.9;
 
         // Move
         p.x += p.vx;
@@ -60,7 +60,7 @@
         // Draw
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(200, 215, 235, ${p.a * twinkle})`;
+        ctx.fillStyle = `rgba(215, 230, 250, ${p.a * twinkle})`;
         ctx.fill();
       }
 
@@ -71,11 +71,11 @@
           const dx = a.x - b.x, dy = a.y - b.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < CONNECT_DIST) {
-            const alpha = (1 - dist / CONNECT_DIST) * 0.12;
+            const alpha = (1 - dist / CONNECT_DIST) * 0.25;
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(b.x, b.y);
-            ctx.strokeStyle = `rgba(140, 170, 210, ${alpha})`;
+            ctx.strokeStyle = `rgba(160, 190, 230, ${alpha})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
@@ -124,6 +124,6 @@
     height: 100%;
     z-index: 0;
     pointer-events: none;
-    opacity: 0.7;
+    opacity: 1.0;
   }
 </style>

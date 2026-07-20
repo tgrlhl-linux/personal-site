@@ -3,14 +3,16 @@ import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import StarParticles from '../components/StarParticles.astro';
+import SplashScreen from '../components/SplashScreen.astro';
 
 export interface Props {
   title?: string;
   description?: string;
   wide?: boolean;
+  splash?: boolean;
 }
 
-const { title = 'Guorui', description = 'Personal site', wide = false } = Astro.props;
+const { title = 'Guorui', description = 'Personal site', wide = false, splash = false } = Astro.props;
 const containerClass = wide ? 'container-wide' : 'container';
 ---
 
@@ -24,6 +26,7 @@ const containerClass = wide ? 'container-wide' : 'container';
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
   <body>
+    {splash && <SplashScreen />}
     <StarParticles />
     <Header />
     <main class="page">
