@@ -3,18 +3,25 @@ export const prerender = false;
 
 import Base from '../../layouts/Base.astro';
 import { query } from '../../db/mysql';
+import { marked } from 'marked';
+
+marked.setOptions({ breaks: true, gfm: true });
 
 const slug = Astro.params.slug;
 
 let error = null;
 let hobby = null;
+let renderedContent = '';
 
 if (!slug) {
   error = '无效的 ID';
 } else {
   const rows = await query("SELECT * FROM notes WHERE type='hobby' AND slug = ?", [slug]);
   if (rows.length === 0) error = '内容不存在';
-  else hobby = rows[0];
+  else {
+    hobby = rows[0];
+    renderedContent = marked.parse(hobby.content || '');
+  }
 }
 
 const tagList = hobby ? (() => { try { return JSON.parse(hobby.tags || '[]'); } catch { return []; } })() : [];
@@ -40,24 +47,12 @@ const tagList = hobby ? (() => { try { return JSON.parse(hobby.tags || '[]'); } 
         </div>
       </header>
 
-      <div class="post-content">
-        <div id="content">{hobby.content || ''}</div>
-      </div>
+      <div class="post-content" set:html={renderedContent}></div>
 
       <nav class="post-nav">
         <a href="/hobbies" class="btn">← 返回爱好列表</a>
       </nav>
     </article>
-
-    <script>
-      import { marked } from 'marked';
-      marked.setOptions({ breaks: true, gfm: true });
-      const content = document.getElementById('content');
-      if (content) {
-        const md = content.textContent;
-        content.innerHTML = marked.parse(md);
-      }
-    </script>
   </Base>
 )}
 

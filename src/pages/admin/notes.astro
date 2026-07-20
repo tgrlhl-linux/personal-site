@@ -1,14 +1,8 @@
 ---
-const token = Astro.cookies.get('admin_token')?.value;
-let authenticated = false;
-if (token) {
-  try {
-    const decoded = Buffer.from(token, 'base64').toString();
-    const [username] = decoded.split(':');
-    authenticated = username === (import.meta.env.ADMIN_USERNAME || 'admin');
-  } catch {}
-}
-if (!authenticated) return Astro.redirect('/admin/login');
+import { verifyToken, COOKIE_NAME } from '../../lib/auth.js';
+const token = Astro.cookies.get(COOKIE_NAME)?.value;
+const username = token ? verifyToken(token) : null;
+if (!username) return Astro.redirect('/admin/login');
 ---
 
 <!doctype html>

@@ -48,37 +48,55 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-r
     <Footer />
 
     <script>
-      // ── Cursor glow follower ──
-      document.addEventListener('mousemove', (e) => {
-        document.documentElement.style.setProperty('--mouse-x', e.clientX + 'px');
-        document.documentElement.style.setProperty('--mouse-y', e.clientY + 'px');
-      });
-
-      // ── Scroll Reveal Observer ──
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add('is-visible');
-              observer.unobserve(entry.target);
-            }
+      /**
+       * 页面 JavaScript — 在首次加载和 View Transition 导航后均执行
+       * 使用 astro:page-load 事件确保导航后重新初始化
+       */
+      document.addEventListener('astro:page-load', () => {
+        // ── Cursor glow follower（全局只绑一次） ──
+        if (!document.documentElement.hasAttribute('data-glow-init')) {
+          document.documentElement.setAttribute('data-glow-init', '');
+          document.addEventListener('mousemove', (e) => {
+            document.documentElement.style.setProperty('--mouse-x', e.clientX + 'px');
+            document.documentElement.style.setProperty('--mouse-y', e.clientY + 'px');
           });
-        },
-        { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
-      );
+        }
 
-      document.querySelectorAll('[data-reveal]').forEach((el) => observer.observe(el));
+        // ── Scroll Reveal（View Transition 后重新观察新元素） ──
+        const revealEls = document.querySelectorAll('[data-reveal]:not(.is-visible)');
+        if (revealEls.length === 0) return;
 
-      // ── Scroll Progress Bar ──
-      const progressBar = document.getElementById('scroll-progress');
-      if (progressBar) {
-        window.addEventListener('scroll', () => {
-          const scrollTop = window.scrollY;
-          const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-          const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-          progressBar.style.width = progress + '%';
-        }, { passive: true });
-      }
+        // 标记预动画态（JS 可用时才隐藏内容）
+        revealEls.forEach(el => el.classList.add('js-reveal-init'));
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.remove('js-reveal-init');
+                entry.target.classList.add('is-visible');
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
+        );
+
+        revealEls.forEach(el => observer.observe(el));
+
+        // ── Scroll Progress Bar ──
+        const progressBar = document.getElementById('scroll-progress');
+        if (progressBar) {
+          const onScroll = () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.style.width = (docHeight > 0 ? (scrollTop / docHeight) * 100 : 0) + '%';
+          };
+          window.removeEventListener('scroll', progressBar._scrollHandler);
+          progressBar._scrollHandler = onScroll;
+          window.addEventListener('scroll', onScroll, { passive: true });
+        }
+      });
     </script>
 
     <style>

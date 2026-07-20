@@ -1,14 +1,8 @@
 ---
-const token = Astro.cookies.get('admin_token')?.value;
-let authenticated = false;
-if (token) {
-  try {
-    const decoded = Buffer.from(token, 'base64').toString();
-    const [username] = decoded.split(':');
-    authenticated = username === (import.meta.env.ADMIN_USERNAME || 'admin');
-  } catch {}
-}
-if (!authenticated) return Astro.redirect('/admin/login');
+import { verifyToken, COOKIE_NAME } from '../../lib/auth.js';
+const token = Astro.cookies.get(COOKIE_NAME)?.value;
+const username = token ? verifyToken(token) : null;
+if (!username) return Astro.redirect('/admin/login');
 ---
 
 <!doctype html>
@@ -92,15 +86,28 @@ if (!authenticated) return Astro.redirect('/admin/login');
 
 <script>
 async function loadDashboard() {
-  var res = await fetch('/api/contents?limit=10');
-  var data = await res.json();
-  var items = data.contents || [];
+  // 分别获取各类别总数
+  const [notesRes, projectsRes, hobbiesRes, allRes] = await Promise.all([
+    fetch('/api/contents?type=note&limit=1'),
+    fetch('/api/contents?type=project&limit=1'),
+    fetch('/api/contents?type=hobby&limit=1'),
+    fetch('/api/contents?limit=10'),
+  ]);
+  const notesData = await notesRes.json();
+  const projectsData = await projectsRes.json();
+  const hobbiesData = await hobbiesRes.json();
+  const allData = await allRes.json();
 
-  document.getElementById('noteCount').textContent = items.filter(i => i.type === 'note').length || data.total || '-';
-  document.getElementById('projectCount').textContent = items.filter(i => i.type === 'project').length || '-';
-  document.getElementById('hobbyCount').textContent = items.filter(i => i.type === 'hobby').length || '-';
-  document.getElementById('totalCount').textContent = data.total || items.length;
+  var noteTotal = notesData.total || 0;
+  var projectTotal = projectsData.total || 0;
+  var hobbyTotal = hobbiesData.total || 0;
 
+  document.getElementById('noteCount').textContent = noteTotal;
+  document.getElementById('projectCount').textContent = projectTotal;
+  document.getElementById('hobbyCount').textContent = hobbyTotal;
+  document.getElementById('totalCount').textContent = noteTotal + projectTotal + hobbyTotal;
+
+  var items = allData.contents || [];
   var container = document.getElementById('recentItems');
   if (items.length === 0) {
     container.innerHTML = '<div style="color:#8a8a9a;font-size:0.85rem;">还没有内容</div>';

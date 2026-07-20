@@ -31,6 +31,11 @@ export function getPool() {
 
 export async function query(sql, params = []) {
   const conn = getPool();
-  const [rows] = await conn.query(sql, params);
-  return rows;
+  try {
+    const [rows] = await conn.query(sql, params);
+    return rows;
+  } catch (err) {
+    console.error('[DB] Query error:', err.message);
+    throw err; // 让上层页面处理 500
+  }
 }
