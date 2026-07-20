@@ -35,7 +35,11 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
       <div class="hero-text">
         <h1>童国睿</h1>
         <p class="hero-sub">软件工程 · 大三 · 贵州大学</p>
-        <p class="hero-desc">从底层系统到前端界面，用代码解决问题的过程都记录在这里。</p>
+        <div class="hero-typewriter">
+          <span class="ht-prompt">$</span>
+          <span class="ht-text" id="typewriter-text"></span>
+          <span class="ht-cursor">▊</span>
+        </div>
         <div class="hero-links">
           <a href="/projects" class="btn">浏览项目</a>
           <a href="/about" class="btn btn-outline">关于我</a>
@@ -43,18 +47,27 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
       </div>
       <div class="hero-stats">
         <div class="hs-item" style="--c:var(--c-os);--g:var(--c-os-glow)">
-          <span class="hs-num">{totalNotes}</span>
+          <span class="hs-num" data-count="{totalNotes}">0</span>
           <span class="hs-label">笔记</span>
         </div>
         <div class="hs-item" style="--c:var(--c-db);--g:var(--c-db-glow)">
-          <span class="hs-num">{totalProjects}</span>
+          <span class="hs-num" data-count="{totalProjects}">0</span>
           <span class="hs-label">项目</span>
         </div>
         <div class="hs-item" style="--c:var(--c-prob);--g:var(--c-prob-glow)">
-          <span class="hs-num">{dbHobbies.length}</span>
+          <span class="hs-num" data-count="{dbHobbies.length}">0</span>
           <span class="hs-label">爱好</span>
         </div>
       </div>
+    </div>
+
+    <!-- GitHub Stats -->
+    <div class="github-strip" data-reveal="bottom" data-delay="150">
+      <a href="https://github.com/tgrlhl-linux" target="_blank" rel="noopener" class="gs-link">
+        <span class="gs-icon">🐙</span>
+        <span class="gs-text">github.com/tgrlhl-linux</span>
+        <span class="gs-arrow">↗</span>
+      </a>
     </div>
 
     <!-- Featured Project -->
@@ -297,10 +310,119 @@ const featuredTags = featured ? (() => { try { return JSON.parse(featured.tags |
   .hbm-icon { font-size: 1.2rem; }
   .hbm-title { font-size: 0.85rem; }
 
+  /* ── Typewriter ── */
+  .hero-typewriter {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    min-height: 1.6rem;
+  }
+  .ht-prompt {
+    color: var(--c-db);
+    font-weight: 700;
+    user-select: none;
+  }
+  .ht-text {
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .ht-cursor {
+    color: var(--c-os);
+    animation: blink 0.8s step-end infinite;
+    font-size: 0.75rem;
+  }
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
+  /* ── GitHub Strip ── */
+  .github-strip {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .github-strip:hover { border-color: var(--c-os); }
+  .gs-link {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.9rem;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    transition: color 0.2s;
+  }
+  .gs-link:hover { color: var(--c-os); }
+  .gs-icon { font-size: 1rem; }
+  .gs-text { flex: 1; }
+  .gs-arrow { font-size: 0.8rem; opacity: 0.4; transition: transform 0.2s, opacity 0.2s; }
+  .gs-link:hover .gs-arrow { opacity: 1; transform: translate(2px, -2px); }
+
   @media (max-width: 640px) {
     .hero-bento { grid-template-columns: 1fr; }
     .proj-mini-grid { grid-template-columns: 1fr; }
     .hobby-row { flex-direction: column; }
     .sig-line { font-size: 1.4rem; letter-spacing: 4px; }
+    .hero-typewriter { font-size: 0.78rem; }
   }
 </style>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    // ── Typewriter ──
+    const el = document.getElementById('typewriter-text');
+    if (el && !el.dataset.initialized) {
+      el.dataset.initialized = 'true';
+      const lines = [
+        '从底层系统到前端界面，用代码解决问题的过程都记录在这里。',
+        '软件工程 · 系统编程 · 数据库 · 全栈开发',
+        'INTJ · 持续学习 · 喜欢把复杂的东西变简单',
+      ];
+      let lineIdx = 0, charIdx = 0, deleting = false;
+      function tick() {
+        const line = lines[lineIdx % lines.length];
+        if (!deleting) {
+          if (charIdx < line.length) {
+            el.textContent = line.slice(0, ++charIdx);
+            setTimeout(tick, 50);
+          } else {
+            deleting = true;
+            setTimeout(tick, 2500);
+          }
+        } else {
+          if (charIdx > 0) {
+            el.textContent = line.slice(0, --charIdx);
+            setTimeout(tick, 25);
+          } else {
+            deleting = false;
+            lineIdx++;
+            setTimeout(tick, 500);
+          }
+        }
+      }
+      tick();
+    }
+
+    // ── Count-up animation ──
+    document.querySelectorAll('.hs-num[data-count]').forEach(el => {
+      if (el.dataset.counted) return;
+      el.dataset.counted = 'true';
+      const target = parseInt(el.dataset.count);
+      const duration = 1200;
+      const start = performance.now();
+      function update(now) {
+        const pct = Math.min((now - start) / duration, 1);
+        el.textContent = Math.floor(pct * target);
+        if (pct < 1) requestAnimationFrame(update);
+        else el.textContent = target;
+      }
+      requestAnimationFrame(update);
+    });
+  });
+</script>

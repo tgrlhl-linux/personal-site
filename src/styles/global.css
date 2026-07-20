@@ -46,6 +46,42 @@
   --mouse-y: 50%;
 }
 
+/* ── Light Theme ── */
+[data-theme="light"] {
+  --bg: #f6f4f0;
+  --bg-card: #ffffff;
+  --bg-hover: rgba(0,0,0,0.04);
+  --bg-raised: #ece8e0;
+  --text: #1a1a2e;
+  --text-secondary: #5c5c72;
+  --text-muted: #9494a8;
+  --border: rgba(0,0,0,0.08);
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-hover: 0 8px 32px rgba(0,0,0,0.12);
+
+  --c-os: #2563eb;
+  --c-os-glow: rgba(37,99,235,0.10);
+  --c-db: #16a34a;
+  --c-db-glow: rgba(22,163,74,0.10);
+  --c-prob: #ca8a04;
+  --c-prob-glow: rgba(202,138,4,0.10);
+  --c-pol: #7c3aed;
+  --c-pol-glow: rgba(124,58,237,0.10);
+  --c-project: #ea580c;
+  --c-project-glow: rgba(234,88,12,0.10);
+  --c-hobby: #2563eb;
+  --c-hobby-glow: rgba(37,99,235,0.10);
+
+  --accent: var(--c-os);
+  --accent-light: rgba(37,99,235,0.08);
+  --accent-dark: #1d4ed8;
+}
+
+/* Light mode: cursor glow should be very subtle */
+[data-theme="light"] body::after {
+  background: radial-gradient(800px at var(--mouse-x) var(--mouse-y), rgba(37,99,235,0.02) 0%, transparent 60%);
+}
+
 /* ── Reset ── */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { font-size: 16px; scroll-behavior: smooth; }
@@ -248,6 +284,39 @@ img, svg { max-width: 100%; height: auto; }
   from { opacity: 0; transform: scale(0.98) translateY(8px); }
 }
 
+/* ── Skip to content ── */
+.skip-link {
+  position: fixed;
+  top: -100%;
+  left: 1rem;
+  z-index: 10000;
+  padding: 0.5rem 1rem;
+  background: var(--c-os);
+  color: #fff;
+  font-size: 0.85rem;
+  border-radius: 0 0 6px 6px;
+  text-decoration: none;
+  transition: top 0.2s;
+}
+.skip-link:focus {
+  top: 0;
+}
+
+/* ── Focus visible ── */
+:focus-visible {
+  outline: 2px solid var(--c-os);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--c-os);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -275,4 +344,10 @@ img, svg { max-width: 100%; height: auto; }
   html { font-size: 15px; }
   .container, .container-wide { padding: 0 1rem; }
   .page { padding: 1.2rem 0 2.5rem; }
+}
+
+/* ── Tablet (768-1024px) ── */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .container-wide { padding: 0 1.5rem; }
+  .page { padding: 1.5rem 0 3rem; }
 }

@@ -1,0 +1,59 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="页面未找到" description="404">
+  <div class="e404-root">
+    <div class="e404-card" data-reveal="bottom">
+      <div class="e404-code">404</div>
+      <h1>页面未找到</h1>
+      <p>你寻找的页面已随数据漂移到未知的扇区。</p>
+      <div class="e404-links">
+        <a href="/" class="btn">返回首页</a>
+        <a href="/projects" class="btn btn-outline">浏览项目</a>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .e404-root {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+  }
+  .e404-card {
+    text-align: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 3.5rem 2.5rem;
+    max-width: 420px;
+  }
+  .e404-code {
+    font-size: 5rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    background: linear-gradient(135deg, var(--c-os), var(--c-pol));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .e404-card h1 {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+  }
+  .e404-card p {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+  }
+  .e404-links {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+  }
+</style>

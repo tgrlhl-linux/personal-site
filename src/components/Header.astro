@@ -13,11 +13,17 @@ const currentPath = Astro.url.pathname;
 <header class="header">
   <div class="header-inner container-wide">
     <a href="/" class="logo">GR</a>
-    <nav class="nav">
+    <nav class="nav" aria-label="主导航">
       {links.map(link => (
         <a href={link.href}
-           class={'nav-link' + (currentPath.startsWith(link.href) && link.href !== '/' ? ' active' : '')}>{link.label}</a>
+           class={'nav-link' + (currentPath.startsWith(link.href) && link.href !== '/' ? ' active' : '')}
+           {...(currentPath.startsWith(link.href) && link.href !== '/' ? { 'aria-current': 'page' } : {})}
+        >{link.label}</a>
       ))}
+      <button class="theme-toggle" id="theme-toggle" aria-label="切换暗色/亮色模式" title="切换主题">
+        <span class="tt-icon tt-moon">🌙</span>
+        <span class="tt-icon tt-sun">☀️</span>
+      </button>
     </nav>
   </div>
 </header>
@@ -71,8 +77,35 @@ const currentPath = Astro.url.pathname;
     background: var(--accent-light);
   }
 
+  /* ── Theme Toggle ── */
+  .theme-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.3rem 0.5rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+    line-height: 1;
+    margin-left: 0.4rem;
+    transition: border-color 0.2s, background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+  }
+  .theme-toggle:hover {
+    border-color: var(--c-os);
+    background: var(--bg-hover);
+  }
+  .tt-icon { display: inline-block; }
+  /* 暗色模式默认显示月亮，隐藏太阳 */
+  .tt-sun { display: none; }
+  /* 亮色模式切换 */
+  [data-theme="light"] .tt-moon { display: none; }
+  [data-theme="light"] .tt-sun { display: inline-block; }
+
   @media (max-width: 520px) {
-    .nav { gap: 0; }
-    .nav-link { font-size: 0.78rem; padding: 0.25rem 0.5rem; }
+    .nav { gap: 0.15rem; }
+    .nav-link { font-size: 0.78rem; padding: 0.25rem 0.45rem; }
+    .theme-toggle { padding: 0.25rem 0.35rem; font-size: 0.85rem; margin-left: 0.15rem; }
   }
 </style>

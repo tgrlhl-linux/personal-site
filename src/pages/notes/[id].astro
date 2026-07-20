@@ -36,6 +36,7 @@ const courseColors = {
   '习近平新时代中国特色社会主义思想概论': '#bc8cff',
 };
 const courseColor = courseColors[note?.course] || '#58a6ff';
+const readingTime = note?.content ? Math.max(1, Math.ceil(note.content.length / 600)) : 1;
 ---
 
 {error ? (
@@ -54,6 +55,7 @@ const courseColor = courseColors[note?.course] || '#58a6ff';
             {new Date(note.created_at).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
           </time>
           {note.course && <span class="tag course-tag" style={`background:${courseColor}15;color:${courseColor};border:1px solid ${courseColor}30`}>{note.course}</span>}
+          <span class="meta reading-time">{readingTime} 分钟阅读</span>
         </div>
         <h1>{note.title}</h1>
         <div class="post-tags">

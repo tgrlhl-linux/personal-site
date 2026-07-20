@@ -73,6 +73,10 @@ const allTags = [...new Set(notes.flatMap(n => {
       <h1>笔记</h1>
       <div class="np-sub">{notes.length} 篇笔记 · {courses.length} 个分类</div>
     </div>
+    <a href="/rss.xml" class="np-rss" target="_blank" rel="noopener" title="RSS 订阅">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="4" cy="20" r="3"/><path d="M4 11a9 9 0 0 1 9 9h3a12 12 0 0 0-12-12v3zm0-7a16 16 0 0 1 16 16h3a19 19 0 0 0-19-19v3z"/></svg>
+      <span>RSS</span>
+    </a>
   </div>
 
   <!-- Toolbar -->
@@ -200,9 +204,16 @@ const allTags = [...new Set(notes.flatMap(n => {
 
 <style>
   /* ── Page header ── */
-  .np-header { margin-bottom: 1.2rem; }
+  .np-header { margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: flex-start; }
   .np-header h1 { font-size: 1.6rem; margin: 0; }
   .np-sub { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.1rem; }
+  .np-rss {
+    display: flex; align-items: center; gap: 0.3rem;
+    font-size: 0.72rem; color: var(--text-muted); text-decoration: none;
+    padding: 0.3rem 0.5rem; border: 1px solid var(--border); border-radius: 6px;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .np-rss:hover { color: #f97316; border-color: #f97316; background: rgba(249,115,22,0.06); }
 
   /* ── Toolbar ── */
   .np-toolbar { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }

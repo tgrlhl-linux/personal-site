@@ -267,54 +267,45 @@ const projectDir = codeData?.githubUrl?.replace('https://github.com/tgrlhl-linux
     </article>
 
     <script>
+      import hljs from 'highlight.js/lib/core';
+      import java from 'highlight.js/lib/languages/java';
+      import python from 'highlight.js/lib/languages/python';
+      import rust from 'highlight.js/lib/languages/rust';
+      import bash from 'highlight.js/lib/languages/bash';
+      import sql from 'highlight.js/lib/languages/sql';
+      import javascript from 'highlight.js/lib/languages/javascript';
+      import xml from 'highlight.js/lib/languages/xml';
+
+      hljs.registerLanguage('java', java);
+      hljs.registerLanguage('python', python);
+      hljs.registerLanguage('rust', rust);
+      hljs.registerLanguage('bash', bash);
+      hljs.registerLanguage('sql', sql);
+      hljs.registerLanguage('javascript', javascript);
+      hljs.registerLanguage('xml', xml);
+
       import { marked } from 'marked';
       marked.setOptions({ breaks: true, gfm: true });
 
-      // Render analysis report markdown
-      const analysisEl = document.getElementById('analysisContent');
-      if (analysisEl) analysisEl.innerHTML = marked.parse(analysisEl.textContent);
+      document.addEventListener('astro:page-load', () => {
+        // Highlight code blocks (after View Transition)
+        document.querySelectorAll('.pd-code-block code').forEach(el => {
+          hljs.highlightElement(el);
+        });
 
-      // Render project content
-      const contentEl = document.getElementById('projectContent');
-      if (contentEl) contentEl.innerHTML = marked.parse(contentEl.textContent);
-
-      // Copy code
-      document.querySelectorAll('.pd-code-copy').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const details = btn.closest('.pd-code-item');
-          const code = details?.querySelector('code');
-          if (!code) return;
-          navigator.clipboard.writeText(code.textContent || code.innerText).then(() => {
-            btn.textContent = '✅';
-            setTimeout(() => { btn.textContent = '📋'; }, 1500);
-          }).catch(() => {});
+        // Copy code
+        document.querySelectorAll('.pd-code-copy').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const details = btn.closest('.pd-code-item');
+            const code = details?.querySelector('code');
+            if (!code) return;
+            navigator.clipboard.writeText(code.textContent || code.innerText).then(() => {
+              btn.textContent = '✅';
+              setTimeout(() => { btn.textContent = '📋'; }, 1500);
+            }).catch(() => {});
+          });
         });
       });
-    </script>
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
-    <script is:inline>
-    (function(){
-      var s=document.createElement('script');
-      s.src='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js';
-      s.onload=function(){
-        var langs=['java','python','rust','bash','sql','javascript','xml'];
-        var loaded=0;
-        langs.forEach(function(l){
-          var ls=document.createElement('script');
-          ls.src='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/'+l+'.min.js';
-          ls.onload=ls.onerror=function(){loaded++;if(loaded>=langs.length)highlight();};
-          document.head.appendChild(ls);
-        });
-        setTimeout(highlight,3000);
-        function highlight(){
-          document.querySelectorAll('.pd-code-block code').forEach(function(el){
-            if(typeof hljs!=='undefined')hljs.highlightElement(el);
-          });
-        }
-      };
-      document.head.appendChild(s);
-    })();
     </script>
   </Base>
 )}

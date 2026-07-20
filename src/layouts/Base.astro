@@ -33,14 +33,25 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-r
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
+    <link rel="alternate" type="application/rss+xml" title="Guorui 的笔记" href="https://shengxia.dev/rss.xml" />
     <SEO title={title} description={description} url={pageUrl} image={image} publishDate={publishDate} />
     <ViewTransitions />
+
+    {{/* Prevent FOUC: apply theme before first paint */}}
+    <script is:inline>
+    (function(){
+      var t = localStorage.getItem('theme');
+      if (!t) t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+    </script>
   </head>
   <body>
+    <a href="#main-content" class="skip-link">跳到主要内容</a>
     <StarParticles />
     <div id="scroll-progress"></div>
     <Header />
-    <main class="page">
+    <main id="main-content" class="page">
       <div class={containerClass}>
         <slot />
       </div>
@@ -53,6 +64,18 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-r
        * 使用 astro:page-load 事件确保导航后重新初始化
        */
       document.addEventListener('astro:page-load', () => {
+        // ── Theme (暗/亮色) ──
+        const themeToggle = document.getElementById('theme-toggle');
+        const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        if (themeToggle) {
+          themeToggle.addEventListener('click', () => {
+            const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+          });
+        }
+
         // ── Cursor glow follower（全局只绑一次） ──
         if (!document.documentElement.hasAttribute('data-glow-init')) {
           document.documentElement.setAttribute('data-glow-init', '');
