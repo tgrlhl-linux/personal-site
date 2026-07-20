@@ -38,7 +38,7 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-r
     <SEO title={title} description={description} url={pageUrl} image={image} publishDate={publishDate} />
     <ViewTransitions />
 
-    {{/* Prevent FOUC: apply theme AND set CSS variable before first paint */}}
+    <!-- Prevent FOUC: apply theme AND set CSS variable before first paint -->
     <script is:inline>
     (function(){
       var t = localStorage.getItem('theme');
@@ -70,13 +70,17 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-r
        * 页面 JavaScript — 在首次加载和 View Transition 导航后均执行
        * 使用 astro:page-load 事件确保导航后重新初始化
        */
+      let themeInitialized = false;
       document.addEventListener('astro:page-load', () => {
         // ── Theme (暗/亮色) ──
-        const themeToggle = document.getElementById('theme-toggle');
         const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
         document.documentElement.setAttribute('data-theme', currentTheme);
         document.documentElement.style.setProperty('--vt-bg', currentTheme === 'light' ? '#f6f4f0' : '#0d1117');
-        if (themeToggle) {
+
+        // 主题切换按钮：只在首次绑定时注册事件（用标志位防止重复）
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle && !themeInitialized) {
+          themeInitialized = true;
           themeToggle.addEventListener('click', () => {
             const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
             document.documentElement.setAttribute('data-theme', next);
@@ -97,27 +101,27 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-r
 
         // ── Scroll Reveal（View Transition 后重新观察新元素） ──
         const revealEls = document.querySelectorAll('[data-reveal]:not(.is-visible)');
-        if (revealEls.length === 0) return;
+        if (revealEls.length > 0) {
+          // 标记预动画态（JS 可用时才隐藏内容）
+          revealEls.forEach(el => el.classList.add('js-reveal-init'));
 
-        // 标记预动画态（JS 可用时才隐藏内容）
-        revealEls.forEach(el => el.classList.add('js-reveal-init'));
+          const observer = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                  entry.target.classList.remove('js-reveal-init');
+                  entry.target.classList.add('is-visible');
+                  observer.unobserve(entry.target);
+                }
+              });
+            },
+            { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
+          );
 
-        const observer = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((entry) => {
-              if (entry.isIntersecting) {
-                entry.target.classList.remove('js-reveal-init');
-                entry.target.classList.add('is-visible');
-                observer.unobserve(entry.target);
-              }
-            });
-          },
-          { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
-        );
+          revealEls.forEach(el => observer.observe(el));
+        }
 
-        revealEls.forEach(el => observer.observe(el));
-
-        // ── Scroll Progress Bar ──
+        // ── Scroll Progress Bar（独立于 Scroll Reveal，不受上面 return 影响） ──
         const progressBar = document.getElementById('scroll-progress');
         if (progressBar) {
           const onScroll = () => {

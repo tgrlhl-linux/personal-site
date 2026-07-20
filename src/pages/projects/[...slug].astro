@@ -284,9 +284,6 @@ const projectDir = codeData?.githubUrl?.replace('https://github.com/tgrlhl-linux
       hljs.registerLanguage('javascript', javascript);
       hljs.registerLanguage('xml', xml);
 
-      import { marked } from 'marked';
-      marked.setOptions({ breaks: true, gfm: true });
-
       document.addEventListener('astro:page-load', () => {
         // Highlight code blocks (after View Transition)
         document.querySelectorAll('.pd-code-block code').forEach(el => {
