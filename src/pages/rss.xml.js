@@ -44,61 +44,38 @@ function buildDescription(n) {
   return n.title || '';
 }
 
-// ─── HTML 页面渲染 — 错位 Bento 风格 ──────────────────────────
+// ─── HTML 页面渲染 — 主流列表风格 ─────────────────────────────
 
 const TYPE_COLORS = { note: '#3fb950', project: '#58a6ff', hobby: '#f0883e' };
-const TYPE_LABELS = { note: '📄 笔记', project: '🛠️ 项目', hobby: '🎨 爱好' };
 function tColor(t) { return TYPE_COLORS[t] || '#8b949e'; }
-function tLabel(t) { return TYPE_LABELS[t] || '📄'; }
-
-/** 根据索引分配网格跨度，产生错位感 */
-function gridSpan(i) {
-  // 第 1 个占 2 列宽 + 2 行高（主打），之后按 4 拍循环产生节奏
-  const colSpan = i === 0 ? 2 : (i % 4 === 3 ? 2 : 1);
-  const rowSpan = i === 0 ? 2 : (i % 5 === 2 ? 2 : 1);
-  return { colSpan, rowSpan };
-}
+function tLabel(t) { return { note: '笔记', project: '项目', hobby: '爱好' }[t] || '笔记'; }
 
 function renderHtmlPage(items) {
-  const statGroups = {};
-  for (const n of items) {
-    const t = n.type || 'note';
-    if (!statGroups[t]) statGroups[t] = 0;
-    statGroups[t]++;
-  }
-  const statList = [
-    { label: '笔记', count: statGroups.note || 0, color: '#3fb950', icon: '📄' },
-    { label: '项目', count: statGroups.project || 0, color: '#58a6ff', icon: '🛠️' },
-    { label: '爱好', count: statGroups.hobby || 0, color: '#f0883e', icon: '🎨' },
-    { label: '总计', count: items.length, color: '#d29922', icon: '📡' },
-  ];
-
   const cardsHtml = items.map((n, i) => {
-    const { colSpan, rowSpan } = gridSpan(i);
     const color = tColor(n.type);
-    const label = tLabel(n.type);
     const link = TYPE_META[n.type]?.link(n) || `${SITE}/notes/${n.id}`;
     const date = new Date(n.created_at).toLocaleDateString('zh-CN', {
       year: 'numeric', month: 'long', day: 'numeric',
     });
-    const desc = buildDescription(n);
+    const desc = buildDescription(n) || '';
     const content = n.content ? renderHtml(n.content) : '';
 
     return `
-    <article class="bc" style="--accent:${color};grid-column:span ${colSpan};grid-row:span ${rowSpan}" data-i="${i}">
-      <div class="bc-top">
-        <span class="bc-badge">${label}</span>
-        <time class="bc-date">${date}</time>
-        ${n.course ? `<span class="bc-course">${escapeXml(n.course)}</span>` : ''}
+    <article class="entry" style="--accent:${color}">
+      <div class="entry-meta">
+        <span class="entry-type" style="color:${color}">${tLabel(n.type)}</span>
+        <span class="entry-dot">·</span>
+        <time class="entry-date">${date}</time>
+        ${n.course ? `<span class="entry-course">${escapeXml(n.course)}</span>` : ''}
       </div>
-      <h2 class="bc-title"><a href="${escapeXml(link)}" target="_blank">${escapeXml(n.title || '')}</a></h2>
-      <div class="bc-desc">${desc}</div>
+      <h2 class="entry-title"><a href="${escapeXml(link)}" target="_blank">${escapeXml(n.title || '')}</a></h2>
+      <div class="entry-desc">${desc}</div>
       ${content ? `
-      <details class="bc-more">
-        <summary>展开全文 ↓</summary>
-        <div class="bc-body">${content}</div>
+      <details class="entry-details">
+        <summary>展开全文</summary>
+        <div class="entry-body">${content}</div>
       </details>` : ''}
-      <a href="${escapeXml(link)}" class="bc-read" target="_blank">阅读全文 →</a>
+      <a href="${escapeXml(link)}" class="entry-link" target="_blank">阅读全文 →</a>
     </article>`;
   }).join('\n');
 
@@ -107,7 +84,7 @@ function renderHtmlPage(items) {
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RSS Feed — Guorui 的笔记与项目</title>
+  <title>RSS Feed — Guorui</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap"/>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -115,231 +92,152 @@ function renderHtmlPage(items) {
       font-family: -apple-system, "Noto Sans SC", BlinkMacSystemFont, sans-serif;
       background: #0d1117;
       color: #e6edf3;
-      line-height: 1.65;
-      padding: 2rem 1rem;
+      line-height: 1.7;
     }
-    .container { max-width: 960px; margin: 0 auto; }
+
+    /* ── Layout ── */
+    .wrap { max-width: 720px; margin: 0 auto; padding: 0 1.5rem; }
 
     /* ── Header ── */
     .hd {
-      text-align: center;
-      padding-bottom: 2rem;
+      padding: 2.5rem 0 1.5rem;
       border-bottom: 1px solid #21262d;
-      margin-bottom: 2rem;
-    }
-    .hd h1 {
-      font-size: 1.6rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, #58a6ff, #3fb950, #f0883e, #d29922);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .hd .sub { color: #8b949e; font-size: 0.875rem; margin-top: 0.4rem; }
-    .hd .meta { color: #484f58; font-size: 0.8rem; margin-top: 0.25rem; }
-    .hd .meta a { color: #f97316; text-decoration: none; }
-    .hd .meta a:hover { text-decoration: underline; }
-
-    /* ── Stats ── */
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0.75rem;
       margin-bottom: 1.5rem;
     }
-    .stat {
-      background: #161b22;
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 10px;
-      padding: 0.8rem;
-      text-align: center;
+    .hd h1 { font-size: 1.4rem; font-weight: 700; }
+    .hd-hint { font-size: 0.8rem; color: #8b949e; margin-top: 0.3rem; }
+    .hd-meta {
+      display: flex; gap: 1rem; margin-top: 0.6rem;
+      font-size: 0.78rem; color: #484f58;
     }
-    .stat .si { font-size: 1rem; }
-    .stat .sn { font-size: 1.4rem; font-weight: 700; line-height: 1.2; }
-    .stat .sl { font-size: 0.7rem; color: #8b949e; margin-top: 0.05rem; }
+    .hd-meta a { color: #f97316; text-decoration: none; }
+    .hd-meta a:hover { text-decoration: underline; }
 
-    /* ── Bento Grid ── */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0.75rem;
+    /* ── Entry List ── */
+    .entry {
+      padding: 1.1rem 0;
+      border-bottom: 1px solid #21262d;
+      transition: opacity 0.15s;
     }
+    .entry:last-of-type { border-bottom: none; }
 
-    .bc {
-      background: #161b22;
-      border: 1px solid #21262d;
-      border-radius: 10px;
-      padding: 1.25rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
-      position: relative;
-      overflow: hidden;
-    }
-    /* 左上角色块装饰 */
-    .bc::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0;
-      width: 3px;
-      height: 100%;
-      background: var(--accent);
-      border-radius: 10px 0 0 10px;
-      opacity: 0.5;
-      transition: opacity 0.2s;
-    }
-    .bc:hover {
-      border-color: var(--accent);
-      transform: translateY(-2px);
-      box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 10%, transparent);
-    }
-    .bc:hover::before { opacity: 1; }
-
-    .bc-top {
+    .entry-meta {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      margin-bottom: 0.15rem;
+      gap: 0.3rem;
+      font-size: 0.78rem;
+      margin-bottom: 0.35rem;
     }
-    .bc-badge {
-      font-size: 0.7rem;
+    .entry-type { font-weight: 600; font-size: 0.72rem; }
+    .entry-dot { color: #30363d; }
+    .entry-date { color: #484f58; }
+    .entry-course {
+      font-size: 0.68rem;
       padding: 0.05em 0.5em;
-      border-radius: 4px;
-      background: color-mix(in srgb, var(--accent) 20%, transparent);
-      color: var(--accent);
-      font-weight: 600;
-      line-height: 1.6;
-    }
-    .bc-date { font-size: 0.72rem; color: #484f58; }
-    .bc-course {
-      font-size: 0.65rem;
-      padding: 0.05em 0.5em;
-      border-radius: 10px;
+      border-radius: 8px;
       background: #1c2128;
       color: #8b949e;
     }
 
-    .bc-title { font-size: 1.05rem; font-weight: 600; line-height: 1.35; }
-    .bc-title a { color: #e6edf3; text-decoration: none; }
-    .bc-title a:hover { color: var(--accent); }
+    .entry-title { font-size: 1.1rem; font-weight: 600; line-height: 1.4; }
+    .entry-title a { color: #e6edf3; text-decoration: none; }
+    .entry-title a:hover { color: var(--accent, #58a6ff); }
 
-    .bc-desc {
-      font-size: 0.85rem;
+    .entry-desc {
+      margin-top: 0.35rem;
+      font-size: 0.88rem;
       color: #8b949e;
       line-height: 1.6;
-      flex: 1;
     }
-    .bc-desc p { margin: 0.3rem 0; }
+    .entry-desc p { margin: 0.3rem 0; }
 
-    .bc-more { margin-top: 0.25rem; }
-    .bc-more summary {
-      font-size: 0.75rem;
+    .entry-details { margin-top: 0.4rem; }
+    .entry-details summary {
+      font-size: 0.78rem;
       color: #484f58;
       cursor: pointer;
       user-select: none;
       display: inline-block;
     }
-    .bc-more summary:hover { color: var(--accent); }
+    .entry-details summary:hover { color: var(--accent, #58a6ff); }
 
-    .bc-body {
+    .entry-body {
       margin-top: 0.6rem;
       padding-top: 0.6rem;
       border-top: 1px solid #21262d;
-      font-size: 0.85rem;
+      font-size: 0.88rem;
       color: #c9d1d9;
       line-height: 1.7;
     }
-    .bc-body img { max-width: 100%; border-radius: 4px; margin: 0.4rem 0; }
-    .bc-body pre {
+    .entry-body img { max-width: 100%; border-radius: 4px; margin: 0.5rem 0; }
+    .entry-body pre {
       background: #0d1117;
       border: 1px solid #21262d;
       border-radius: 4px;
       padding: 0.6rem 0.8rem;
       overflow-x: auto;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       font-family: "Consolas", "SF Mono", "Fira Code", monospace;
       margin: 0.5rem 0;
     }
-    .bc-body code {
+    .entry-body code {
       font-family: "Consolas", "SF Mono", "Fira Code", monospace;
       background: #1c2128;
       padding: 0.1em 0.3em;
       border-radius: 3px;
       font-size: 0.85em;
     }
-    .bc-body pre code { background: none; padding: 0; }
-    .bc-body blockquote {
+    .entry-body pre code { background: none; padding: 0; }
+    .entry-body blockquote {
       border-left: 3px solid #30363d;
       padding-left: 0.8rem;
       color: #8b949e;
       margin: 0.5rem 0;
     }
-    .bc-body a { color: #58a6ff; }
-    .bc-body h1, .bc-body h2, .bc-body h3 { margin: 0.8rem 0 0.4rem; color: #e6edf3; }
-    .bc-body p { margin: 0.4rem 0; }
-    .bc-body ul, .bc-body ol { padding-left: 1.4rem; margin: 0.4rem 0; }
-    .bc-body li { margin: 0.2rem 0; }
+    .entry-body a { color: #58a6ff; }
+    .entry-body h1, .entry-body h2, .entry-body h3 { margin: 0.8rem 0 0.4rem; color: #e6edf3; }
+    .entry-body p { margin: 0.4rem 0; }
+    .entry-body ul, .entry-body ol { padding-left: 1.4rem; margin: 0.4rem 0; }
 
-    .bc-read {
-      font-size: 0.75rem;
-      color: #58a6ff;
+    .entry-link {
+      display: inline-block;
+      margin-top: 0.4rem;
+      font-size: 0.78rem;
+      color: #484f58;
       text-decoration: none;
-      margin-top: 0.15rem;
-      align-self: flex-start;
+      transition: color 0.15s;
     }
-    .bc-read:hover { text-decoration: underline; }
+    .entry-link:hover { color: var(--accent, #58a6ff); }
 
     /* ── Footer ── */
     .ft {
+      padding: 1.5rem 0 2.5rem;
       text-align: center;
-      padding: 2rem 0 1rem;
+      font-size: 0.78rem;
       color: #484f58;
-      font-size: 0.8rem;
     }
     .ft a { color: #58a6ff; text-decoration: none; }
     .ft a:hover { text-decoration: underline; }
-
-    /* ── Responsive ── */
-    @media (max-width: 820px) {
-      .grid { grid-template-columns: repeat(3, 1fr); gap: 0.65rem; }
-      .stats { gap: 0.5rem; }
-      .bc[data-i="0"] { grid-column: span 3; }
-    }
-    @media (max-width: 600px) {
-      .grid { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
-      .stats { grid-template-columns: repeat(2, 1fr); }
-      .bc { padding: 1rem; }
-      .bc[data-i="0"] { grid-column: span 2; }
-      .bc[style*="grid-column:span 2"] { grid-column: span 2; }
-    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="hd">
-      <h1>RSS · Guorui 的动态</h1>
-      <p class="sub">软件工程笔记 · 课程项目 · 生活分享</p>
-      <p class="meta">${items.length} 条内容 · <a href="/rss.xml">订阅 RSS</a></p>
-    </div>
+  <div class="wrap">
+    <header class="hd">
+      <h1>RSS · 最近更新</h1>
+      <p class="hd-hint">${items.length} 条内容 · 来自 Guorui 的个人网站</p>
+      <div class="hd-meta">
+        <span>📄 笔记 ${items.filter(n => n.type === 'note').length}</span>
+        <span>🛠️ 项目 ${items.filter(n => n.type === 'project').length}</span>
+        <span>🎨 爱好 ${items.filter(n => n.type === 'hobby').length}</span>
+        <a href="/rss.xml">订阅 →</a>
+      </div>
+    </header>
 
-    <div class="stats">
-      ${statList.map(s => `
-      <div class="stat">
-        <div class="si">${s.icon}</div>
-        <div class="sn" style="color:${s.color}">${s.count}</div>
-        <div class="sl">${s.label}</div>
-      </div>`).join('\n')}
-    </div>
+    ${cardsHtml}
 
-    <div class="grid">
-      ${cardsHtml}
-    </div>
-
-    <div class="ft">
-      <a href="/">← 返回首页</a> · Powered by shengxia.dev
-    </div>
+    <footer class="ft">
+      <a href="/">← 返回首页</a>
+    </footer>
   </div>
 </body>
 </html>`;
