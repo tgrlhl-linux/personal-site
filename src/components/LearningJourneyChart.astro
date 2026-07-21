@@ -135,23 +135,26 @@ const jsonPhases = JSON.stringify(phaseConfig);
   </div>
 </div>
 
+<script id="jc-data" type="application/json">{jsonData}</script>
+<script id="jc-phases" type="application/json">{jsonPhases}</script>
+
 <script>
 (function() {
-  // 动画
-  const line = document.querySelector('.jc-line');
+  // 从 JSON script 标签读取数据
+  var data = JSON.parse(document.getElementById('jc-data').textContent);
+  var phases = JSON.parse(document.getElementById('jc-phases').textContent);
+
+  // 入场动画
+  var line = document.querySelector('.jc-line');
   if (line) {
-    const len = line.getTotalLength();
+    var len = line.getTotalLength();
     line.style.strokeDasharray = len;
     line.style.strokeDashoffset = len;
-    requestAnimationFrame(() => {
+    requestAnimationFrame(function() {
       line.style.transition = 'stroke-dashoffset 1.8s ease-out';
       line.style.strokeDashoffset = '0';
     });
   }
-
-  // 数据
-  var data = JSON.parse('{jsonData}');
-  var phases = JSON.parse('{jsonPhases}');
 
   var modal = document.getElementById('jc-modal');
   var overlay = document.getElementById('jc-modal-overlay');
