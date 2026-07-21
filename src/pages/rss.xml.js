@@ -23,22 +23,25 @@ function escapeXml(str) {
     .replace(/'/g, '&apos;');
 }
 
-/** 将 HTML+Markdown 转为纯文本摘要 */
-function toPlainText(str) {
-  if (!str) return '';
-  return str
-    .replace(/<[^>]*>/g, '')           // HTML 标签
-    .replace(/```[\s\S]*?```/g, ' ')  // 代码块整体替换成空格
-    .replace(/`[^`]*`/g, '')           // 行内代码
-    .replace(/[#*_~\[\]()>|]/g, '')   // markdown 符号
-    .replace(/\n{3,}/g, '\n\n')        // 保留段落
-    .replace(/[ \t]+/g, ' ')           // 合并空白
-    .trim();
+/** 将 Markdown 渲染为 HTML 并处理相对路径 */
+function renderHtml(md) {
+  if (!md) return '';
+  return marked.parse(md)
+    .replace(/src="\/(?!\/)/g, `src="${SITE}/`);
+}
+
+/** 取前 N 个字符，尽量在段落边界截断 */
+function truncateHtml(html, maxLen = 500) {
+  if (!html || html.length <= maxLen) return html;
+  // 在 maxLen 附近找一个段落边界截断
+  const cut = html.lastIndexOf('</p>', maxLen);
+  if (cut > maxLen * 0.6) return html.slice(0, cut + 4);
+  return html.slice(0, maxLen).replace(/<[^>]*$/, '') + '…';
 }
 
 function buildDescription(n) {
-  if (n.excerpt) return toPlainText(n.excerpt);
-  if (n.content) return toPlainText(n.content).substring(0, 300);
+  if (n.excerpt) return truncateHtml(renderHtml(n.excerpt));
+  if (n.content) return truncateHtml(renderHtml(n.content));
   return n.title || '';
 }
 
@@ -60,7 +63,7 @@ export async function GET() {
     const course = n.course ? escapeXml(n.course) : '';
 
     // 全文 HTML（用于 content:encoded）
-    const fullHtml = n.content ? marked.parse(n.content) : '';
+    const fullHtml = n.content ? renderHtml(n.content) : '';
 
     return `
     <item>
