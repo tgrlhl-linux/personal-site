@@ -65,6 +65,15 @@ const allTags = [...new Set(notes.flatMap(n => {
   if (Array.isArray(n.tags)) return n.tags;
   try { return JSON.parse(n.tags || '[]'); } catch { return []; }
 }))];
+
+// 搜索结果关键词高亮
+function highlightText(text, term) {
+  if (!term || !text) return text;
+  try {
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="sr-hl">$1</mark>');
+  } catch { return text; }
+}
 ---
 
 <Base title="笔记" description="课程笔记与技术思考" wide={true}>
@@ -154,13 +163,13 @@ const allTags = [...new Set(notes.flatMap(n => {
                     <a href={`/notes/${n.id}`} class="nc-card" style={`--cc:${color}`} data-reveal="bottom" data-delay={`${i * 50}`}>
                       <div class="ncc-left">
                         <span class="ncc-num">{String(i + 1).padStart(2, '0')}</span>
-                        <span class="ncc-title">{shortTitle}</span>
+                        <span class="ncc-title" set:html={highlightText(shortTitle, search)}></span>
                         <div class="ncc-tags">
                           {tagList.slice(0, 3).map(t => <span class="ncc-tag">{t}</span>)}
                         </div>
                       </div>
                       <div class="ncc-right">
-                        <div class="ncc-excerpt">{n.excerpt || shortTitle}</div>
+                        <div class="ncc-excerpt" set:html={highlightText(n.excerpt || shortTitle, search)}></div>
                         <div class="ncc-meta">
                           <span class="ncc-course" style={`color:${color}`}>{course}</span>
                           <span class="ncc-date">{dateStr}</span>
@@ -202,6 +211,24 @@ const allTags = [...new Set(notes.flatMap(n => {
     </div>
   )}
 </Base>
+
+<script>
+  // ── 输入即搜：停顿 800ms 后自动提交搜索 ──
+  (function() {
+    var input = document.querySelector('.np-search-input');
+    var form = input && input.closest('form');
+    if (!input || !form) return;
+    var timer = null;
+    input.addEventListener('input', function() {
+      clearTimeout(timer);
+      timer = setTimeout(function() {
+        if (input.value !== new URLSearchParams(location.search).get('q')) {
+          form.submit();
+        }
+      }, 800);
+    });
+  })();
+</script>
 
 <style>
   /* ── Page header ── */
@@ -447,6 +474,17 @@ const allTags = [...new Set(notes.flatMap(n => {
   /* Empty state */
   .np-empty { text-align: center; padding: 4rem 0; color: var(--text-muted); }
   .np-empty-hint { font-size: 0.85rem; margin-top: 0.5rem; }
+
+  /* ── 搜索结果高亮 ── */
+  .sr-hl {
+    background: rgba(88,166,255,0.25);
+    color: inherit;
+    padding: 0.05em 0.15em;
+    border-radius: 3px;
+  }
+  [data-theme="light"] .sr-hl {
+    background: rgba(88,166,255,0.2);
+  }
 
   /* Responsive */
   @media (max-width: 900px) {

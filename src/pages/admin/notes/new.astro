@@ -93,19 +93,101 @@ if (!username) return Astro.redirect('/admin/login');
 </div>
 
 <script>
-// Load courses
+// ── 自动保存草稿 ──
+const STORAGE_KEY = 'note_draft_new';
+const AUTO_FIELDS = ['title', 'content', 'tags'];
+let saveTimer = null;
+
+function saveDraft() {
+  var draft = {};
+  AUTO_FIELDS.forEach(function(f) {
+    var el = document.getElementById(f);
+    draft[f] = el ? el.value : '';
+  });
+  // 额外保存课程（处理新增课程输入框）
+  var courseEl = document.getElementById('course');
+  var courseVal = courseEl ? courseEl.value : '';
+  if (courseVal === '__new__') {
+    courseVal = 'new:' + (document.getElementById('newCourse').value || '');
+  }
+  draft.course = courseVal;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+  var st = document.getElementById('status');
+  var now = new Date();
+  st.textContent = '草稿已保存 ' + now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
+  st.style.color = '#8a8a9a';
+}
+
+function onDraftInput() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveDraft, 2000);
+}
+
+// 恢复草稿
+function tryRestoreDraft() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    var draft = JSON.parse(raw);
+    if (!draft.title && !draft.content) return;
+    if (!confirm('检测到未发布的草稿，是否恢复？\n（点"取消"将丢弃草稿）')) {
+      localStorage.removeItem(STORAGE_KEY);
+      return;
+    }
+    AUTO_FIELDS.forEach(function(f) {
+      var el = document.getElementById(f);
+      if (el && draft[f]) el.value = draft[f];
+    });
+    if (draft.course) {
+      var sel = document.getElementById('course');
+      // 检查是否为新增课程
+      if (draft.course.startsWith('new:')) {
+        var nc = document.getElementById('newCourse');
+        nc.value = draft.course.slice(4);
+        nc.style.display = 'block';
+        // 已存在的选项不重复加
+        var exists = Array.from(sel.options).some(function(o) { return o.value === nc.value; });
+        if (!exists) {
+          sel.innerHTML += '<option value="' + nc.value + '">' + nc.value + '</option>';
+        }
+        sel.value = nc.value;
+      } else if (draft.course) {
+        // 如果该分类尚未加载，先临时添加
+        var exists = Array.from(sel.options).some(function(o) { return o.value === draft.course; });
+        if (!exists && draft.course) {
+          sel.innerHTML += '<option value="' + draft.course + '">' + draft.course + '</option>';
+        }
+        sel.value = draft.course;
+      }
+    }
+    document.getElementById('status').textContent = '草稿已恢复';
+  } catch(e) {}
+}
+
+// ── 自动保存输入监听 ──
+AUTO_FIELDS.forEach(function(f) {
+  var el = document.getElementById(f);
+  if (el) el.addEventListener('input', onDraftInput);
+});
+
+// ── 加载课程列表 ──
 fetch('/api/notes?limit=1').then(function(r) { return r.json(); }).then(function(data) {
   var sel = document.getElementById('course');
   (data.courses || []).forEach(function(c) {
     sel.innerHTML += '<option value="' + c + '">' + c + '</option>';
   });
+  // 课程加载完成后尝试恢复草稿
+  tryRestoreDraft();
 });
 
 document.getElementById('course').addEventListener('change', function() {
   var nc = document.getElementById('newCourse');
   if (this.value === '__new__') { nc.style.display = 'block'; nc.focus(); }
   else { nc.style.display = 'none'; }
+  onDraftInput();
 });
+
+document.getElementById('newCourse').addEventListener('input', onDraftInput);
 
 document.getElementById('togglePreview').addEventListener('click', function() {
   var preview = document.getElementById('preview');
@@ -163,6 +245,7 @@ document.getElementById('saveBtn').addEventListener('click', async function() {
     })
   });
   if (res.ok) {
+    localStorage.removeItem(STORAGE_KEY);
     status.textContent = '发布成功！';
     setTimeout(function() { window.location.href = '/admin/notes'; }, 1000);
   } else {

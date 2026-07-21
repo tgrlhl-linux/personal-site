@@ -88,6 +88,54 @@ if (!username) return Astro.redirect('/admin/login');
 
 <script>
 var noteId = window.location.pathname.split('/').pop();
+var STORAGE_KEY = 'note_draft_edit_' + noteId;
+var AUTO_FIELDS = ['title', 'content', 'tags'];
+var saveTimer = null;
+
+function saveDraft() {
+  var draft = {};
+  AUTO_FIELDS.forEach(function(f) {
+    var el = document.getElementById(f);
+    draft[f] = el ? el.value : '';
+  });
+  draft.course = (document.getElementById('course') || {}).value || '';
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+  var st = document.getElementById('status');
+  var now = new Date();
+  st.textContent = '草稿已保存 ' + now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
+  st.style.color = '#8a8a9a';
+}
+
+function onDraftInput() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveDraft, 2000);
+}
+
+function tryRestoreDraft() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    var draft = JSON.parse(raw);
+    if (!draft.title && !draft.content) return;
+    if (!confirm('检测到未保存的修改，是否恢复？（点"取消"丢弃草稿）')) {
+      localStorage.removeItem(STORAGE_KEY);
+      return;
+    }
+    AUTO_FIELDS.forEach(function(f) {
+      var el = document.getElementById(f);
+      if (el && draft[f]) el.value = draft[f];
+    });
+    var sel = document.getElementById('course');
+    if (draft.course) {
+      var exists = Array.from(sel.options).some(function(o) { return o.value === draft.course; });
+      if (!exists) {
+        sel.innerHTML += '<option value="' + draft.course + '">' + draft.course + '</option>';
+      }
+      sel.value = draft.course;
+    }
+    document.getElementById('status').textContent = '草稿已恢复';
+  } catch(e) {}
+}
 
 // Load note data
 Promise.all([
@@ -113,6 +161,17 @@ Promise.all([
   var tags = [];
   try { tags = Array.isArray(note.tags) ? note.tags : JSON.parse(note.tags || '[]'); } catch(e) {}
   document.getElementById('tags').value = tags.join(', ');
+
+  // 自动保存监听（在数据加载完成后附加）
+  AUTO_FIELDS.forEach(function(f) {
+    var el = document.getElementById(f);
+    if (el) el.addEventListener('input', onDraftInput);
+  });
+  var courseSel = document.getElementById('course');
+  if (courseSel) courseSel.addEventListener('change', onDraftInput);
+
+  // 尝试恢复草稿（放在数据加载之后）
+  tryRestoreDraft();
 }).catch(function(err) {
   document.getElementById('status').textContent = '加载失败';
 });
@@ -136,6 +195,7 @@ document.getElementById('saveBtn').addEventListener('click', async function() {
     })
   });
   if (res.ok) {
+    localStorage.removeItem(STORAGE_KEY);
     status.textContent = '保存成功！';
   } else {
     var err = await res.json();
