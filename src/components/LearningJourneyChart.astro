@@ -139,9 +139,12 @@ const jsonPhases = JSON.stringify(phaseConfig);
 <script id="jc-phases" type="application/json">{jsonPhases}</script>
 
 <script>
-(function() {
+document.addEventListener('astro:page-load', function() {
+  // 保护：只在本页有折线图时才执行
+  var dataEl = document.getElementById('jc-data');
+  if (!dataEl) return;
   // 从 JSON script 标签读取数据
-  var data = JSON.parse(document.getElementById('jc-data').textContent);
+  var data = JSON.parse(dataEl.textContent);
   var phases = JSON.parse(document.getElementById('jc-phases').textContent);
 
   // 入场动画
@@ -213,7 +216,7 @@ const jsonPhases = JSON.stringify(phaseConfig);
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && modal.style.display !== 'none') closeModal();
   });
-})();
+});
 </script>
 
 <style>
