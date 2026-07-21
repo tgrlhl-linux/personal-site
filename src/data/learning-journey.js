@@ -41,25 +41,25 @@ export const journeyData = [
     events: ['临时抱佛脚，无力回天', '高考 576 分，进入贵州大学'],
   },
 
-  // ═══════════ 大学：贵州大学 软件工程 ═══════════
+  // ═══════════ 大学：贵州大学 软件工程（2024-2028）═══════════
   {
-    year: 2024.25, label: '大一下', value: 58, phase: 'university',
+    year: 2024.75, label: '大一上', value: 58, phase: 'university',
     events: ['软工专业入门', 'C语言、高数', '绩点不到3.43，玩太爽'],
   },
   {
-    year: 2024.75, label: '大二上', value: 68, phase: 'university',
+    year: 2025.25, label: '大一下', value: 68, phase: 'university',
     events: ['Java/数据结构', '开始发力，拉升绩点'],
   },
   {
-    year: 2025.25, label: '大二下', value: 80, phase: 'university',
+    year: 2025.75, label: '大二上', value: 80, phase: 'university',
     events: ['数据库原理/操作系统', 'Linux/大数据', '院团委组织部部长'],
   },
   {
-    year: 2025.75, label: '大三上', value: 92, phase: 'university',
+    year: 2026.25, label: '大二下', value: 92, phase: 'university',
     events: ['MiniSQL/Rust/Flask/Hadoop', '三下乡（清华合办）', '酒博会优秀志愿者'],
   },
   {
-    year: 2026.50, label: '大三下', value: 100, phase: 'university',
+    year: 2026.75, label: '大三上', value: 100, phase: 'university',
     events: ['个人网站/全栈实践', '贵州教育报发表文章', '预备党员', '笔记体系化'],
   },
 ];
