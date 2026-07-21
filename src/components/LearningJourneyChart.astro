@@ -200,12 +200,12 @@ const jsonPhases = JSON.stringify(phaseConfig);
     setTimeout(function() { modal.style.display = 'none'; }, 200);
   }
 
-  // 点击数据点 — 用事件委托避免重复绑定
+  // 点击数据点 — 用事件委托监听父级 .jc-dot-group
   var svg = document.querySelector('.jc-svg');
   if (svg) {
     svg.addEventListener('click', function(e) {
-      var hit = e.target.closest('.jc-hit');
-      if (hit) openModal(parseInt(hit.getAttribute('data-idx')));
+      var group = e.target.closest('.jc-dot-group');
+      if (group) openModal(parseInt(group.getAttribute('data-idx')));
     });
   }
 
