@@ -138,18 +138,17 @@ const jsonPhases = JSON.stringify(phaseConfig);
 <script id="jc-data" type="application/json">{jsonData}</script>
 <script id="jc-phases" type="application/json">{jsonPhases}</script>
 
-<script>
-document.addEventListener('astro:page-load', function() {
-  // 保护：只在本页有折线图时才执行
-  var dataEl = document.getElementById('jc-data');
-  if (!dataEl) return;
-  // 从 JSON script 标签读取数据
-  var data = JSON.parse(dataEl.textContent);
+<script is:inline>
+(function() {
+  var el = document.getElementById('jc-data');
+  if (!el) return;
+  var data = JSON.parse(el.textContent);
   var phases = JSON.parse(document.getElementById('jc-phases').textContent);
 
   // 入场动画
   var line = document.querySelector('.jc-line');
-  if (line) {
+  if (line && !line._animDone) {
+    line._animDone = true;
     var len = line.getTotalLength();
     line.style.strokeDasharray = len;
     line.style.strokeDashoffset = len;
@@ -201,22 +200,28 @@ document.addEventListener('astro:page-load', function() {
     setTimeout(function() { modal.style.display = 'none'; }, 200);
   }
 
-  // 点击数据点
-  document.querySelectorAll('.jc-hit').forEach(function(el) {
-    el.addEventListener('click', function(e) {
-      openModal(parseInt(this.getAttribute('data-idx')));
+  // 点击数据点 — 用事件委托避免重复绑定
+  var svg = document.querySelector('.jc-svg');
+  if (svg) {
+    svg.addEventListener('click', function(e) {
+      var hit = e.target.closest('.jc-hit');
+      if (hit) openModal(parseInt(hit.getAttribute('data-idx')));
     });
-  });
+  }
 
   // 点击关闭 / 遮罩
-  closeBtn.addEventListener('click', closeModal);
-  overlay.addEventListener('click', closeModal);
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (overlay) overlay.addEventListener('click', closeModal);
 
-  // Escape 键关闭
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && modal.style.display !== 'none') closeModal();
-  });
-});
+  // Escape 键关闭（防重复注册）
+  if (!document._jcEscInstalled) {
+    document._jcEscInstalled = true;
+    document.addEventListener('keydown', function(e) {
+      var m = document.getElementById('jc-modal');
+      if (e.key === 'Escape' && m && m.style.display !== 'none') closeModal();
+    });
+  }
+})();
 </script>
 
 <style>
