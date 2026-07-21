@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import { query } from '../db/mysql';
 import ContributionGraph from '../components/ContributionGraph.astro';
-import { milestones, categoryConfig } from '../data/timeline-milestones.js';
+import LearningJourneyChart from '../components/LearningJourneyChart.astro';
 
 // ── 热力图数据：各类型内容按日分布 ──
 const heatRows = await query(
@@ -14,21 +14,10 @@ const heatData = {};
 const heatLabels = {};
 for (const r of heatRows) {
   heatData[r.d] = parseInt(r.c);
-}
-// 从 milestones 补充标记（只取有确切日期的）
-for (const m of milestones) {
-  if (m.date && !m.date.startsWith('~')) {
-    heatData[m.date] = (heatData[m.date] || 0) + 0.5;
-    if (!heatLabels[m.date]) heatLabels[m.date] = [];
-    heatLabels[m.date].push(m.title);
-  }
-}
-// 将标签数组转为字符串
-for (const k of Object.keys(heatLabels)) {
-  heatLabels[k] = heatLabels[k].join(' · ');
+  heatLabels[r.d] = r.c + ' 条记录';
 }
 
-// ── DB 内容列表 ──
+// ── DB 内容统计 ──
 const dbNotes = await query(
   "SELECT id, title, excerpt, created_at FROM notes WHERE type='note' AND status='published' ORDER BY created_at DESC"
 );
@@ -40,50 +29,30 @@ const dbEvents = [
   ...dbProjects.map(p => ({
     date: new Date(p.created_at),
     title: p.title,
-    desc: p.excerpt || '',
     url: `/projects/${p.slug}`,
     type: 'project',
   })),
   ...dbNotes.map(n => ({
     date: new Date(n.created_at),
     title: n.title,
-    desc: n.excerpt || '',
     url: `/notes/${n.id}`,
     type: 'note',
   })),
 ].sort((a, b) => b.date.valueOf() - a.date.valueOf());
 
-// ── 里程碑按年月分组 ──
-const sortedMs = [...milestones].sort((a, b) => {
-  const da = a.date.replace(/^~/, '');
-  const db = b.date.replace(/^~/, '');
-  return db.localeCompare(da);
-});
-
-const msByMonth = {};
-for (const m of sortedMs) {
-  const date = m.date.replace(/^~/, '');
-  const monthKey = date.slice(0, 7); // "2026-07"
-  if (!msByMonth[monthKey]) msByMonth[monthKey] = [];
-  msByMonth[monthKey].push(m);
-}
-
-const monthNames = {
-  '01':'一月','02':'二月','03':'三月','04':'四月',
-  '05':'五月','06':'六月','07':'七月','08':'八月',
-  '09':'九月','10':'十月','11':'十一月','12':'十二月',
-};
-
-// 统计
 const totalDays = Object.keys(heatData).length;
 const totalProjects = dbProjects.length;
-const totalMilestones = milestones.length;
+const totalNotes = dbNotes.length;
+const totalItems = totalProjects + totalNotes;
+
+const now = new Date();
+const timeStr = now.toLocaleString('zh-CN', { hour12: false });
 ---
 
-<Base title="成长时间线" description="走过的每一步">
+<Base title="成长时间线" description="从初中到大学的学习足迹">
   <div class="page-header" data-reveal="bottom">
     <h1>🌱 成长时间线</h1>
-    <p>每一步都算数</p>
+    <p class="tl-subtitle">从初中到大学 · 每一步都算数</p>
   </div>
 
   <!-- Stats -->
@@ -93,113 +62,120 @@ const totalMilestones = milestones.length;
       <div class="tl-stat-label">活跃天数</div>
     </div>
     <div class="tl-stat" style="--sc:#3fb950">
-      <div class="tl-stat-num">{totalMilestones}</div>
-      <div class="tl-stat-label">里程碑</div>
+      <div class="tl-stat-num">{totalItems}</div>
+      <div class="tl-stat-label">内容总数</div>
     </div>
     <div class="tl-stat" style="--sc:#f0883e">
       <div class="tl-stat-num">{totalProjects}</div>
       <div class="tl-stat-label">项目</div>
     </div>
     <div class="tl-stat" style="--sc:#d29922">
-      <div class="tl-stat-num">{dbNotes.length}</div>
+      <div class="tl-stat-num">{totalNotes}</div>
       <div class="tl-stat-label">笔记</div>
     </div>
   </div>
 
-  <!-- Contribution Graph -->
+  <!-- 贡献热力图（实时数据） -->
   <div class="tl-card" data-reveal="bottom">
-    <div class="tl-card-title">📊 贡献热力图</div>
+    <div class="tl-card-hd">
+      <span class="tl-card-title">📊 贡献热力图</span>
+      <span class="tl-live">
+        <span class="tl-live-dot"></span>
+        实时 · 数据来自数据库
+      </span>
+    </div>
     <ContributionGraph data={heatData} labels={heatLabels} />
   </div>
 
-  <!-- Category Legend -->
-  <div class="tl-cats" data-reveal="bottom">
-    {Object.entries(categoryConfig).map(([k, v]) => (
-      <span class="tl-cat" style={`--cc:${v.color};--cg:${v.glow}`}>
-        <span class="tl-cat-dot" style={`background:${v.color}`}></span>
-        {v.label}
-      </span>
-    ))}
-    <span class="tl-cat-hint">~ 标记为近似日期</span>
-  </div>
-
-  <!-- Milestones -->
-  <div class="tl-section" data-reveal="bottom">
-    <h2 class="tl-section-title">🏆 成长里程碑</h2>
-  </div>
-
-  {Object.entries(msByMonth).map(([monthKey, items]) => {
-    const [y, m] = monthKey.split('-');
-    const label = `${y}年 ${monthNames[m] || m + '月'}`;
-    return (
-      <div class="month-group" data-reveal="bottom">
-        <div class="month-heading">{label}</div>
-        <div class="month-line">
-          {items.map(m => {
-            const cfg = categoryConfig[m.category] || categoryConfig.life;
-            const day = m.date.replace(/^~/, '').slice(8);
-            const isApprox = m.date.startsWith('~');
-            return (
-              <div class="ms-event" style={`--cc:${cfg.color};--cg:${cfg.glow}`}>
-                <div class="ms-dot" style={`background:${cfg.color}`}></div>
-                <div class="ms-body">
-                  <div class="ms-meta">
-                    <span class="ms-day">{isApprox ? '~' + day + '日' : day + '日'}</span>
-                    <span class="ms-cat" style={`color:${cfg.color}`}>{cfg.label}</span>
-                  </div>
-                  <h3 class="ms-title">{m.title}</h3>
-                  <p class="ms-desc">{m.desc}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  })}
-
-  <!-- DB Events (compact) -->
-  <div class="tl-section" data-reveal="bottom">
-    <h2 class="tl-section-title">📝 内容时间线</h2>
-    <p class="tl-section-desc">所有笔记和项目的创建记录</p>
-  </div>
-
-  {dbEvents.length === 0 ? (
-    <div class="tl-empty">还没有内容</div>
-  ) : (
-    <div class="tl-compact" data-reveal="bottom">
-      {(() => {
-        const years = [...new Set(dbEvents.map(e => e.date.getFullYear()))].sort((a,b) => b - a);
-        return years.map(year => (
-          <div class="cy-group">
-            <div class="cy-heading">{year}</div>
-            {dbEvents.filter(e => e.date.getFullYear() === year).map(e => (
-              <a href={e.url} class={`ce-item type-${e.type}`}>
-                <div class="ce-dot"></div>
-                <div class="ce-body">
-                  <time class="ce-date">
-                    {e.date.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' })}
-                  </time>
-                  <span class="ce-title">{e.title}</span>
-                  {e.desc && <span class="ce-desc">{e.desc}</span>}
-                </div>
-                <span class="ce-arrow">→</span>
-              </a>
-            ))}
-          </div>
-        ));
-      })()}
+  <!-- 学习旅程折线图 -->
+  <div class="tl-card" data-reveal="bottom" id="journey-card">
+    <div class="tl-card-hd">
+      <span class="tl-card-title">📈 学习成长轨迹</span>
     </div>
-  )}
+    <LearningJourneyChart />
+  </div>
+
+  <!-- 近期内容快照 -->
+  <div class="tl-card" data-reveal="bottom" id="recent-card">
+    <div class="tl-card-hd">
+      <span class="tl-card-title">📝 近期内容</span>
+      <span class="tl-count">{dbEvents.length} 条</span>
+    </div>
+    <div class="tl-events">
+      {dbEvents.length === 0 ? (
+        <div class="tl-empty">还没有内容</div>
+      ) : (
+        dbEvents.slice(0, 15).map(e => (
+          <a href={e.url} class={`tl-event type-${e.type}`}>
+            <span class="tl-event-dot"></span>
+            <time class="tl-event-date">
+              {e.date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' })}
+            </time>
+            <span class="tl-event-title">{e.title}</span>
+            <span class="tl-event-type">{e.type === 'project' ? '项目' : '笔记'}</span>
+          </a>
+        ))
+      )}
+    </div>
+  </div>
 </Base>
 
+<script>
+// ── 热力图实时守护：每分钟检查新数据 ──
+(function() {
+  const INTERVAL = 60000; // 60s
+  let lastCount = { items: 0, days: 0 };
+
+  // 读取当前统计
+  const statEls = document.querySelectorAll('.tl-stat-num');
+  if (statEls.length >= 4) {
+    lastCount.items = parseInt(statEls[1].textContent) || 0;
+    lastCount.days = parseInt(statEls[0].textContent) || 0;
+  }
+
+  // 定时检查
+  setInterval(async () => {
+    try {
+      const res = await fetch('/api/notes?limit=1');
+      if (!res.ok) return;
+      const data = await res.json();
+
+      // 检查数据是否变化（用总条目数做快速判断）
+      // data 包含 courses 列表和 notes 列表（limit=1时只返回1条）
+      // 更精确：额外请求内容总数
+      const countRes = await fetch('/api/contents');
+      if (countRes.ok) {
+        const countData = await countRes.json();
+        // 如果contents API返回了总条目数
+        if (countData.total !== undefined && countData.total !== lastCount.items) {
+          lastCount.items = countData.total;
+          // 软刷新页面
+          const badge = document.querySelector('.tl-live');
+          if (badge) {
+            badge.innerHTML = '<span class="tl-live-dot tl-live-updated"></span> 已更新';
+            badge.classList.add('tl-live-flash');
+            setTimeout(() => {
+              location.reload();
+            }, 1500);
+          }
+        }
+      }
+    } catch (e) {
+      // 静默失败，不干扰用户
+    }
+  }, INTERVAL);
+})();
+</script>
+
 <style>
+  .tl-subtitle { font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.15rem; }
+
   /* ── Stats ── */
   .tl-stats {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 0.75rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.2rem;
   }
   .tl-stat {
     background: var(--bg-card);
@@ -209,15 +185,12 @@ const totalMilestones = milestones.length;
     text-align: center;
   }
   .tl-stat-num {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--sc);
-    line-height: 1.1;
+    font-size: 1.8rem; font-weight: 700;
+    color: var(--sc); line-height: 1.1;
     letter-spacing: -0.03em;
   }
   .tl-stat-label {
-    font-size: 0.72rem;
-    color: var(--text-muted);
+    font-size: 0.72rem; color: var(--text-muted);
     margin-top: 0.15rem;
   }
   @media (max-width: 640px) {
@@ -229,187 +202,100 @@ const totalMilestones = milestones.length;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 1rem 1.2rem 0.8rem;
+    padding: 1rem 1.2rem;
     margin-bottom: 0.75rem;
   }
-  .tl-card-title {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-secondary);
+  .tl-card-hd {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 0.3rem;
   }
-
-  /* ── Category Legend ── */
-  .tl-cats {
-    display: flex;
-    gap: 0.6rem;
-    align-items: center;
-    flex-wrap: wrap;
-    margin-bottom: 1.5rem;
-    padding: 0 0.2rem;
-  }
-  .tl-cat {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-    font-size: 0.75rem;
+  .tl-card-title {
+    font-size: 0.82rem;
+    font-weight: 600;
     color: var(--text-secondary);
   }
-  .tl-cat-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-  }
-  .tl-cat-hint {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    margin-left: auto;
-  }
 
-  /* ── Section headers ── */
-  .tl-section { margin: 1.5rem 0 0.5rem; }
-  .tl-section-title { font-size: 1.2rem; margin: 0; }
-  .tl-section-desc { font-size: 0.8rem; color: var(--text-muted); margin: 0.1rem 0 0; }
-
-  /* ── Milestones Timeline ── */
-  .month-group { margin-bottom: 1.5rem; }
-  .month-heading {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 0.75rem;
-    padding-left: 0.5rem;
-    border-left: 3px solid var(--c-os);
-  }
-  .month-line {
-    border-left: 2px solid var(--border);
-    padding-left: 1.2rem;
-    margin-left: 0.5rem;
-  }
-  .ms-event {
-    display: flex;
-    gap: 0.8rem;
-    margin-bottom: 1.2rem;
-    padding: 0.6rem 0.8rem;
-    border-radius: var(--radius-sm);
-    transition: background 0.15s;
-    position: relative;
-  }
-  .ms-event:hover { background: var(--bg-hover); }
-  .ms-dot {
-    position: absolute;
-    left: -1.45rem;
-    top: 0.85rem;
-    width: 11px; height: 11px;
-    border-radius: 50%;
-    border: 2px solid var(--bg-card);
-    box-shadow: 0 0 0 2px var(--cc);
-  }
-  .ms-body { flex: 1; min-width: 0; }
-  .ms-meta {
-    display: flex;
-    gap: 0.4rem;
+  /* ── Live 实时标记 ── */
+  .tl-live {
+    display: inline-flex;
     align-items: center;
-    margin-bottom: 0.15rem;
+    gap: 0.3rem;
+    font-size: 0.68rem;
+    color: var(--text-muted);
   }
-  .ms-day {
-    font-size: 0.75rem;
+  .tl-live-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #3fb950;
+    animation: tl-pulse 2s infinite;
+  }
+  .tl-live-updated { background: #d29922; animation: none; }
+  .tl-live-flash {
+    animation: tl-flash 0.6s ease-out;
+  }
+  @keyframes tl-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  @keyframes tl-flash {
+    0% { background: rgba(210,153,34,0.3); }
+    100% { background: transparent; }
+  }
+  .tl-count {
+    font-size: 0.72rem;
     color: var(--text-muted);
     font-family: var(--font-mono);
   }
-  .ms-cat {
-    font-size: 0.65rem;
-    padding: 0.05em 0.45em;
-    border-radius: 4px;
-    background: color-mix(in srgb, currentColor 15%, transparent);
-  }
-  .ms-title {
-    font-size: 0.95rem;
-    font-weight: 600;
-    margin: 0 0 0.15rem;
-    line-height: 1.4;
-  }
-  .ms-desc {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    margin: 0;
-    line-height: 1.5;
-  }
 
-  /* ── Compact event list (DB auto-generated) ── */
-  .tl-compact { max-width: 600px; margin: 0 auto; }
-  .cy-group { margin-bottom: 1.5rem; }
-  .cy-heading {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--c-os);
-    margin-bottom: 0.75rem;
-  }
-  .ce-item {
+  /* ── Events ── */
+  .tl-events { display: flex; flex-direction: column; gap: 0.15rem; }
+  .tl-event {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 0.6rem;
-    margin-bottom: 0.35rem;
+    gap: 0.5rem;
+    padding: 0.35rem 0.4rem;
     border-radius: var(--radius-sm);
     text-decoration: none;
     color: var(--text);
-    transition: background 0.12s;
+    transition: background 0.1s;
   }
-  .ce-item:hover { background: var(--bg-hover); }
-  .ce-dot {
-    width: 7px; height: 7px;
+  .tl-event:hover { background: var(--bg-hover); }
+  .tl-event-dot {
+    width: 6px; height: 6px;
     border-radius: 50%;
     flex-shrink: 0;
     background: var(--c-db);
   }
-  .type-project .ce-dot { background: var(--c-project); }
-  .type-note .ce-dot { background: var(--c-db); }
-  .ce-body {
-    flex: 1;
-    display: flex;
-    gap: 0.5rem;
-    align-items: baseline;
-    min-width: 0;
-  }
-  .ce-date {
+  .type-project .tl-event-dot { background: var(--c-project); }
+  .tl-event-date {
     font-size: 0.7rem;
     color: var(--text-muted);
-    white-space: nowrap;
     font-family: var(--font-mono);
+    white-space: nowrap;
+    min-width: 2.8em;
   }
-  .ce-title {
-    font-size: 0.85rem;
+  .tl-event-title {
+    flex: 1;
+    font-size: 0.82rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .ce-desc {
-    font-size: 0.75rem;
+  .tl-event-type {
+    font-size: 0.6rem;
+    padding: 0.1em 0.4em;
+    border-radius: 4px;
+    background: var(--bg-hover);
     color: var(--text-muted);
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
-  .ce-arrow {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    opacity: 0.3;
-    transition: opacity 0.15s, transform 0.15s;
-    flex-shrink: 0;
-  }
-  .ce-item:hover .ce-arrow {
-    opacity: 1;
-    transform: translateX(3px);
-  }
-
   .tl-empty {
     text-align: center;
-    padding: 3rem 0;
+    padding: 2rem 0;
     color: var(--text-muted);
-  }
-
-  @media (max-width: 640px) {
-    .ce-body { flex-direction: column; gap: 0.1rem; }
-    .ce-desc { display: none; }
+    font-size: 0.85rem;
   }
 </style>

@@ -1,0 +1,232 @@
+---
+import { journeyData, phaseConfig } from '../data/learning-journey.js';
+
+const PAD = { top: 30, right: 24, bottom: 44, left: 48 };
+const W = 720;
+const H = 360;
+const IW = W - PAD.left - PAD.right;
+const IH = H - PAD.top - PAD.bottom;
+
+const minYear = Math.min(...journeyData.map(d => d.year));
+const maxYear = Math.max(...journeyData.map(d => d.year));
+const yearRange = maxYear - minYear;
+
+function xPos(d) { return PAD.left + ((d.year - minYear) / yearRange) * IW; }
+function yPos(d) { return PAD.top + IH - (d.value / 100) * IH; }
+
+// 平滑曲线路径（三次贝塞尔）
+function smoothPath(points) {
+  if (points.length < 2) return '';
+  let d = `M ${xPos(points[0])} ${yPos(points[0])}`;
+  for (let i = 1; i < points.length; i++) {
+    const prev = points[i - 1];
+    const curr = points[i];
+    const cpx1 = xPos(prev) + (xPos(curr) - xPos(prev)) * 0.4;
+    const cpy1 = yPos(prev);
+    const cpx2 = xPos(prev) + (xPos(curr) - xPos(prev)) * 0.6;
+    const cpy2 = yPos(curr);
+    d += ` C ${cpx1} ${cpy1}, ${cpx2} ${cpy2}, ${xPos(curr)} ${yPos(curr)}`;
+  }
+  return d;
+}
+
+const lastPoint = journeyData[journeyData.length - 1];
+const linePath = smoothPath(journeyData);
+const areaPath = linePath + ` L ${xPos(lastPoint)} ${PAD.top + IH} L ${xPos(journeyData[0])} ${PAD.top + IH} Z`;
+
+// Y 轴刻度
+const yTicks = [0, 25, 50, 75, 100];
+
+// 阶段背景区
+const phases = ['middle-school', 'high-school', 'university'];
+const phaseRanges = phases.map(ph => {
+  const pts = journeyData.filter(d => d.phase === ph);
+  if (!pts.length) return null;
+  return {
+    key: ph,
+    ...phaseConfig[ph],
+    x: xPos(pts[0]),
+    w: pts.length > 1 ? xPos(pts[pts.length - 1]) - xPos(pts[0]) : IW / 12,
+  };
+}).filter(Boolean);
+
+// X 轴标签（仅显示年份/阶段名）
+const xLabels = journeyData.filter(d => !d.year.toString().includes('.'));
+---
+
+<div class="jc-wrap">
+  <svg viewBox={`0 0 ${W} ${H}`} class="jc-svg" role="img" aria-label="学习成长轨迹">
+    <defs>
+      <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#3fb950" stop-opacity="0.3" />
+        <stop offset="100%" stop-color="#3fb950" stop-opacity="0.02" />
+      </linearGradient>
+      <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#58a6ff" />
+        <stop offset="50%" stop-color="#d29922" />
+        <stop offset="100%" stop-color="#3fb950" />
+      </linearGradient>
+      <filter id="glow">
+        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+
+    <!-- 阶段背景 -->
+    {phaseRanges.map(ph => (
+      <rect
+        x={ph.x} y={PAD.top} width={ph.w} height={IH}
+        fill={ph.area} rx="4"
+      />
+    ))}
+
+    <!-- 网格线 -->
+    {yTicks.map(v => (
+      <g>
+        <line
+          x1={PAD.left} y1={yPos({value: v})}
+          x2={PAD.left + IW} y2={yPos({value: v})}
+          stroke="var(--border)" stroke-width="0.5"
+        />
+        <text x={PAD.left - 8} y={yPos({value: v}) + 4}
+          text-anchor="end" class="jc-tick">{v}</text>
+      </g>
+    ))}
+
+    <!-- Y 轴标签 -->
+    <text x={12} y={PAD.top + IH / 2 + 4}
+      text-anchor="middle" class="jc-axis-label"
+      transform={`rotate(-90, 12, ${PAD.top + IH / 2})`}>
+      成长指数
+    </text>
+
+    <!-- 面积填充 -->
+    <path d={areaPath} fill="url(#areaGrad)" class="jc-area" />
+
+    <!-- 折线 -->
+    <path d={linePath} fill="none" stroke="url(#lineGrad)" stroke-width="3"
+      stroke-linecap="round" stroke-linejoin="round" class="jc-line" />
+
+    <!-- 数据点 -->
+    {journeyData.map((d, i) => (
+      <g class="jc-dot-group">
+        <circle cx={xPos(d)} cy={yPos(d)} r="5" fill="var(--bg-card)"
+          stroke={d.phase === 'university' ? '#3fb950' : '#58a6ff'}
+          stroke-width="2.5" class="jc-dot"
+        />
+        <circle cx={xPos(d)} cy={yPos(d)} r="14" fill="transparent" class="jc-hit" />
+        <!-- tooltip -->
+        <g class="jc-tooltip">
+          <rect x={xPos(d) - 60} y={yPos(d) - 58} width="120" rx="6" ry="6"
+            fill="var(--bg-card)" stroke="var(--border)" stroke-width="1"
+            class="jc-tip-bg"
+          />
+          <text x={xPos(d)} y={yPos(d) - 42} text-anchor="middle"
+            class="jc-tip-title">{d.label}</text>
+          {d.events?.slice(0, 2).map((ev, ei) => (
+            <text x={xPos(d)} y={yPos(d) - 26 + ei * 16} text-anchor="middle"
+              class="jc-tip-ev">{ev}</text>
+          ))}
+          <text x={xPos(d)} y={yPos(d) - 26 + (d.events?.length || 0) * 16 + 2}
+            text-anchor="middle" class="jc-tip-val">指数 {d.value}</text>
+        </g>
+      </g>
+    ))}
+
+    <!-- X 轴标签（阶段名） -->
+    {xLabels.map(d => (
+      <text x={xPos(d)} y={H - 8} text-anchor="middle" class="jc-xlabel">{d.label}</text>
+    ))}
+  </svg>
+
+  <!-- 图例 -->
+  <div class="jc-legend">
+    {phaseRanges.map(ph => (
+      <span class="jc-legend-item">
+        <span class="jc-legend-dot" style={`background:${ph.color}`}></span>
+        {ph.label}
+      </span>
+    ))}
+  </div>
+</div>
+
+<script>
+  // 入场动画
+  const lines = document.querySelectorAll('.jc-line');
+  if (lines.length) {
+    const length = lines[0].getTotalLength();
+    lines[0].style.strokeDasharray = length;
+    lines[0].style.strokeDashoffset = length;
+    requestAnimationFrame(() => {
+      lines[0].style.transition = 'stroke-dashoffset 1.8s ease-out';
+      lines[0].style.strokeDashoffset = '0';
+    });
+  }
+</script>
+
+<style>
+  .jc-wrap {
+    padding: 1rem 0;
+    overflow-x: auto;
+  }
+  .jc-svg {
+    display: block;
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .jc-tick {
+    fill: var(--text-muted);
+    font-size: 10px;
+    font-family: var(--font-mono);
+  }
+  .jc-axis-label {
+    fill: var(--text-muted);
+    font-size: 10px;
+  }
+  .jc-xlabel {
+    fill: var(--text-muted);
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .jc-area { pointer-events: none; }
+  .jc-line { pointer-events: none; }
+  .jc-dot { transition: r 0.15s; cursor: pointer; }
+  .jc-dot-group:hover .jc-dot { r: 6.5; }
+  .jc-hit { cursor: pointer; }
+
+  /* Tooltip */
+  .jc-tooltip { opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+  .jc-dot-group:hover .jc-tooltip { opacity: 1; }
+  .jc-tip-bg { fill: var(--bg-card); }
+  .jc-tip-title {
+    fill: var(--text); font-size: 12px; font-weight: 600;
+  }
+  .jc-tip-ev {
+    fill: var(--text-secondary); font-size: 10px;
+  }
+  .jc-tip-val {
+    fill: var(--text-muted); font-size: 9px;
+    font-family: var(--font-mono);
+  }
+
+  /* Legend */
+  .jc-legend {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .jc-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+  .jc-legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+</style>
