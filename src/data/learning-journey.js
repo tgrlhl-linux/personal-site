@@ -12,55 +12,55 @@ export const journeyData = [
   // ═══════════ 初中：遵义市第十二中学总校 ═══════════
   {
     year: 2018.25, label: '初一上', value: 8, phase: 'middle-school',
-    events: ['进入遵义市第十二中学总校', '初考班级第四，开始发力'],
+    events: ['进入遵义市第十二中学总校'],
   },
   {
     year: 2018.75, label: '初一下', value: 20, phase: 'middle-school',
-    events: ['巅峰期：班级第一，年级15/2000人', '期末 776.5/850，语文131.5年级第一'],
+    events: ['成绩进入前列，奠定学业基础'],
   },
   {
     year: 2019.50, label: '初二', value: 30, phase: 'middle-school',
-    events: ['成绩稳在年级前列'],
+    events: ['保持良好学习状态'],
   },
   {
     year: 2020.50, label: '初三', value: 38, phase: 'middle-school',
-    events: ['状态下滑，中考 681/750', '保送省重点高中尖子班'],
+    events: ['保送省重点高中尖子班'],
   },
 
   // ═══════════ 高中：南白中学→观一高 ═══════════
   {
     year: 2021.25, label: '高一', value: 45, phase: 'high-school',
-    events: ['遵义市南白中学·麒麟班（省重点）', '开始摆烂，成绩大幅下滑'],
+    events: ['遵义市南白中学·麒麟班（省重点）'],
   },
   {
     year: 2022.25, label: '高二', value: 48, phase: 'high-school',
-    events: ['转学贵阳市观山湖区第一高级中学', '持续摆烂'],
+    events: ['转学贵阳市观山湖区第一高级中学'],
   },
   {
     year: 2023.25, label: '高三', value: 52, phase: 'high-school',
-    events: ['临时抱佛脚，无力回天', '高考 576 分，进入贵州大学'],
+    events: ['高考进入贵州大学'],
   },
 
   // ═══════════ 大学：贵州大学 软件工程（2024-2028）═══════════
   {
     year: 2024.75, label: '大一上', value: 58, phase: 'university',
-    events: ['软工专业入门', 'C语言、高数', '绩点不到3.43，玩太爽'],
+    events: ['软件工程专业入门'],
   },
   {
     year: 2025.25, label: '大一下', value: 68, phase: 'university',
-    events: ['Java/数据结构', '开始发力，拉升绩点'],
+    events: ['开始发力专业课程'],
   },
   {
     year: 2025.75, label: '大二上', value: 80, phase: 'university',
-    events: ['数据库原理/操作系统', 'Linux/大数据', '院团委组织部部长'],
+    events: ['数据库原理/操作系统/Linux/大数据', '院团委组织部副部长'],
   },
   {
     year: 2026.25, label: '大二下', value: 92, phase: 'university',
-    events: ['MiniSQL/Rust/Flask/Hadoop', '三下乡（清华合办）', '酒博会优秀志愿者'],
+    events: ['MiniSQL/Rust/Flask/Hadoop 全栈实践', '三下乡（清华合办）', '酒博会优秀志愿者'],
   },
   {
     year: 2026.75, label: '大三上', value: 100, phase: 'university',
-    events: ['个人网站/全栈实践', '贵州教育报发表文章', '预备党员', '笔记体系化'],
+    events: ['个人网站全栈搭建', '贵州教育报发表文章', '预备党员'],
   },
 ];
 

@@ -48,8 +48,6 @@ const phaseRanges = phases.map(ph => {
 }).filter(Boolean);
 
 const xLabels = journeyData.filter(d => !d.year.toString().includes('.'));
-const jsonData = JSON.stringify(journeyData);
-const jsonPhases = JSON.stringify(phaseConfig);
 ---
 
 <div class="jc-wrap">
@@ -92,10 +90,9 @@ const jsonPhases = JSON.stringify(phaseConfig);
     <path d={linePath} fill="none" stroke="url(#lineGrad)" stroke-width="3"
       stroke-linecap="round" stroke-linejoin="round" class="jc-line" />
 
-    <!-- 数据点（可点击，onclick 直接调用全局函数） -->
+    <!-- 数据点 -->
     {journeyData.map((d, i) => (
-      <g class="jc-dot-group" onclick="window.journeyModal({i})">
-        <circle cx={xPos(d)} cy={yPos(d)} r="16" fill="transparent" class="jc-hit" />
+      <g class="jc-dot-group">
         <circle cx={xPos(d)} cy={yPos(d)} r="6" fill="var(--bg-card)"
           stroke={d.phase === 'university' ? '#3fb950' : '#58a6ff'}
           stroke-width="2.5" class="jc-dot" />
@@ -116,72 +113,19 @@ const jsonPhases = JSON.stringify(phaseConfig);
         {ph.label}
       </span>
     ))}
-    <span class="jc-legend-hint">💡 点击圆点查看详情</span>
   </div>
 </div>
 
-<!-- 原生 <dialog> 弹窗 -->
-<dialog id="jc-dialog" class="jc-dialog">
-  <div class="jd-box">
-    <button class="jd-close" onclick="this.closest('dialog').close()">✕</button>
-    <div class="jd-stage" id="jd-stage"></div>
-    <h2 class="jd-title" id="jd-title"></h2>
-    <div class="jd-value">成长指数 <span id="jd-val"></span></div>
-    <ul class="jd-list" id="jd-list"></ul>
-  </div>
-</dialog>
-
 <script is:inline>
-window._jd = { data: {jsonData}, phases: {jsonPhases} };
-
-window.journeyModal = function(idx) {
-  var d = window._jd.data[idx];
-  if (!d) return;
-  var cfg = window._jd.phases[d.phase] || { label: d.phase, color: '#58a6ff' };
-  var dialog = document.getElementById('jc-dialog');
-  if (!dialog) return;
-
-  document.getElementById('jd-stage').textContent = cfg.label;
-  document.getElementById('jd-stage').style.cssText = 'color:' + cfg.color + ';border-color:' + cfg.color + ';background:' + cfg.color + '18';
-  document.getElementById('jd-title').textContent = d.label;
-  document.getElementById('jd-val').textContent = d.value;
-  var list = document.getElementById('jd-list');
-  list.innerHTML = '';
-  if (d.events && d.events.length) {
-    d.events.forEach(function(ev) {
-      var li = document.createElement('li');
-      li.textContent = ev;
-      list.appendChild(li);
-    });
-  } else {
-    var li = document.createElement('li');
-    li.textContent = '暂无详细记录';
-    li.style.color = 'var(--text-muted)';
-    list.appendChild(li);
-  }
-  dialog.showModal();
-};
-
-// 入场动画（单次）
-(function() {
-  var line = document.querySelector('.jc-line');
-  if (line) {
-    var len = line.getTotalLength();
-    line.style.strokeDasharray = len;
-    line.style.strokeDashoffset = len;
-    requestAnimationFrame(function() {
-      line.style.transition = 'stroke-dashoffset 1.8s ease-out';
-      line.style.strokeDashoffset = '0';
-    });
-  }
-})();
-
-// 点击遮罩关闭 dialog（全局只注册一次）
-if (!window._jdInit) {
-  window._jdInit = true;
-  document.addEventListener('click', function(e) {
-    var d = document.getElementById('jc-dialog');
-    if (d && d.open && !e.target.closest('.jd-box')) d.close();
+// 入场动画
+var line = document.querySelector('.jc-line');
+if (line) {
+  var len = line.getTotalLength();
+  line.style.strokeDasharray = len;
+  line.style.strokeDashoffset = len;
+  requestAnimationFrame(function() {
+    line.style.transition = 'stroke-dashoffset 1.8s ease-out';
+    line.style.strokeDashoffset = '0';
   });
 }
 </script>
@@ -193,8 +137,7 @@ if (!window._jdInit) {
   .jc-axis-label { fill: var(--text-muted); font-size: 10px; }
   .jc-xlabel { fill: var(--text-muted); font-size: 11px; font-weight: 500; }
   .jc-area, .jc-line { pointer-events: none; }
-  .jc-dot { transition: r 0.15s; cursor: pointer; }
-  .jc-hit { cursor: pointer; }
+  .jc-dot { transition: r 0.15s; }
   .jc-dot-group:hover .jc-dot { r: 7.5; }
 
   .jc-legend {
@@ -203,73 +146,4 @@ if (!window._jdInit) {
   }
   .jc-legend-item { display: flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; color: var(--text-secondary); }
   .jc-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-  .jc-legend-hint { font-size: 0.7rem; color: var(--text-muted); margin-left: 0.5rem; }
-
-  /* ── Dialog ── */
-  .jc-dialog {
-    border: none; border-radius: 16px; padding: 0;
-    background: transparent; max-width: 420px; width: 90%;
-  }
-  .jc-dialog::backdrop {
-    background: rgba(0,0,0,0.5);
-    backdrop-filter: blur(4px);
-  }
-  .jd-box {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 2rem 1.8rem;
-    box-shadow: 0 24px 80px rgba(0,0,0,0.5);
-  }
-  .jd-close {
-    float: right;
-    background: none; border: none;
-    font-size: 1.1rem; color: var(--text-muted);
-    cursor: pointer; padding: 0.2rem; line-height: 1;
-    border-radius: 4px; transition: color 0.1s;
-  }
-  .jd-close:hover { color: var(--text); }
-  .jd-stage {
-    display: inline-block;
-    font-size: 0.7rem; padding: 0.15em 0.6em;
-    border-radius: 6px; border: 1px solid;
-    margin-bottom: 0.6rem;
-  }
-  .jd-title {
-    font-size: 1.3rem; font-weight: 700;
-    margin: 0 0 0.2rem; line-height: 1.3;
-    color: var(--text);
-    clear: none;
-  }
-  .jd-value {
-    font-size: 0.8rem; color: var(--text-muted);
-    margin-bottom: 1rem; font-family: var(--font-mono);
-  }
-  .jd-value span { color: var(--c-os); font-weight: 600; }
-  .jd-list {
-    list-style: none; margin: 0; padding: 0;
-    display: flex; flex-direction: column; gap: 0.35rem;
-  }
-  .jd-list li {
-    position: relative;
-    padding-left: 1rem;
-    font-size: 0.88rem;
-    color: var(--text-secondary);
-    line-height: 1.5;
-  }
-  .jd-list li::before {
-    content: '·';
-    position: absolute; left: 0.15rem;
-    color: var(--c-os);
-    font-weight: 700;
-  }
-
-  /* dialog 打开动画 */
-  .jd-box {
-    animation: jd-in 0.2s ease-out;
-  }
-  @keyframes jd-in {
-    from { transform: scale(0.92) translateY(12px); opacity: 0; }
-    to { transform: scale(1) translateY(0); opacity: 1; }
-  }
 </style>

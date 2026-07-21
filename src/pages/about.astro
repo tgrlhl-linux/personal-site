@@ -10,47 +10,62 @@ export const prerender = true;
 
   <div class="about-content">
     <section class="about-section" data-reveal="bottom">
-      <h2>👋 自我介绍</h2>
       <p>
-        贵州大学软件工程专业大三学生。热衷于用代码解决问题，从底层系统到前端界面都乐在其中。
-        相信持续记录和反思是成长最快的方式——这个网站就是这一信念的产物。
+        童国睿，2006年贵州遵义人，水瓶座，贵州大学软件工程在读大三学生，MBTI 为 INTJ。
+        做事风格偏向效率导向，但会主动警惕单一效率带来的隐性代价；具备明确的目标感与边界感，方向自主把控，执行层面可协作、可放权。状态弹性较强，高专注周期能够高密度输出，低谷期选择沉淀复盘，弥补 INTJ 思维闭环的局限性，平衡"过度思考"与"落地不足"的问题。
       </p>
     </section>
 
     <section class="about-section" data-reveal="bottom">
-      <h2>🎯 现在关注</h2>
-      <ul>
-        <li>系统编程（Rust、C、操作系统原理）</li>
-        <li>数据库设计与实现</li>
-        <li>Web 全栈开发</li>
-        <li>数据可视化与 3D 图形</li>
-      </ul>
+      <h2>求学轨迹</h2>
+      <p>
+        学习路径呈明显的起伏迭代特征。小学成绩稳居前列，保送遵义市第十二中学；初中就读于遵义市第十二中学总校，入学位列前茅，中期达到学业巅峰，初三状态波动，中考考入遵义市南白中学麒麟班。
+        高中阶段经历环境与心态调整，节奏松弛；高三集中冲刺，顺利考入贵州大学软件工程专业。大学阶段完成自我回调：大一初期状态平缓，大一下逐步发力，大二完全进入专业状态，稳步夯实计算机底层能力与工程实践能力。
+      </p>
     </section>
 
     <section class="about-section" data-reveal="bottom">
-      <h2>🛠️ 技术栈</h2>
-      <div class="skills">
-        {[
-          { cat: '语言', items: ['Java', 'Rust', 'Python', 'JavaScript', 'Shell', 'SQL'] },
-          { cat: '后端', items: ['Flask', 'Node.js', 'Spring Boot'] },
-          { cat: '前端', items: ['Astro', 'HTML/CSS', 'Three.js'] },
-          { cat: '工具', items: ['Git', 'Linux', 'Docker', 'Hadoop'] },
-        ].map(g => (
-          <div class="skill-group">
-            <h3>{g.cat}</h3>
-            <div class="skill-items">
-              {g.items.map(s => <span class="skill-tag">{s}</span>)}
-            </div>
-          </div>
-        ))}
+      <h2>技术与项目实践</h2>
+      <p>深耕底层原理与全栈落地，技术方向涵盖数据库内核、操作系统文件系统、分布式存储、Web 服务开发，擅长从零手写核心逻辑、剥离第三方依赖、理解系统底层运行机制，代表性项目如下：</p>
+      <div class="proj-list">
+        <div class="proj-item">
+          <strong>MiniSQL</strong> — Java 8 零依赖：独立实现完整 SQL 执行链路，包含词法分析、语法解析、逻辑执行、数据持久化，内嵌 HTTP 服务与 Web 交互界面，自主搭建小型数据库内核模型。
+        </div>
+        <div class="proj-item">
+          <strong>个人独立站点</strong> — 基于 Astro + SSR 服务端渲染架构，搭配 TiDB Cloud 与 Vercel 部署，实现自定义管理后台、REST API、全站 SEO 优化，具备完整的线上服务能力。
+        </div>
+        <div class="proj-item">
+          <strong>FAT 文件系统可视化仿真</strong> — 使用 Rust + egui 实现 FAT 文件系统可视化模拟，直观复现文件存储、检索、读写底层机制。
+        </div>
+        <div class="proj-item">
+          <strong>HDFS 客户端开发</strong> — 基于 Java 对接 Hadoop 3.3.4 集群，封装并实现 11 项常用分布式文件系统操作，熟悉分布式存储基础交互逻辑。
+        </div>
+        <div class="proj-item">
+          <strong>Flask 成绩管理系统</strong> — 完成从 Shell 脚本原始版本到 Flask Web 架构的跨技术栈迁移，实现功能可视化与服务化升级。
+        </div>
       </div>
     </section>
 
     <section class="about-section" data-reveal="bottom">
-      <h2>📬 联系</h2>
+      <h2>校园经历与社会实践</h2>
       <p>
-        GitHub：<a href="https://github.com/tgrlhl-linux" target="_blank">github.com/tgrlhl-linux</a><br />
-        Email：<a href="mailto:1767242545@qq.com">1767242545@qq.com</a>
+        在校历任院团委组织部干事、副部长，具备长期学生工作统筹经验，做事严谨、流程规范。现为中共预备党员。积极参与各类社会实践与公益志愿活动，包含清华合办三下乡、酒博会志愿服务、返家乡社会实践、黔仁生态志愿项目等。2026 年 2 月，以第一作者身份在《贵州教育报》发表理论文章，实现工程思维与文字思辨的双向输出。
+      </p>
+    </section>
+
+    <section class="about-section" data-reveal="bottom">
+      <h2>百年悖论</h2>
+      <p>
+        如何在"确定性"的牢笼中，为"可能性"保留火种？
+      </p>
+      <blockquote class="paradox-quote">
+        <p>你被任命为"文明存续理事会"首席战略官，任期 100 年。你继承了一个已实现"全知决策系统"的文明——该系统以 99.99% 的准确率为每一个微观决策提供唯一最优解，使文明效率最大化，但也导致了路径依赖、思维同质与创新枯竭的隐性危机。</p>
+        <p>你被授予"火种"协议：一次权限，在系统中植入一个"反逻辑预设"——一个无法被系统消除的"良性病毒"，持续生成一小部分无法被预测或优化的随机事件与无效率选择，以此刺激社会的多样性与非常规创造力。</p>
+        <p>代价：社会整体效率将在至少三代人（约 80 年）内，以每年 0.5%-2% 的速率衰减。同时，文明正面临一个来自深空的、概率未知的"X 级危机"——可能在 10 年后到来，也可能 10 万年都不来。"全知系统"是当前应对任何可预见危机的最强盾牌。</p>
+        <p>你的任务：在 100 年任期内，制定"火种"协议的实施与风险管控方案——在"确定性"的牢笼中为"可能性"保留火种。</p>
+      </blockquote>
+      <p class="paradox-tag">
+        这个问题没有标准答案。但它定义了我思考问题的方式——永远追问代价、韧性与非线性。
       </p>
     </section>
   </div>
@@ -58,26 +73,45 @@ export const prerender = true;
 
 <style>
   .about-content { max-width: 640px; }
-  .about-section { margin-bottom: 2.5rem; }
-  .about-section h2 { font-size: 1.3rem; margin-bottom: 0.8rem; }
-  .about-section p, .about-section li {
-    font-size: 0.95rem;
-    color: var(--text-secondary);
-    line-height: 1.8;
-  }
-  .about-section li { margin-bottom: 0.3rem; }
 
-  .skills { display: flex; flex-direction: column; gap: 1.2rem; }
-  .skill-group { }
-  .skill-group h3 { font-size: 0.9rem; color: var(--text-muted); margin: 0 0 0.4rem; text-transform: uppercase; letter-spacing: 1px; }
-  .skill-items { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-  .skill-tag {
-    display: inline-block;
-    font-size: 0.85rem;
-    padding: 0.3em 0.8em;
-    background: var(--bg-hover);
-    border: 1px solid var(--border);
-    border-radius: 4px;
+  .about-section { margin-bottom: 2.5rem; }
+  .about-section h2 {
+    font-size: 1.2rem;
+    margin-bottom: 0.8rem;
+    color: var(--text);
+  }
+  .about-section p, .about-section li {
+    font-size: 0.92rem;
     color: var(--text-secondary);
+    line-height: 1.85;
+    margin-bottom: 0.6rem;
+  }
+
+  .proj-list { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.3rem; }
+  .proj-item {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.75;
+    padding-left: 0.8rem;
+    border-left: 2px solid var(--border);
+  }
+  .proj-item strong { color: var(--text); }
+
+  .paradox-quote {
+    margin: 0.8rem 0 0.4rem;
+    padding: 1rem 1.2rem;
+    background: var(--bg-hover);
+    border-left: 3px solid var(--c-os);
+    border-radius: 4px;
+  }
+  .paradox-quote p {
+    font-size: 0.88rem;
+    margin-bottom: 0.5rem;
+  }
+  .paradox-quote p:last-child { margin-bottom: 0; }
+  .paradox-tag {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-style: italic;
   }
 </style>
