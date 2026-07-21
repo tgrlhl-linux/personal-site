@@ -3,115 +3,565 @@ import Base from '../layouts/Base.astro';
 export const prerender = true;
 ---
 
-<Base title="关于" description="关于童国睿">
-  <div class="page-header" data-reveal="bottom">
-    <h1>关于</h1>
+<Base title="关于" description="关于童国睿" wide={true}>
+  <!-- Hero -->
+  <div class="ab-hero" data-reveal="bottom">
+    <div class="ab-hero-main">
+      <div class="ab-avatar">G</div>
+      <div>
+        <h1 class="ab-name">童国睿</h1>
+        <p class="ab-tagline">软件工程 · 水瓶座 · INTJ</p>
+        <p class="ab-desc">
+          2006 年贵州遵义人，贵州大学大三在读。做事风格偏向效率导向，但会主动警惕单一效率带来的隐性代价；具备明确的目标感与边界感，方向自主把控，执行层面可协作、可放权。状态弹性较强，高专注周期能够高密度输出，低谷期选择沉淀复盘。
+        </p>
+      </div>
+    </div>
+    <div class="ab-hero-meta">
+      <div class="ab-meta-item" style="--c:#58a6ff;--g:rgba(88,166,255,0.15)">
+        <span class="ab-meta-num">2006</span>
+        <span class="ab-meta-lbl">水瓶座</span>
+      </div>
+      <div class="ab-meta-item" style="--c:#3fb950;--g:rgba(63,185,80,0.15)">
+        <span class="ab-meta-num">INTJ</span>
+        <span class="ab-meta-lbl">思维型</span>
+      </div>
+      <div class="ab-meta-item" style="--c:#d29922;--g:rgba(210,153,34,0.15)">
+        <span class="ab-meta-num">大三</span>
+        <span class="ab-meta-lbl">软件工程</span>
+      </div>
+      <div class="ab-meta-item" style="--c:#bc8cff;--g:rgba(188,140,255,0.15)">
+        <span class="ab-meta-num">贵州</span>
+        <span class="ab-meta-lbl">遵义人</span>
+      </div>
+    </div>
   </div>
 
-  <div class="about-content">
-    <section class="about-section" data-reveal="bottom">
-      <p>
-        童国睿，2006年贵州遵义人，水瓶座，贵州大学软件工程在读大三学生，MBTI 为 INTJ。
-        做事风格偏向效率导向，但会主动警惕单一效率带来的隐性代价；具备明确的目标感与边界感，方向自主把控，执行层面可协作、可放权。状态弹性较强，高专注周期能够高密度输出，低谷期选择沉淀复盘，弥补 INTJ 思维闭环的局限性，平衡"过度思考"与"落地不足"的问题。
-      </p>
-    </section>
-
-    <section class="about-section" data-reveal="bottom">
+  <!-- 求学轨迹 -->
+  <section class="ab-section" data-reveal="bottom" data-delay="100">
+    <div class="ab-section-hd">
+      <span class="ab-section-dot" style="--c:#58a6ff"></span>
       <h2>求学轨迹</h2>
-      <p>
-        学习路径呈明显的起伏迭代特征。小学成绩稳居前列，保送遵义市第十二中学；初中就读于遵义市第十二中学总校，入学位列前茅，中期达到学业巅峰，初三状态波动，中考考入遵义市南白中学麒麟班。
-        高中阶段经历环境与心态调整，节奏松弛；高三集中冲刺，顺利考入贵州大学软件工程专业。大学阶段完成自我回调：大一初期状态平缓，大一下逐步发力，大二完全进入专业状态，稳步夯实计算机底层能力与工程实践能力。
-      </p>
-    </section>
+    </div>
+    <div class="ab-timeline">
+      <div class="ab-tl-line"></div>
 
-    <section class="about-section" data-reveal="bottom">
-      <h2>技术与项目实践</h2>
-      <p>深耕底层原理与全栈落地，技术方向涵盖数据库内核、操作系统文件系统、分布式存储、Web 服务开发，擅长从零手写核心逻辑、剥离第三方依赖、理解系统底层运行机制，代表性项目如下：</p>
-      <div class="proj-list">
-        <div class="proj-item">
-          <strong>MiniSQL</strong> — Java 8 零依赖：独立实现完整 SQL 执行链路，包含词法分析、语法解析、逻辑执行、数据持久化，内嵌 HTTP 服务与 Web 交互界面，自主搭建小型数据库内核模型。
-        </div>
-        <div class="proj-item">
-          <strong>个人独立站点</strong> — 基于 Astro + SSR 服务端渲染架构，搭配 TiDB Cloud 与 Vercel 部署，实现自定义管理后台、REST API、全站 SEO 优化，具备完整的线上服务能力。
-        </div>
-        <div class="proj-item">
-          <strong>FAT 文件系统可视化仿真</strong> — 使用 Rust + egui 实现 FAT 文件系统可视化模拟，直观复现文件存储、检索、读写底层机制。
-        </div>
-        <div class="proj-item">
-          <strong>HDFS 客户端开发</strong> — 基于 Java 对接 Hadoop 3.3.4 集群，封装并实现 11 项常用分布式文件系统操作，熟悉分布式存储基础交互逻辑。
-        </div>
-        <div class="proj-item">
-          <strong>Flask 成绩管理系统</strong> — 完成从 Shell 脚本原始版本到 Flask Web 架构的跨技术栈迁移，实现功能可视化与服务化升级。
+      <div class="ab-tl-item" style="--ac:#8b949e">
+        <div class="ab-tl-dot" style="--ac:#8b949e"></div>
+        <div class="ab-tl-card">
+          <div class="ab-tl-stage">小学</div>
+          <div class="ab-tl-school">保送市里最好初中</div>
+          <div class="ab-tl-desc">成绩稳居前列。六年级有过一段小恋爱，现在想起来还挺有意思。</div>
         </div>
       </div>
-    </section>
 
-    <section class="about-section" data-reveal="bottom">
+      <div class="ab-tl-item" style="--ac:#58a6ff">
+        <div class="ab-tl-dot" style="--ac:#58a6ff"></div>
+        <div class="ab-tl-card">
+          <div class="ab-tl-stage">初中 · 遵义市第十二中学总校</div>
+          <div class="ab-tl-range">2018 — 2021</div>
+          <div class="ab-tl-desc">入学位列前茅，中期达到学业巅峰。初三状态波动，中考后保送省重点高中尖子班。</div>
+        </div>
+      </div>
+
+      <div class="ab-tl-item" style="--ac:#d29922">
+        <div class="ab-tl-dot" style="--ac:#d29922"></div>
+        <div class="ab-tl-card">
+          <div class="ab-tl-stage">高中 · 南白中学麒麟班 → 观一高</div>
+          <div class="ab-tl-range">2021 — 2024</div>
+          <div class="ab-tl-desc">高一省重点尖子班，经历环境与心态调整，节奏松弛。高三集中冲刺，考入贵州大学。</div>
+        </div>
+      </div>
+
+      <div class="ab-tl-item" style="--ac:#3fb950">
+        <div class="ab-tl-dot" style="--ac:#3fb950"></div>
+        <div class="ab-tl-card">
+          <div class="ab-tl-stage">大学 · 贵州大学 软件工程</div>
+          <div class="ab-tl-range">2024 — 至今</div>
+          <div class="ab-tl-desc">大一平缓，大一下发力，大二进入专业状态。完成自我回调，稳步夯实底层能力与工程实践。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 技术与项目实践 -->
+  <section class="ab-section" data-reveal="bottom" data-delay="150">
+    <div class="ab-section-hd">
+      <span class="ab-section-dot" style="--c:#f0883e"></span>
+      <h2>技术与项目实践</h2>
+    </div>
+    <p class="ab-sec-desc">深耕底层原理与全栈落地，擅长从零手写核心逻辑，理解系统底层运行机制。</p>
+    <div class="ab-proj-grid">
+      <a class="ab-proj-card" style="--cc:#58a6ff">
+        <div class="ab-pc-left" style="--cc:#58a6ff">
+          <span class="ab-pc-num">01</span>
+          <span class="ab-pc-cat">数据库</span>
+        </div>
+        <div class="ab-pc-right">
+          <div class="ab-pc-title">MiniSQL</div>
+          <div class="ab-pc-desc">Java 8 零依赖，手写完整 SQL 执行链路（词法→语法→执行→持久化），内嵌 HTTP 服务与 Web UI。</div>
+          <div class="ab-pc-tags">
+            <span class="ab-pc-tag">Java</span>
+            <span class="ab-pc-tag">SQL</span>
+            <span class="ab-pc-tag">零依赖</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="ab-proj-card" style="--cc:#3fb950">
+        <div class="ab-pc-left" style="--cc:#3fb950">
+          <span class="ab-pc-num">02</span>
+          <span class="ab-pc-cat">全栈</span>
+        </div>
+        <div class="ab-pc-right">
+          <div class="ab-pc-title">个人独立站点</div>
+          <div class="ab-pc-desc">Astro SSR + TiDB Cloud + Vercel，自定义管理后台、REST API、全站 SEO，持续迭代中。</div>
+          <div class="ab-pc-tags">
+            <span class="ab-pc-tag">Astro</span>
+            <span class="ab-pc-tag">SSR</span>
+            <span class="ab-pc-tag">TiDB</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="ab-proj-card" style="--cc:#d29922">
+        <div class="ab-pc-left" style="--cc:#d29922">
+          <span class="ab-pc-num">03</span>
+          <span class="ab-pc-cat">系统</span>
+        </div>
+        <div class="ab-pc-right">
+          <div class="ab-pc-title">FAT 文件系统仿真</div>
+          <div class="ab-pc-desc">Rust + egui 实现 FAT 可视化模拟，位图驱动、实时渲染，直观复现文件存储读写底层机制。</div>
+          <div class="ab-pc-tags">
+            <span class="ab-pc-tag">Rust</span>
+            <span class="ab-pc-tag">egui</span>
+            <span class="ab-pc-tag">文件系统</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="ab-proj-card" style="--cc:#bc8cff">
+        <div class="ab-pc-left" style="--cc:#bc8cff">
+          <span class="ab-pc-num">04</span>
+          <span class="ab-pc-cat">分布式</span>
+        </div>
+        <div class="ab-pc-right">
+          <div class="ab-pc-title">HDFS 客户端</div>
+          <div class="ab-pc-desc">Java 对接 Hadoop 3.3.4 集群，封装 11 项分布式文件系统操作，覆盖 CRUD + IO 流。</div>
+          <div class="ab-pc-tags">
+            <span class="ab-pc-tag">Hadoop</span>
+            <span class="ab-pc-tag">Java</span>
+            <span class="ab-pc-tag">HDFS</span>
+          </div>
+        </div>
+      </a>
+
+      <a class="ab-proj-card" style="--cc:#f0883e">
+        <div class="ab-pc-left" style="--cc:#f0883e">
+          <span class="ab-pc-num">05</span>
+          <span class="ab-pc-cat">Web</span>
+        </div>
+        <div class="ab-pc-right">
+          <div class="ab-pc-title">Flask 成绩管理系统</div>
+          <div class="ab-pc-desc">Shell 脚本到 Flask Web 的跨技术栈迁移，数据隔离思路从 bash 平滑过渡到 SQL 子句。</div>
+          <div class="ab-pc-tags">
+            <span class="ab-pc-tag">Flask</span>
+            <span class="ab-pc-tag">Python</span>
+            <span class="ab-pc-tag">SQLite</span>
+          </div>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- 校园经历与社会实践 -->
+  <section class="ab-section" data-reveal="bottom" data-delay="200">
+    <div class="ab-section-hd">
+      <span class="ab-section-dot" style="--c:#3fb950"></span>
       <h2>校园经历与社会实践</h2>
-      <p>
-        在校历任院团委组织部干事、副部长，具备长期学生工作统筹经验，做事严谨、流程规范。现为中共预备党员。积极参与各类社会实践与公益志愿活动，包含清华合办三下乡、酒博会志愿服务、返家乡社会实践、黔仁生态志愿项目等。2026 年 2 月，以第一作者身份在《贵州教育报》发表理论文章，实现工程思维与文字思辨的双向输出。
-      </p>
-    </section>
+    </div>
+    <div class="ab-exp-grid">
+      <div class="ab-exp-card" style="--c:#58a6ff;--g:rgba(88,166,255,0.06)">
+        <span class="ab-exp-icon">🏛️</span>
+        <span class="ab-exp-title">院团委组织部副部长</span>
+        <span class="ab-exp-desc">长期学生工作统筹，做事严谨、流程规范</span>
+      </div>
+      <div class="ab-exp-card" style="--c:#3fb950;--g:rgba(63,185,80,0.06)">
+        <span class="ab-exp-icon">⭐</span>
+        <span class="ab-exp-title">中共预备党员</span>
+        <span class="ab-exp-desc">2026 年发展</span>
+      </div>
+      <div class="ab-exp-card" style="--c:#f0883e;--g:rgba(240,136,62,0.06)">
+        <span class="ab-exp-icon">🌾</span>
+        <span class="ab-exp-title">三下乡（清华合办）</span>
+        <span class="ab-exp-desc">社会实践项目</span>
+      </div>
+      <div class="ab-exp-card" style="--c:#d29922;--g:rgba(210,153,34,0.06)">
+        <span class="ab-exp-icon">🏅</span>
+        <span class="ab-exp-title">酒博会优秀志愿者</span>
+        <span class="ab-exp-desc">志愿服务表彰</span>
+      </div>
+      <div class="ab-exp-card" style="--c:#bc8cff;--g:rgba(188,140,255,0.06)">
+        <span class="ab-exp-icon">📰</span>
+        <span class="ab-exp-title">贵州教育报第一作者</span>
+        <span class="ab-exp-desc">2026.02 发表理论文章</span>
+      </div>
+      <div class="ab-exp-card" style="--c:#79c0ff;--g:rgba(121,192,255,0.06)">
+        <span class="ab-exp-icon">🤝</span>
+        <span class="ab-exp-title">返家乡 / 黔仁生态</span>
+        <span class="ab-exp-desc">社会实践与志愿服务</span>
+      </div>
+    </div>
+  </section>
 
-    <section class="about-section" data-reveal="bottom">
+  <!-- 百年悖论 -->
+  <section class="ab-section" data-reveal="bottom" data-delay="250">
+    <div class="ab-section-hd">
+      <span class="ab-section-dot" style="--c:#bc8cff"></span>
       <h2>百年悖论</h2>
-      <p>
-        如何在"确定性"的牢笼中，为"可能性"保留火种？
-      </p>
-      <blockquote class="paradox-quote">
+    </div>
+    <div class="ab-paradox">
+      <p class="ab-paradox-q">如何在"确定性"的牢笼中，为"可能性"保留火种？</p>
+      <div class="ab-paradox-body">
         <p>你被任命为"文明存续理事会"首席战略官，任期 100 年。你继承了一个已实现"全知决策系统"的文明——该系统以 99.99% 的准确率为每一个微观决策提供唯一最优解，使文明效率最大化，但也导致了路径依赖、思维同质与创新枯竭的隐性危机。</p>
         <p>你被授予"火种"协议：一次权限，在系统中植入一个"反逻辑预设"——一个无法被系统消除的"良性病毒"，持续生成一小部分无法被预测或优化的随机事件与无效率选择，以此刺激社会的多样性与非常规创造力。</p>
         <p>代价：社会整体效率将在至少三代人（约 80 年）内，以每年 0.5%-2% 的速率衰减。同时，文明正面临一个来自深空的、概率未知的"X 级危机"——可能在 10 年后到来，也可能 10 万年都不来。"全知系统"是当前应对任何可预见危机的最强盾牌。</p>
         <p>你的任务：在 100 年任期内，制定"火种"协议的实施与风险管控方案——在"确定性"的牢笼中为"可能性"保留火种。</p>
-      </blockquote>
-      <p class="paradox-tag">
-        这个问题没有标准答案。但它定义了我思考问题的方式——永远追问代价、韧性与非线性。
-      </p>
-    </section>
-  </div>
+      </div>
+      <p class="ab-paradox-tag">这个问题没有标准答案。但它定义了我思考问题的方式——永远追问代价、韧性与非线性。</p>
+    </div>
+  </section>
 </Base>
 
 <style>
-  .about-content { max-width: 640px; }
-
-  .about-section { margin-bottom: 2.5rem; }
-  .about-section h2 {
-    font-size: 1.2rem;
-    margin-bottom: 0.8rem;
-    color: var(--text);
+  .ab-hero {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
   }
-  .about-section p, .about-section li {
-    font-size: 0.92rem;
-    color: var(--text-secondary);
-    line-height: 1.85;
-    margin-bottom: 0.6rem;
+  .ab-hero-main {
+    display: flex;
+    gap: 1.2rem;
+    align-items: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
   }
-
-  .proj-list { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.3rem; }
-  .proj-item {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    line-height: 1.75;
-    padding-left: 0.8rem;
-    border-left: 2px solid var(--border);
+  .ab-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #58a6ff, #bc8cff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 0 24px rgba(88,166,255,0.2);
   }
-  .proj-item strong { color: var(--text); }
-
-  .paradox-quote {
-    margin: 0.8rem 0 0.4rem;
-    padding: 1rem 1.2rem;
-    background: var(--bg-hover);
-    border-left: 3px solid var(--c-os);
-    border-radius: 4px;
+  .ab-name {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(135deg, #e6edf3, #8b949e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
-  .paradox-quote p {
-    font-size: 0.88rem;
-    margin-bottom: 0.5rem;
-  }
-  .paradox-quote p:last-child { margin-bottom: 0; }
-  .paradox-tag {
+  .ab-tagline {
     font-size: 0.85rem;
     color: var(--text-muted);
+    margin: 0.15rem 0 0.4rem;
+    letter-spacing: 2px;
+  }
+  .ab-desc {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    line-height: 1.75;
+    margin: 0;
+  }
+
+  .ab-hero-meta {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.6rem;
+  }
+  .ab-meta-item {
+    background: var(--bg-card);
+    border: 1px solid var(--g);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem;
+    text-align: center;
+    transition: box-shadow 0.2s, transform 0.15s;
+  }
+  .ab-meta-item:hover {
+    box-shadow: 0 0 16px var(--g);
+    transform: translateY(-1px);
+  }
+  .ab-meta-num {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--c);
+    line-height: 1.2;
+  }
+  .ab-meta-lbl {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 0.05rem;
+  }
+
+  /* ── Section ── */
+  .ab-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: box-shadow 0.2s;
+  }
+  .ab-section:hover {
+    box-shadow: var(--shadow-hover);
+  }
+  .ab-section-hd {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .ab-section-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--c);
+    box-shadow: 0 0 8px var(--c);
+  }
+  .ab-section-hd h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+  }
+  .ab-sec-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: -0.3rem 0 1rem;
+  }
+
+  /* ── Timeline ── */
+  .ab-timeline {
+    position: relative;
+    padding-left: 1.5rem;
+  }
+  .ab-tl-line {
+    position: absolute;
+    left: 7px;
+    top: 4px;
+    bottom: 4px;
+    width: 2px;
+    background: linear-gradient(to bottom, #58a6ff, #d29922, #3fb950);
+    border-radius: 1px;
+  }
+  .ab-tl-item {
+    position: relative;
+    padding-bottom: 1.2rem;
+  }
+  .ab-tl-item:last-child { padding-bottom: 0; }
+  .ab-tl-dot {
+    position: absolute;
+    left: -1.5rem;
+    top: 4px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--ac);
+    border: 2px solid var(--bg-card);
+    box-shadow: 0 0 0 2px var(--ac), 0 0 12px var(--ac);
+    z-index: 1;
+  }
+  .ab-tl-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.8rem 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .ab-tl-card:hover {
+    border-color: var(--ac);
+    box-shadow: 0 0 0 1px var(--ac);
+  }
+  .ab-tl-stage {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .ab-tl-range {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    margin-top: 0.1rem;
+  }
+  .ab-tl-desc {
+    font-size: 0.83rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-top: 0.3rem;
+  }
+
+  /* ── Project grid ── */
+  .ab-proj-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .ab-proj-card {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.15s, border-color 0.2s;
+  }
+  .ab-proj-card:hover {
+    box-shadow: 0 0 0 1px var(--cc), var(--shadow-hover);
+    transform: translateY(-2px);
+    border-color: var(--cc);
+  }
+  .ab-pc-left {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--cc) 8%, transparent), transparent);
+    padding: 0.7rem 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    justify-content: center;
+    align-items: center;
+    border-right: 1px solid var(--border);
+  }
+  .ab-pc-num {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--cc);
+  }
+  .ab-pc-cat {
+    font-size: 0.55rem;
+    padding: 0.15em 0.5em;
+    background: color-mix(in srgb, var(--cc) 15%, transparent);
+    color: var(--cc);
+    border-radius: 4px;
+  }
+  .ab-pc-right {
+    padding: 0.7rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    justify-content: center;
+  }
+  .ab-pc-title {
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+  .ab-pc-desc {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .ab-pc-tags {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+    margin-top: 0.1rem;
+  }
+  .ab-pc-tag {
+    font-size: 0.6rem;
+    padding: 0.1em 0.45em;
+    background: var(--bg-hover);
+    border-radius: 3px;
+    color: var(--text-secondary);
+  }
+
+  /* ── Experience grid ── */
+  .ab-exp-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.6rem;
+  }
+  .ab-exp-card {
+    background: var(--g);
+    border: 1px solid color-mix(in srgb, var(--c) 20%, transparent);
+    border-radius: var(--radius-sm);
+    padding: 0.8rem 0.7rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    transition: box-shadow 0.2s, transform 0.15s;
+  }
+  .ab-exp-card:hover {
+    box-shadow: 0 0 12px color-mix(in srgb, var(--c) 15%, transparent);
+    transform: translateY(-1px);
+  }
+  .ab-exp-icon { font-size: 1.1rem; }
+  .ab-exp-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .ab-exp-desc {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  /* ── Paradox ── */
+  .ab-paradox {
+    position: relative;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid #bc8cff;
+    border-radius: var(--radius-sm);
+    padding: 1.2rem 1.2rem 1rem;
+    overflow: hidden;
+  }
+  .ab-paradox::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(188,140,255,0.04), transparent);
+    pointer-events: none;
+  }
+  .ab-paradox-q {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #bc8cff;
+    margin-bottom: 0.8rem;
+    letter-spacing: 1px;
+  }
+  .ab-paradox-body p {
+    font-size: 0.83rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 0.5rem;
+  }
+  .ab-paradox-body p:last-of-type { margin-bottom: 0.8rem; }
+  .ab-paradox-tag {
+    font-size: 0.8rem;
+    color: var(--text-muted);
     font-style: italic;
+    margin: 0;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .ab-hero-main { flex-direction: column; text-align: center; }
+    .ab-hero-meta { grid-template-columns: repeat(2, 1fr); }
+    .ab-exp-grid { grid-template-columns: repeat(2, 1fr); }
+    .ab-proj-card { grid-template-columns: 60px 1fr; }
   }
 </style>
