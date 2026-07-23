@@ -9,7 +9,6 @@ const TYPE_META = {
   note:    { label: '📄', link: (n) => `${SITE}/notes/${n.id}` },
   project: { label: '🛠️', link: (n) => `${SITE}/projects/${n.slug || n.id}` },
   hobby:   { label: '🎨', link: (n) => `${SITE}/hobbies/${n.slug || n.id}` },
-  quote:   { label: '💬', link: (n) => `${SITE}/quotes/${n.slug || n.id}` },
 };
 
 const SUPPORTED_TYPES = Object.keys(TYPE_META);
@@ -47,9 +46,9 @@ function buildDescription(n) {
 
 // ─── HTML 页面渲染 — 主流列表风格 ─────────────────────────────
 
-const TYPE_COLORS = { note: '#3fb950', project: '#58a6ff', hobby: '#f0883e', quote: '#bc8cff' };
+const TYPE_COLORS = { note: '#3fb950', project: '#58a6ff', hobby: '#f0883e' };
 function tColor(t) { return TYPE_COLORS[t] || '#8b949e'; }
-function tLabel(t) { return { note: '笔记', project: '项目', hobby: '爱好', quote: '拾句' }[t] || '笔记'; }
+function tLabel(t) { return { note: '笔记', project: '项目', hobby: '爱好' }[t] || '笔记'; }
 
 function renderHtmlPage(items) {
   const cardsHtml = items.map((n, i) => {
@@ -230,7 +229,6 @@ function renderHtmlPage(items) {
         <span>📄 笔记 ${items.filter(n => n.type === 'note').length}</span>
         <span>🛠️ 项目 ${items.filter(n => n.type === 'project').length}</span>
         <span>🎨 爱好 ${items.filter(n => n.type === 'hobby').length}</span>
-        <span>💬 拾句 ${items.filter(n => n.type === 'quote').length}</span>
         <a href="/rss.xml">订阅 →</a>
       </div>
     </header>
