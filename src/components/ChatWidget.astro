@@ -4,15 +4,19 @@
 ---
 
 <div id="chat-widget" data-astro-cid-chat>
-  <!-- 气泡按钮 -->
-  <button id="chat-toggle" class="chat-bubble" aria-label="打开聊天" title="和我聊聊">
-    <svg class="cb-icon cb-default" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-    </svg>
-    <svg class="cb-icon cb-close" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-    </svg>
-  </button>
+  <!-- 气泡按钮 + 提示文字 -->
+  <div class="cb-wrapper">
+    <span class="cb-hint" id="chat-hint">💬 和我聊聊</span>
+    <div class="cb-ring"></div>
+    <button id="chat-toggle" class="chat-bubble" aria-label="打开聊天" title="和我聊聊">
+      <svg class="cb-icon cb-default" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <svg class="cb-icon cb-close" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
 
   <!-- 聊天面板 -->
   <div id="chat-panel" class="chat-panel">
@@ -81,10 +85,13 @@ function initChatWidget() {
   }
 
   // ---- toggle ----
+  const hint = document.getElementById('chat-hint');
+
   function openChat() {
     isOpen = true;
     panel.classList.add('open');
     toggle.classList.add('active');
+    if (hint) hint.style.display = 'none';
     input.focus();
   }
 
@@ -92,6 +99,7 @@ function initChatWidget() {
     isOpen = false;
     panel.classList.remove('open');
     toggle.classList.remove('active');
+    if (hint) hint.style.display = '';
   }
 
   toggle.addEventListener('click', () => isOpen ? closeChat() : openChat());
@@ -185,31 +193,71 @@ function initChatWidget() {
 </script>
 
 <style>
-  /* ── 浮动气泡 ── */
-  .chat-bubble {
+  /* ── 气泡容器 ── */
+  .cb-wrapper {
     position: fixed;
     bottom: 1.5rem;
     right: 1.5rem;
-    width: 48px;
-    height: 48px;
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  /* ── 脉冲光环 ── */
+  .cb-ring {
+    position: absolute;
+    inset: -6px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #58a6ff, #bc8cff);
+    border: 2px solid rgba(88,166,255,0.35);
+    animation: cb-pulse 2.5s ease-out infinite;
+    pointer-events: none;
+  }
+  @keyframes cb-pulse {
+    0%   { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.4); opacity: 0; }
+  }
+
+  /* ── 浮动提示文字 ── */
+  .cb-hint {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    animation: cb-hint-float 3s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes cb-hint-float {
+    0%, 100% { transform: translateY(0); opacity: 1; }
+    50%      { transform: translateY(-4px); opacity: 0.85; }
+  }
+  /* ── 气泡按钮 ── */
+  .chat-bubble {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #58a6ff, #a78bfa);
     border: none;
     color: #fff;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 16px rgba(88,166,255,0.3);
-    z-index: 900;
+    box-shadow: 0 3px 20px rgba(88,166,255,0.4);
+    position: relative;
     transition: transform 0.2s, box-shadow 0.2s;
   }
   .chat-bubble:hover {
-    transform: scale(1.08);
-    box-shadow: 0 4px 24px rgba(88,166,255,0.4);
+    transform: scale(1.1);
+    box-shadow: 0 5px 28px rgba(88,166,255,0.55);
   }
   .chat-bubble.active {
-    box-shadow: 0 4px 24px rgba(188,140,255,0.4);
+    box-shadow: 0 5px 28px rgba(167,139,250,0.5);
   }
   .cb-icon { position: absolute; transition: opacity 0.2s, transform 0.2s; }
   .cb-close { opacity: 0; transform: rotate(-90deg); }
@@ -219,14 +267,14 @@ function initChatWidget() {
   /* ── 聊天面板 ── */
   .chat-panel {
     position: fixed;
-    bottom: 5rem;
+    bottom: 5.5rem;
     right: 1.5rem;
     width: 360px;
     max-height: 520px;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 12px;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.28);
     z-index: 899;
     display: flex;
     flex-direction: column;
@@ -300,7 +348,7 @@ function initChatWidget() {
     word-break: break-word;
   }
   .msg-user .msg-content {
-    background: linear-gradient(135deg, rgba(88,166,255,0.15), rgba(188,140,255,0.1));
+    background: linear-gradient(135deg, rgba(88,166,255,0.15), rgba(167,139,250,0.1));
   }
 
   /* ── 输入区 ── */
@@ -330,7 +378,7 @@ function initChatWidget() {
   .cp-input:focus { border-color: var(--c-os); }
   .cp-input::placeholder { color: var(--text-muted); }
   .cp-send {
-    background: linear-gradient(135deg, #58a6ff, #bc8cff);
+    background: linear-gradient(135deg, #58a6ff, #a78bfa);
     border: none;
     border-radius: 8px;
     color: #fff;
@@ -348,15 +396,13 @@ function initChatWidget() {
 
   /* ── Responsive ── */
   @media (max-width: 480px) {
+    .cb-wrapper { bottom: 1rem; right: 1rem; }
     .chat-panel {
       right: 0.5rem;
       bottom: 4.5rem;
       width: calc(100vw - 1rem);
       max-height: 60vh;
     }
-    .chat-bubble {
-      bottom: 1rem;
-      right: 1rem;
-    }
+    .cb-hint { display: none; }
   }
 </style>
