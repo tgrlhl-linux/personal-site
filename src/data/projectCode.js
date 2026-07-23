@@ -1663,6 +1663,7 @@ body { background: #1a1410; }
       },
     ],
     fullFiles: [
+      { path: 'index.html', desc: '动漫文化导览', lines: 220 },
       { path: 'ghost-stories.html', desc: '聊斋志异（古风暗色）', lines: 195 },
       { path: 'presentation-mastery.html', desc: '演讲艺术（现代风）', lines: 180 },
     ],
