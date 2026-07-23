@@ -31,12 +31,7 @@ const tagList = (tags) => {
         return (
           <a href={`/quotes/${q.slug}`} class="quote-card">
             <div class="qc-body">
-              <div class="qc-text">{[q.content]}</div>
-              {tags.length > 0 && (
-                <div class="qc-tags">
-                  {tags.slice(0, 3).map(t => <span class="qc-tag">{t}</span>)}
-                </div>
-              )}
+              <div class="qc-text">{[q.excerpt || q.content]}</div>
             </div>
             <div class="qc-foot">
               <span class="qc-title">{q.title}</span>
