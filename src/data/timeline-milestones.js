@@ -60,8 +60,8 @@ export const milestones = [
   },
   {
     date: '2026-07-20',
-    title: '暗亮色模式 + RSS 订阅',
-    desc: '完整暗亮主题系统（FOUC 防护 + 系统偏好检测），RSS 2.0 订阅 + XSLT 排版',
+    title: '暗亮色模式',
+    desc: '完整暗亮主题系统（FOUC 防护 + 系统偏好检测）',
     category: 'web',
   },
   {
