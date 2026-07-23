@@ -1,0 +1,145 @@
+---
+export const prerender = false;
+
+import Base from '../../layouts/Base.astro';
+import { query } from '../../db/mysql';
+
+const quotes = await query(
+  `SELECT id, title, slug, excerpt, content, tags, created_at
+   FROM notes WHERE type='quote' AND status='published'
+   ORDER BY created_at DESC`
+);
+
+const tagList = (tags) => {
+  if (Array.isArray(tags)) return tags;
+  try { return JSON.parse(tags || '[]'); } catch { return []; }
+};
+---
+
+<Base title="拾句" description="遇见好句，随手拾起" wide={true}>
+  <div class="page-header">
+    <h1>拾句</h1>
+    <p>遇见好句，随手拾起</p>
+  </div>
+
+  {quotes.length === 0 ? (
+    <div class="empty-state">还没有收藏的句子</div>
+  ) : (
+    <div class="quote-list">
+      {quotes.map(q => {
+        const tags = tagList(q.tags);
+        return (
+          <a href={`/quotes/${q.slug}`} class="quote-card">
+            <div class="qc-body">
+              <div class="qc-text">{[q.content]}</div>
+              {tags.length > 0 && (
+                <div class="qc-tags">
+                  {tags.slice(0, 3).map(t => <span class="qc-tag">{t}</span>)}
+                </div>
+              )}
+            </div>
+            <div class="qc-foot">
+              <span class="qc-title">{q.title}</span>
+              <span class="qc-date">{new Date(q.created_at).toLocaleDateString('zh-CN')}</span>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  )}
+</Base>
+
+<style>
+  .quote-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+  }
+
+  .quote-card {
+    display: block;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.8rem 2rem;
+    text-decoration: none;
+    color: var(--text);
+    transition: box-shadow 0.25s, transform 0.2s;
+    position: relative;
+  }
+  .quote-card::before {
+    content: '\201C';
+    position: absolute;
+    top: 0.2rem;
+    left: 0.6rem;
+    font-size: 4rem;
+    line-height: 1;
+    color: var(--c-os);
+    opacity: 0.15;
+    font-family: Georgia, 'Times New Roman', serif;
+    pointer-events: none;
+  }
+  .quote-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-3px);
+  }
+
+  .qc-body {
+    margin-bottom: 1rem;
+  }
+
+  .qc-text {
+    font-size: 1.1rem;
+    line-height: 2;
+    color: var(--text);
+    font-family: 'Noto Serif SC', 'Source Han Serif SC', 'STSong', Georgia, serif;
+    letter-spacing: 0.03em;
+  }
+
+  .qc-text :global(p) {
+    margin-bottom: 0.6rem;
+  }
+
+  .qc-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.8rem;
+  }
+  .qc-tag {
+    font-size: 0.7rem;
+    padding: 0.1em 0.5em;
+    background: var(--bg-hover);
+    border-radius: 4px;
+    color: var(--text-secondary);
+  }
+
+  .qc-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--border);
+  }
+  .qc-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--c-os);
+  }
+  .qc-date {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 0;
+    color: var(--text-muted);
+  }
+
+  @media (max-width: 520px) {
+    .quote-card { padding: 1.4rem 1.2rem; }
+    .qc-text { font-size: 1rem; line-height: 1.9; }
+  }
+</style>

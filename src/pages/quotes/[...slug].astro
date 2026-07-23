@@ -1,0 +1,151 @@
+---
+export const prerender = false;
+
+import Base from '../../layouts/Base.astro';
+import { query } from '../../db/mysql';
+
+const slug = Astro.params.slug;
+
+let error = null;
+let quote = null;
+
+if (!slug) {
+  error = '无效的 ID';
+} else {
+  const rows = await query("SELECT * FROM notes WHERE type='quote' AND slug = ?", [slug]);
+  if (rows.length === 0) error = '内容不存在';
+  else quote = rows[0];
+}
+
+const tagList = quote ? (() => {
+  if (Array.isArray(quote.tags)) return quote.tags;
+  try { return JSON.parse(quote.tags || '[]'); } catch { return []; }
+})() : [];
+---
+
+{error ? (
+  <Base title="内容不存在">
+    <div class="page-header">
+      <h1>内容不存在</h1>
+      <p><a href="/quotes">← 返回拾句</a></p>
+    </div>
+  </Base>
+) : (
+  <Base title={quote.title}>
+    <article class="quote-detail">
+      <div class="qd-ornament">&#x2767;</div>
+
+      <div class="qd-body">
+        {quote.content.split('\n').filter(Boolean).map(line => (
+          line.trim() ? <p class="qd-line">{line.trim()}</p> : null
+        ))}
+      </div>
+
+      <div class="qd-meta">
+        <h1 class="qd-title">{quote.title}</h1>
+        <time class="qd-date">{new Date(quote.created_at).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+      </div>
+
+      {tagList.length > 0 && (
+        <div class="qd-tags">
+          {tagList.map(t => <span class="qd-tag">{t}</span>)}
+        </div>
+      )}
+
+      <div class="qd-nav">
+        <a href="/quotes" class="qd-back">← 返回拾句</a>
+      </div>
+    </article>
+  </Base>
+)}
+
+<style>
+  .quote-detail {
+    max-width: 680px;
+    margin: 2rem auto;
+    padding: 3rem 2.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-align: center;
+    position: relative;
+  }
+
+  .qd-ornament {
+    font-size: 2rem;
+    color: var(--c-os);
+    opacity: 0.3;
+    margin-bottom: 2rem;
+    font-family: Georgia, serif;
+  }
+
+  .qd-body {
+    margin-bottom: 2.5rem;
+  }
+
+  .qd-line {
+    font-family: 'Noto Serif SC', 'Source Han Serif SC', 'STSong', Georgia, serif;
+    font-size: 1.25rem;
+    line-height: 2.2;
+    color: var(--text);
+    letter-spacing: 0.05em;
+    margin: 0;
+    text-align: center;
+    text-indent: 0;
+  }
+
+  .qd-meta {
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .qd-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--c-os);
+    margin: 0;
+  }
+
+  .qd-date {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  .qd-tags {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 1rem;
+  }
+  .qd-tag {
+    font-size: 0.72rem;
+    padding: 0.15em 0.6em;
+    background: var(--bg-hover);
+    border-radius: 4px;
+    color: var(--text-secondary);
+  }
+
+  .qd-nav {
+    margin-top: 2rem;
+  }
+  .qd-back {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .qd-back:hover {
+    color: var(--c-os);
+  }
+
+  @media (max-width: 520px) {
+    .quote-detail { padding: 2rem 1.2rem; margin: 1rem auto; }
+    .qd-line { font-size: 1.05rem; line-height: 2; }
+  }
+</style>

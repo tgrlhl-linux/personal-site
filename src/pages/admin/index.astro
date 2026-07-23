@@ -46,6 +46,7 @@ if (!username) return Astro.redirect('/admin/login');
     .t-note { background:#ede3d8; color:#c17f59; }
     .t-project { background:#fef3e2; color:#f0883e; }
     .t-hobby { background:#e6f4ea; color:#3fb950; }
+    .t-quote { background:#f0e6f6; color:#bc8cff; }
     .btn { padding:0.5rem 1.2rem; border-radius:4px; font-size:0.85rem; cursor:pointer; border:none; text-decoration:none; display:inline-block; }
     .btn-pri { background:#c17f59; color:#fff; }
     .btn-pri:hover { opacity:0.9; }
@@ -74,6 +75,7 @@ if (!username) return Astro.redirect('/admin/login');
       <div class="stat s-note"><div class="stat-num" id="noteCount">-</div><div class="stat-label">笔记</div></div>
       <div class="stat s-project"><div class="stat-num" id="projectCount">-</div><div class="stat-label">项目</div></div>
       <div class="stat s-hobby"><div class="stat-num" id="hobbyCount">-</div><div class="stat-label">爱好</div></div>
+      <div class="stat" style="--sc:#bc8cff"><div class="stat-num" id="quoteCount">-</div><div class="stat-label">拾句</div></div>
       <div class="stat s-total"><div class="stat-num" id="totalCount">-</div><div class="stat-label">总计</div></div>
     </div>
 
@@ -87,25 +89,29 @@ if (!username) return Astro.redirect('/admin/login');
 <script>
 async function loadDashboard() {
   // 分别获取各类别总数
-  const [notesRes, projectsRes, hobbiesRes, allRes] = await Promise.all([
+  const [notesRes, projectsRes, hobbiesRes, quotesRes, allRes] = await Promise.all([
     fetch('/api/contents?type=note&limit=1'),
     fetch('/api/contents?type=project&limit=1'),
     fetch('/api/contents?type=hobby&limit=1'),
+    fetch('/api/contents?type=quote&limit=1'),
     fetch('/api/contents?limit=10'),
   ]);
   const notesData = await notesRes.json();
   const projectsData = await projectsRes.json();
   const hobbiesData = await hobbiesRes.json();
+  const quotesData = await quotesRes.json();
   const allData = await allRes.json();
 
   var noteTotal = notesData.total || 0;
   var projectTotal = projectsData.total || 0;
   var hobbyTotal = hobbiesData.total || 0;
+  var quoteTotal = quotesData.total || 0;
 
   document.getElementById('noteCount').textContent = noteTotal;
   document.getElementById('projectCount').textContent = projectTotal;
   document.getElementById('hobbyCount').textContent = hobbyTotal;
-  document.getElementById('totalCount').textContent = noteTotal + projectTotal + hobbyTotal;
+  document.getElementById('quoteCount').textContent = quoteTotal;
+  document.getElementById('totalCount').textContent = noteTotal + projectTotal + hobbyTotal + quoteTotal;
 
   var items = allData.contents || [];
   var container = document.getElementById('recentItems');
@@ -116,9 +122,9 @@ async function loadDashboard() {
   var html = '';
   items.forEach(function(n) {
     var dateStr = n.created_at ? new Date(n.created_at).toLocaleDateString() : '';
-    var typeLabel = { note: '笔记', project: '项目', hobby: '爱好' }[n.type] || n.type;
-    var typeClass = { note: 't-note', project: 't-project', hobby: 't-hobby' }[n.type] || '';
-    var link = n.type === 'note' ? '/notes/' + n.id : (n.type === 'project' ? '/projects/' + (n.slug || n.id) : '/hobbies/' + (n.slug || n.id));
+    var typeLabel = { note: '笔记', project: '项目', hobby: '爱好', quote: '拾句' }[n.type] || n.type;
+    var typeClass = { note: 't-note', project: 't-project', hobby: 't-hobby', quote: 't-quote' }[n.type] || '';
+    var link = n.type === 'note' ? '/notes/' + n.id : (n.type === 'project' ? '/projects/' + (n.slug || n.id) : n.type === 'hobby' ? '/hobbies/' + (n.slug || n.id) : '/quotes/' + (n.slug || n.id));
     html += '<div class="item">'
       + '<span class="type ' + typeClass + '">' + typeLabel + '</span> '
       + '<a href="' + link + '" target="_blank">' + escapeHtml(n.title) + '</a>'

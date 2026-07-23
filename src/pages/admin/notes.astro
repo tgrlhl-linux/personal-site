@@ -74,6 +74,7 @@ if (!username) return Astro.redirect('/admin/login');
     .t-note { background:#ede3d8; color:#c17f59; }
     .t-project { background:#fef3e2; color:#f0883e; }
     .t-hobby { background:#e6f4ea; color:#3fb950; }
+    .t-quote { background:#f0e6f6; color:#bc8cff; }
     .folder-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:0.3rem; flex-shrink:0; }
     @media (max-width:768px) {
       .split { flex-direction:column; }
@@ -123,9 +124,9 @@ let treeData = [];
 let activeId = null;
 let expandedFolders = new Set();
 
-const typeIcons = { note: '📄', project: '🛠️', hobby: '🎨' };
-const typeLabels = { note: '笔记', project: '项目', hobby: '爱好' };
-const typeClasses = { note: 't-note', project: 't-project', hobby: 't-hobby' };
+const typeIcons = { note: '📄', project: '🛠️', hobby: '🎨', quote: '💬' };
+const typeLabels = { note: '笔记', project: '项目', hobby: '爱好', quote: '拾句' };
+const typeClasses = { note: 't-note', project: 't-project', hobby: 't-hobby', quote: 't-quote' };
 
 function escapeHtml(str) {
   var div = document.createElement('div');
@@ -136,13 +137,13 @@ function escapeHtml(str) {
 function buildTree(items, search) {
   const groups = {};
   items.forEach(n => {
-    const key = n.course || (n.type === 'project' ? '课程项目' : n.type === 'hobby' ? '爱好' : '未分类');
+    const key = n.course || (n.type === 'project' ? '课程项目' : n.type === 'hobby' ? '爱好' : n.type === 'quote' ? '拾句' : '未分类');
     const typeKey = n.type + '::' + key;
     if (!groups[typeKey]) groups[typeKey] = { type: n.type, course: key, items: [] };
     groups[typeKey].items.push(n);
   });
   const sorted = Object.entries(groups).sort((a, b) => {
-    const order = { note: 0, project: 1, hobby: 2 };
+    const order = { note: 0, project: 1, hobby: 2, quote: 3 };
     const ta = order[a[1].type] || 99, tb = order[b[1].type] || 99;
     return ta - tb || a[1].course.localeCompare(b[1].course);
   });
@@ -170,7 +171,7 @@ function renderTree() {
     html += '<div class="tree-node tree-folder">';
     html += '<div class="tree-folder-label" data-key="' + escapeAttr(key) + '" data-type="' + group.type + '">';
     html += '<span class="icon' + (isExpanded ? ' open' : '') + '">▶</span>';
-    html += '<span class="fi">' + (group.type === 'note' ? '📚' : group.type === 'project' ? '🛠️' : '🎨') + '</span>';
+    html += '<span class="fi">' + (group.type === 'note' ? '📚' : group.type === 'project' ? '🛠️' : group.type === 'hobby' ? '🎨' : '💬') + '</span>';
     html += '<span>' + escapeHtml(typeLabels[group.type]) + ' · ' + escapeHtml(group.course) + '</span>';
     html += '<span class="count">' + group.items.length + '</span>';
     html += '</div>';
@@ -222,7 +223,7 @@ function showItem(id) {
     + '<div class="content-actions">'
     + '<a href="/admin/notes/edit/' + id + '" class="btn btn-pri">✏️ 编辑</a>'
     + '<button class="btn btn-del" id="deleteBtn" data-id="' + id + '">🗑️ 删除</button>'
-    + '<a href="/' + (item.type === 'note' ? 'notes' : item.type === 'project' ? 'projects' : 'hobbies') + '/' + (item.type === 'note' ? id : (item.slug || id)) + '" target="_blank" class="btn btn-sec">🔗 查看</a>'
+    + '<a href="/' + (item.type === 'note' ? 'notes' : item.type === 'project' ? 'projects' : item.type === 'hobby' ? 'hobbies' : 'quotes') + '/' + (item.type === 'note' ? id : (item.slug || id)) + '" target="_blank" class="btn btn-sec">🔗 查看</a>'
     + '</div></div>';
 
   document.querySelectorAll('.tree-file').forEach(el => el.classList.remove('active'));
